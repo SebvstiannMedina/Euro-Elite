@@ -6,3 +6,6 @@ INSTRUCCIONES BÁSICA PARA EJECUTAR LA PÁGINA:
 python manage.py runserver
 
 
+carpeta de la página main es app
+
+carpeta start es euroelite

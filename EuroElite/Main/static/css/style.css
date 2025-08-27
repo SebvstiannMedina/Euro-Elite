@@ -1,26 +1,314 @@
+/* Reset básico */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
 body {
-  background-color: #f0f8ff;
-  font-family: Arial, sans-serif;
-  text-align: center;
-  padding: 50px;
+  font-family: 'Poppins', sans-serif;
+  line-height: 1.6;
+  overflow-x: hidden;
+  color: #333;
 }
 
-h1 {
-  color: #2c3e50;
-  font-size: 2.5rem;
+/* Smooth scroll */
+html {
+  scroll-behavior: smooth;
 }
 
-button {
-  background-color: #3498db;
-  color: white;
+/* Variables CSS */
+:root {
+  --primary-color: #2c103f;
+  --primary-dark: #5629f7;
+  --secondary-color: #ff6600;
+  --secondary-dark: #e65500;
+  --text-light: #666;
+  --bg-light: #f8f9fa;
+  --white: #ffffff;
+  --shadow: 0 2px 15px rgba(0,0,0,0.1);
+  --shadow-hover: 0 8px 25px rgba(0,0,0,0.15);
+  --border-radius: 12px;
+  --transition: all 0.3s ease;
+}
+
+/* ===================
+   NAVBAR - VERSIÓN CORREGIDA
+=================== */
+
+.navbar {
+  background: linear-gradient(135deg, var(--primary-color), var(--primary-dark));
+  padding: 15px 0;
+  box-shadow: var(--shadow);
+  position: sticky;
+  top: 0;
+  z-index: 1000;
+  transition: var(--transition);
+}
+
+.navbar-container {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 20px;
+}
+
+.navbar-logo img {
+  height: 60px;
+  width: auto;
+  filter: brightness(1.1);
+  transition: transform 0.3s ease;
+}
+
+.navbar-logo img:hover {
+  transform: scale(1.05);
+}
+
+/* Menú hamburguesa - OCULTO POR DEFECTO */
+.navbar-toggle {
+  display: none;
+  background: none;
   border: none;
-  padding: 12px 24px;
-  font-size: 1rem;
-  border-radius: 8px;
+  color: var(--white);
+  font-size: 1.8rem;
   cursor: pointer;
-  transition: 0.3s;
+  transition: var(--transition);
+  padding: 5px;
 }
 
-button:hover {
-  background-color: #1d6fa5;
+.navbar-toggle:hover {
+  transform: scale(1.1);
+}
+
+.navbar-toggle i {
+  transition: var(--transition);
+}
+
+/* Menú desktop */
+.navbar-menu {
+  list-style: none;
+  display: flex;
+  gap: 30px;
+  align-items: center;
+  margin: 0;
+  padding: 0;
+}
+
+.navbar-menu li a {
+  text-decoration: none;
+  color: var(--white);
+  font-weight: 500;
+  font-size: 0.95rem;
+  padding: 10px 16px;
+  border-radius: 8px;
+  transition: var(--transition);
+  position: relative;
+  overflow: hidden;
+}
+
+.navbar-menu li a:hover {
+  background: rgba(255,255,255,0.2);
+  transform: translateY(-2px);
+  color: var(--white);
+}
+
+.navbar-menu li a::before {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  width: 0;
+  height: 2px;
+  background: var(--white);
+  transition: var(--transition);
+  transform: translateX(-50%);
+}
+
+.navbar-menu li a:hover::before {
+  width: 80%;
+}
+
+/* ===================
+   RESPONSIVE - TABLET Y MÓVIL
+=================== */
+
+/* Para tablets y móviles */
+@media (max-width: 768px) {
+  
+  /* Mostrar botón hamburguesa */
+  .navbar-toggle {
+    display: block;
+    position: relative;
+    z-index: 1001;
+  }
+  
+  /* Menú móvil */
+  .navbar-menu {
+    position: fixed;
+    top: 0;
+    right: -100%; /* Empezar fuera de la pantalla */
+    width: 300px;
+    height: 100vh;
+    background: linear-gradient(180deg, var(--primary-color), var(--primary-dark));
+    flex-direction: column;
+    justify-content: flex-start;
+    align-items: flex-start;
+    gap: 0;
+    padding-top: 100px; /* Espacio para que no tape el logo */
+    transition: right 0.3s ease;
+    box-shadow: -5px 0 15px rgba(0,0,0,0.2);
+    z-index: 1000;
+  }
+  
+  /* Cuando está activo */
+  .navbar-menu.active {
+    right: 0;
+  }
+  
+  /* Items del menú móvil */
+  .navbar-menu li {
+    width: 100%;
+  }
+  
+  .navbar-menu li a {
+    display: block;
+    padding: 20px 30px;
+    width: 100%;
+    font-size: 1.1rem;
+    border-radius: 0;
+    border-bottom: 1px solid rgba(255,255,255,0.1);
+  }
+  
+  .navbar-menu li a:hover {
+    background: rgba(255,255,255,0.1);
+    transform: none;
+    padding-left: 40px;
+  }
+  
+  .navbar-menu li a::before {
+    display: none;
+  }
+  
+  /* Overlay para cerrar el menú */
+  .navbar-menu.active::before {
+    content: '';
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(0,0,0,0.5);
+    z-index: -1;
+  }
+}
+
+/* Para móviles muy pequeños */
+@media (max-width: 480px) {
+  .navbar-container {
+    padding: 0 15px;
+  }
+  
+  .navbar-logo img {
+    height: 50px;
+  }
+  
+  .navbar-menu {
+    width: 280px;
+  }
+  
+  .navbar-menu li a {
+    padding: 18px 25px;
+    font-size: 1rem;
+  }
+}
+
+/* ===================
+   ALTERNATIVA: MENÚ DESDE ARRIBA
+=================== */
+
+/* Si prefieres que el menú baje desde arriba en lugar de desde la derecha, 
+   reemplaza las reglas del @media (max-width: 768px) con estas: */
+
+/*
+@media (max-width: 768px) {
+  .navbar-toggle {
+    display: block;
+    position: relative;
+    z-index: 1001;
+  }
+  
+  .navbar-menu {
+    position: fixed;
+    top: -100vh;
+    left: 0;
+    width: 100%;
+    height: 100vh;
+    background: linear-gradient(180deg, var(--primary-color), var(--primary-dark));
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    gap: 20px;
+    transition: top 0.3s ease;
+    z-index: 1000;
+  }
+  
+  .navbar-menu.active {
+    top: 0;
+  }
+  
+  .navbar-menu li {
+    width: auto;
+  }
+  
+  .navbar-menu li a {
+    display: block;
+    padding: 20px 40px;
+    font-size: 1.5rem;
+    border-radius: 10px;
+    text-align: center;
+    min-width: 200px;
+  }
+  
+  .navbar-menu li a:hover {
+    background: rgba(255,255,255,0.2);
+    transform: scale(1.05);
+  }
+}
+*/
+
+/* ===================
+   EFECTOS ADICIONALES
+=================== */
+
+/* Efecto al hacer scroll */
+.navbar.scrolled {
+  background: linear-gradient(135deg, rgba(62,151,114,0.95), rgba(45,112,86,0.95));
+  backdrop-filter: blur(10px);
+  padding: 10px 0;
+}
+
+.navbar.scrolled .navbar-logo img {
+  height: 50px;
+}
+
+/* Animación del icono hamburguesa */
+.navbar-toggle.active i.fa-bars {
+  transform: rotate(90deg);
+}
+
+.navbar-toggle.active i.fa-times {
+  transform: rotate(0deg);
+}
+
+.navbar-logo {
+  height: 80px;
+  width: auto;
+  filter: brightness(1.1);
+  transition: transform 0.3s ease;
+}
+
+.navbar-logo:hover {
+  transform: scale(1.05);
 }
