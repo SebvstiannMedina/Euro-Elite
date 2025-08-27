@@ -11,3 +11,6 @@ def equipo(request):
 
 def productos(request):
     return render(request, 'Taller/productos.html')
+
+def inicio_crea_session(request):
+    return render(request, 'Taller/inicio_crea_session.html')
