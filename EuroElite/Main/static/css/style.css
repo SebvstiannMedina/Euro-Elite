@@ -598,3 +598,355 @@ h3 {
     -webkit-transform: translateY(calc(100% - 42px));
   }
 }
+
+    /* =================== 
+       CAROUSEL MODERNO - ESTILOS ADICIONALES
+    =================== */
+    .hero-carousel-section {
+      padding: 0;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .hero-carousel-section::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><pattern id="grain" width="100" height="100" patternUnits="userSpaceOnUse"><circle cx="50" cy="50" r="1" fill="%23ffffff" opacity="0.05"/></pattern></defs><rect width="100" height="100" fill="url(%23grain)"/></svg>');
+      pointer-events: none;
+    }
+
+    .modern-carousel-container {
+      position: relative;
+      max-width: 1000px;
+      width: 100%;
+      height: 550px;
+      border-radius: 25px;
+      overflow: hidden;
+      box-shadow: 0 30px 60px rgba(0, 0, 0, 0.4);
+      background: rgba(255, 255, 255, 0.1);
+      backdrop-filter: blur(15px);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      margin: 0 auto;
+    }
+
+    .modern-carousel-track {
+      display: flex;
+      width: 500%;
+      height: 100%;
+      transition: transform 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    }
+
+    .modern-carousel-slide {
+      width: 20%;
+      height: 100%;
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-direction: column;
+      text-align: center;
+      color: white;
+      overflow: hidden;
+    }
+
+    .modern-slide-background {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-size: cover;
+      background-position: center;
+      filter: brightness(0.6) contrast(1.1);
+      transition: all 0.8s ease;
+      transform: scale(1);
+    }
+
+    .modern-slide-content {
+      position: relative;
+      z-index: 2;
+      padding: 50px;
+      transform: translateY(30px);
+      opacity: 0;
+      transition: all 0.8s ease 0.3s;
+      max-width: 600px;
+    }
+
+    .modern-carousel-slide.active .modern-slide-content {
+      transform: translateY(0);
+      opacity: 1;
+    }
+
+    .modern-carousel-slide.active .modern-slide-background {
+      transform: scale(1.08);
+      filter: brightness(0.7) contrast(1.2);
+    }
+
+    .modern-slide-title {
+      font-family: 'Poppins', sans-serif;
+      font-size: 3.2rem;
+      font-weight: 700;
+      margin-bottom: 20px;
+      background: linear-gradient(45deg, #ff6b6b, #4ecdc4, #45b7d1);
+      background-size: 200% 200%;
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      animation: modernGradientShift 3s ease infinite;
+      text-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+    }
+
+    @keyframes modernGradientShift {
+      0%, 100% { background-position: 0% 50%; }
+      50% { background-position: 100% 50%; }
+    }
+
+    .modern-slide-description {
+      font-family: 'Poppins', sans-serif;
+      font-size: 1.2rem;
+      line-height: 1.8;
+      margin-bottom: 35px;
+      opacity: 0.95;
+      font-weight: 300;
+      text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+    }
+
+    .modern-slide-button {
+      padding: 15px 40px;
+      border: none;
+      border-radius: 50px;
+      background: linear-gradient(45deg, #ff6b6b, #4ecdc4);
+      color: white;
+      font-weight: 600;
+      font-family: 'Poppins', sans-serif;
+      cursor: pointer;
+      transition: all 0.4s ease;
+      text-decoration: none;
+      display: inline-block;
+      font-size: 1rem;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .modern-slide-button::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: -100%;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+      transition: left 0.5s ease;
+    }
+
+    .modern-slide-button:hover::before {
+      left: 100%;
+    }
+
+    .modern-slide-button:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 15px 35px rgba(0, 0, 0, 0.3);
+      color: white;
+      text-decoration: none;
+    }
+
+    .modern-carousel-nav {
+      position: absolute;
+      bottom: 30px;
+      left: 50%;
+      transform: translateX(-50%);
+      display: flex;
+      gap: 15px;
+      z-index: 10;
+    }
+
+    .modern-nav-dot {
+      width: 14px;
+      height: 14px;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.4);
+      cursor: pointer;
+      transition: all 0.4s ease;
+      border: 2px solid rgba(255, 255, 255, 0.6);
+      position: relative;
+    }
+
+    .modern-nav-dot::after {
+      content: '';
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 0;
+      height: 0;
+      background: linear-gradient(45deg, #ff6b6b, #4ecdc4);
+      border-radius: 50%;
+      transition: all 0.4s ease;
+    }
+
+    .modern-nav-dot.active::after {
+      width: 8px;
+      height: 8px;
+    }
+
+    .modern-nav-dot.active {
+      background: rgba(255, 255, 255, 0.8);
+      transform: scale(1.3);
+      box-shadow: 0 0 20px rgba(255, 255, 255, 0.5);
+    }
+
+    .modern-carousel-arrow {
+      position: absolute;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 55px;
+      height: 55px;
+      background: rgba(255, 255, 255, 0.15);
+      border: 2px solid rgba(255, 255, 255, 0.3);
+      border-radius: 50%;
+      color: white;
+      font-size: 18px;
+      cursor: pointer;
+      transition: all 0.4s ease;
+      z-index: 10;
+      backdrop-filter: blur(10px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .modern-carousel-arrow:hover {
+      background: rgba(255, 255, 255, 0.25);
+      transform: translateY(-50%) scale(1.1);
+      border-color: rgba(255, 255, 255, 0.5);
+      box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
+    }
+
+    .modern-carousel-arrow.prev {
+      left: 25px;
+    }
+
+    .modern-carousel-arrow.next {
+      right: 25px;
+    }
+
+    /* Fondos específicos para cada slide */
+    .modern-slide-1 .modern-slide-background {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    }
+
+    .modern-slide-2 .modern-slide-background {
+      background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+    }
+
+    .modern-slide-3 .modern-slide-background {
+      background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+    }
+
+    .modern-slide-4 .modern-slide-background {
+      background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
+    }
+
+    .modern-slide-5 .modern-slide-background {
+      background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
+    }
+
+    /* Elementos flotantes animados */
+    .modern-floating-element {
+      position: absolute;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.1);
+      pointer-events: none;
+    }
+
+    .modern-floating-element:nth-child(4) {
+      width: 60px;
+      height: 60px;
+      top: 20%;
+      right: 15%;
+      animation: modernFloat 4s ease-in-out infinite;
+    }
+
+    .modern-floating-element:nth-child(5) {
+      width: 40px;
+      height: 40px;
+      top: 60%;
+      left: 10%;
+      animation: modernFloat 3s ease-in-out infinite 1s;
+    }
+
+    .modern-floating-element:nth-child(6) {
+      width: 30px;
+      height: 30px;
+      top: 30%;
+      left: 85%;
+      animation: modernFloat 5s ease-in-out infinite 2s;
+    }
+
+    @keyframes modernFloat {
+      0%, 100% { transform: translateY(0px) rotate(0deg); }
+      50% { transform: translateY(-20px) rotate(180deg); }
+    }
+
+    /* Responsive */
+    @media (max-width: 992px) {
+      .modern-carousel-container {
+        max-width: 90%;
+        height: 480px;
+      }
+      
+      .modern-slide-title {
+        font-size: 2.5rem;
+      }
+      
+      .modern-slide-description {
+        font-size: 1.1rem;
+      }
+    }
+
+    @media (max-width: 768px) {
+      .hero-carousel-section {
+        min-height: 90vh;
+      }
+      
+      .modern-carousel-container {
+        height: 400px;
+        margin: 20px;
+      }
+
+      .modern-slide-title {
+        font-size: 2rem;
+      }
+
+      .modern-slide-description {
+        font-size: 1rem;
+      }
+
+      .modern-slide-content {
+        padding: 30px 20px;
+      }
+      
+      .modern-carousel-arrow {
+        width: 45px;
+        height: 45px;
+        font-size: 16px;
+      }
+      
+      .modern-carousel-arrow.prev {
+        left: 15px;
+      }
+      
+      .modern-carousel-arrow.next {
+        right: 15px;
+      }
+    }

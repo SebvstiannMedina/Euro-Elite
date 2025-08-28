@@ -54,102 +54,132 @@
     </nav>
   </header>
 
-  <section class="game-section">
-    <h2 class="line-title">Monoplazas 2023</h2>
-    <div class="owl-carousel custom-carousel owl-theme">
-      <div class="item active" style="background-image: url(https://i.postimg.cc/bv65fWVn/ap23056634041243-12.jpg);">
-        <div class="item-desc">
-          <h3>RB19</h3>
-          <p>El Red Bull RB19 es un monoplaza de Fórmula 1 diseñado por Red Bull Racing para competir en la temporada
-            2023.El automóvil fue presentado en la ciudad de Nueva York el 3 de febrero de 2023.El monoplaza es
-            conducido por Max Verstappen y Sergio Pérez.
-          </p>
+  <!-- CAROUSEL HERO SECTION -->
+  <section class="hero-carousel-section">
+    <div class="container-fluid px-0">
+      <div class="modern-carousel-container">
+        <div class="modern-carousel-track" id="modernCarouselTrack">
+
+          <!-- Slide 1 -->
+          <div class="modern-carousel-slide modern-slide-1 active">
+            <div class="modern-slide-background"></div>
+            <div class="modern-floating-element"></div>
+            <div class="modern-floating-element"></div>
+            <div class="modern-floating-element"></div>
+            <div class="modern-slide-content">
+              <br>
+              <h2 class="modern-slide-title">Euro Elite</h2>
+              <p class="modern-slide-description">Descubre la excelencia en productos europeos de la más alta calidad.
+                Innovación y tradición se unen para ofrecerte lo mejor.</p>
+              <img src="{% static 'img/LogoApp.png' %}" alt="Logo" class="navbar-logo">
+              <br>
+              <a href="{% url 'productos' %}" class="modern-slide-button">Ver Productos</a>
+            </div>
+          </div>
+
+          <!-- Slide 2 -->
+          <div class="modern-carousel-slide modern-slide-2">
+            <div class="modern-slide-background"></div>
+            <div class="modern-floating-element"></div>
+            <div class="modern-floating-element"></div>
+            <div class="modern-floating-element"></div>
+            <div class="modern-slide-content">
+              <h2 class="modern-slide-title">Marcas Trabajadas</h2>
+              <p class="modern-slide-description">Cada producto es cuidadosamente seleccionado para garantizar los más
+                altos estándares de calidad europea.</p>
+              <img src="{% static 'img/BMW Logo.png' %}" alt="Logo" class="navbar-logo">
+              <img src="{% static 'img/Audi Logo.png' %}" alt="Logo" class="navbar-logo">
+              <img src="{% static 'img/Mercedez Logo.png' %}" alt="Logo" class="navbar-logo">
+              <br>
+              <br>
+              <a href="#servicios" class="modern-slide-button">Nuestros Servicios</a>
+            </div>
+          </div>
+
+          <!-- Slide 3 -->
+          <div class="modern-carousel-slide modern-slide-3">
+            <div class="modern-slide-background"></div>
+            <div class="modern-floating-element"></div>
+            <div class="modern-floating-element"></div>
+            <div class="modern-floating-element"></div>
+            <div class="modern-slide-content">
+              <h2 class="modern-slide-title">Experiencia Única</h2>
+              <p class="modern-slide-description">Vive una experiencia de compra excepcional con nuestro equipo de
+                expertos y servicio personalizado.</p>
+              <a href="{% url 'equipo' %}" class="modern-slide-button">Conoce al Equipo</a>
+            </div>
+          </div>
+
+          <!-- Slide 4 -->
+          <div class="modern-carousel-slide modern-slide-4">
+            <div class="modern-slide-background"></div>
+            <div class="modern-floating-element"></div>
+            <div class="modern-floating-element"></div>
+            <div class="modern-floating-element"></div>
+            <div class="modern-slide-content">
+              <h2 class="modern-slide-title">Innovación</h2>
+              <p class="modern-slide-description">Incorporamos las últimas tendencias y tecnologías europeas para
+                mantenerte a la vanguardia.</p>
+              <a href="{% url 'productos' %}" class="modern-slide-button">Explorar</a>
+            </div>
+          </div>
+
+          <!-- Slide 5 -->
+          <div class="modern-carousel-slide modern-slide-5">
+            <div class="modern-slide-background"></div>
+            <div class="modern-floating-element"></div>
+            <div class="modern-floating-element"></div>
+            <div class="modern-floating-element"></div>
+            <div class="modern-slide-content">
+              <h2 class="modern-slide-title">Contacto Directo</h2>
+              <p class="modern-slide-description">Estamos aquí para ayudarte. Contacta con nuestro equipo para cualquier
+                consulta o información adicional.</p>
+              <a href="{% url 'contacto' %}" class="modern-slide-button">Contáctanos</a>
+            </div>
+          </div>
+        </div>
+
+        <!-- Flechas de navegación -->
+        <button class="modern-carousel-arrow prev" onclick="modernChangeSlide(-1)">
+          <i class="fas fa-chevron-left"></i>
+        </button>
+        <button class="modern-carousel-arrow next" onclick="modernChangeSlide(1)">
+          <i class="fas fa-chevron-right"></i>
+        </button>
+
+        <!-- Puntos de navegación -->
+        <div class="modern-carousel-nav">
+          <div class="modern-nav-dot active" onclick="modernGoToSlide(0)"></div>
+          <div class="modern-nav-dot" onclick="modernGoToSlide(1)"></div>
+          <div class="modern-nav-dot" onclick="modernGoToSlide(2)"></div>
+          <div class="modern-nav-dot" onclick="modernGoToSlide(3)"></div>
+          <div class="modern-nav-dot" onclick="modernGoToSlide(4)"></div>
         </div>
       </div>
-      <div class="item" style="background-image: url(https://i.postimg.cc/8kw7QHTS/ferrari-sf-23-1.jpg);">
-        <div class="item-desc">
-          <h3>SF-23</h3>
-          <p>El Ferrari SF-23 es un monoplaza de Fórmula 1 diseñado por Scuderia Ferrari para competir en la temporada
-            2023.El automóvil fue presentado en la ciudad de Imola el 14 de febrero de 2023.El monoplaza es conducido
-            por Charles Leclerc y Carlos Sainz Jr..</p>
-        </div>
-      </div>
-      <div class="item" style="background-image: url(https://i.postimg.cc/C1Sx9Zt5/0-4oe51bxj.jpg);">
-        <div class="item-desc">
-          <h3>W14</h3>
-          <p>El Mercedes-AMG F1 W14 E Performance es un monoplaza de Fórmula 1 diseñado y construido por Mercedes para
-            disputar la temporada 2023.Es manejado por Lewis Hamilton y por George Russell.</p>
-        </div>
-      </div>
-      <div class="item"
-        style="background-image: url(https://i.postimg.cc/cHF0jFwk/0001189438-hires-04ncmbl0ts8neo03to4xt0st79mo.jpg);">
-        <div class="item-desc">
-          <h3>A523</h3>
-          <p>El Alpine A523 es un monoplaza de Fórmula 1 diseñado por Alpine F1 Team para competir en la temporada
-            2023.El automóvil fue presentado en la ciudad de Londres el 15 de febrero de 2023.El monoplaza es conducido
-            por Pierre Gasly y Esteban Ocon.</p>
-        </div>
-      </div>
-      <div class="item" style="background-image: url(https://i.postimg.cc/x8qnSLPf/AA17uD6G.jpg);">
-        <div class="item-desc">
-          <h3>MCL60</h3>
-          <p>El McLaren MCL60 es un monoplaza de Fórmula 1.Lando Norris y Oscar Piastri tienen contrato para competir
-            con el equipo, Norris para su quinta temporada y Piastri en su año de novato.</p>
-        </div>
-      </div>
-      <div class="item"
-        style="background-image: url(https://i.postimg.cc/sf8RhQcW/alfa-romeo-sauber-c43-f1-2023-1.jpg);">
-        <div class="item-desc">
-          <h3>C43</h3>
-          <p>El Alfa Romeo C43 es un monoplaza de Fórmula 1 diseñado por Alfa Romeo para competir en la temporada
-            2023.El automóvil fue presentado en la ciudad de Zúrich el 7 de febrero de 2023.El monoplaza es conducido
-            por Guanyu Zhou y Valtteri Bottas.</p>
-        </div>
-      </div>
-      <div class="item"
-        style="background-image: url(https://i.postimg.cc/2SCmkpG9/dd46203c-74f1-4ef0-8b5e-6392065b5671-alta-libre-aspect-ratio-default-0.jpg);">
-        <div class="item-desc">
-          <h3>AMR23</h3>
-          <p>El Aston Martin AMR23 es un monoplaza de Fórmula 1 diseñado por Aston Martin para competir en la temporada
-            2023.El automóvil fue presentado en la ciudad de Silverstone el 13 de febrero de 2023.El monoplaza es
-            conducido por Fernando Alonso y Lance Stroll.</p>
-        </div>
-      </div>
-      <div class="item" style="background-image: url(https://i.postimg.cc/hjdN8MM7/haas-vf-23-09-1675173869.jpg);">
-        <div class="item-desc">
-          <h3>VF-23</h3>
-          <p>EEl Haas VF-23 es un monoplaza de Fórmula 1 diseñado por Haas F1 Team para competir en la temporada 2023.La
-            decoración fue presentada el 31 de enero de 2023.El coche es conducido por Kevin Magnussen y Nico
-            Hülkenberg.</p>
-        </div>
-      </div>
-      <div class="item" style="background-image: url(https://i.postimg.cc/KzfBWh9X/alpha-tauri-04-1.jpg);">
-        <div class="item-desc">
-          <h3>AT04</h3>
-          <p>El AlphaTauri AT04 es un monoplaza de Fórmula 1 diseñado por Scuderia AlphaTauri para competir en la
-            temporada 2023.El automóvil fue presentado en la ciudad de Nueva York el 11 de febrero de 2023.El monoplaza
-            es conducido por Nyck de Vries y Yuki Tsunoda.</p>
-        </div>
-      </div>
-      <div class="item" style="background-image: url(https://i.postimg.cc/mkQDnYZP/7-Williams-2023-FW45.jpg);">
-        <div class="item-desc">
-          <h3>FW45</h3>
-          <p>El Williams FW45 es un monoplaza de Fórmula 1 diseñado y construido por Williams Racing para disputar la
-            temporada 2023.Es manejado por Logan Sargeant, quien hace su debut absoluto en la «máxima categoría», y por
-            Alexander Albon, quien disputa su segunda temporada con el equipo.</p>
-        </div>
-      </div>
+    </div>
   </section>
 
-  <!-- jQuery (requerido por Owl Carousel) -->
-  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 
-  <!-- Owl Carousel JS -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/OwlCarousel2/2.3.4/owl.carousel.min.js"></script>
-  <!-- Bootstrap JS-->
+
+
+
+  <!-- jQuery primero -->
+  <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+
+  <!-- Slick JS (si usas el carrusel) -->
+  <script src="https://cdn.jsdelivr.net/npm/slick-carousel@1.8.1/slick/slick.min.js"></script>
+
+  <!-- Swiper JS -->
+  <script src="https://cdn.jsdelivr.net/npm/swiper@10/swiper-bundle.min.js"></script>
+
+  <!-- Bootstrap -->
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"
     integrity="sha384-FKyoEForCGlyvwx9Hj09JcYn3nv7wiPVlz7YYwJrWVcXK/BmnVDxM+D2scQbITxI"
     crossorigin="anonymous"></script>
+
+  <!-- Tu script al final -->
+  <script src="{% static 'js/main.js' %}"></script>
+
 </body>
 
 </html>
