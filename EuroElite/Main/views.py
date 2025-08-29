@@ -14,3 +14,4 @@ def productos(request):
 
 def inicio_crea_session(request):
     return render(request, 'Taller/inicio_crea_session.html')
+
