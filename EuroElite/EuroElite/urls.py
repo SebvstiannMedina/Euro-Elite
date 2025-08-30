@@ -25,5 +25,5 @@ urlpatterns = [
     path('equipo', views.equipo, name='equipo'),
     path('productos', views.productos, name='productos'),
     path('inicio_crea_session', views.inicio_crea_session, name='inicio_crea_session'),
-   
+    path('perfil', views.perfil, name='perfil'),
 ]

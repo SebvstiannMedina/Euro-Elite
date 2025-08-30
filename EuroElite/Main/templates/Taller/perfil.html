@@ -1,0 +1,522 @@
+{% load static %}
+
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Euro Elite</title>
+  <!-- Bootstrap CSS -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet"
+    integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB" crossorigin="anonymous">
+  <!-- CSS propio -->
+  <link rel="stylesheet" href="{% static 'css/style.css' %}">
+  <!-- Slick CSS -->
+  <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/slick-carousel@1.8.1/slick/slick.css" />
+  <link rel="stylesheet" type="text/css"
+    href="https://cdn.jsdelivr.net/npm/slick-carousel@1.8.1/slick/slick-theme.css" />
+  <!-- Font Awesome -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <!-- Google Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="icon" href="{% static 'img/LogoApp.png' %}" type="image/x-icon">
+  <!-- Owl Carousel CSS -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/OwlCarousel2/2.3.4/assets/owl.carousel.min.css">
+  <link rel="stylesheet"
+    href="https://cdnjs.cloudflare.com/ajax/libs/OwlCarousel2/2.3.4/assets/owl.theme.default.min.css">
+</head>
+
+<body>
+    <!-- NAVBAR -->
+    <nav class="navbar">
+        <div class="navbar-container">
+            <div class="navbar-logo">
+                <img src="{% static 'img/LogoApp.png' %}" alt="Logo" class="navbar-logo">
+            </div>
+            <button class="navbar-toggle" onclick="toggleMobileMenu()" aria-label="Abrir menú">
+                <i class="fas fa-bars"></i>
+            </button>
+
+            <ul class="navbar-menu" id="navbar-menu">
+                <li><a href="#home">INICIO</a></li>
+                <li><a href="#products">PRODUCTOS</a></li>
+                <li><a href="#services">SERVICIOS</a></li>
+                <li><a href="#contact">CONTACTO</a></li>
+                <li><a href="#team">EQUIPO</a></li>
+            </ul>
+
+        </div>
+    </nav>
+
+
+
+    <br>
+    <br>
+    <br>
+    <br>
+    <br>
+    <br>
+
+
+
+
+    <!-- PERFIL -->
+    <div class="container my-4 profile-wrapper">
+        <div class="row">
+            <!-- Sidebar -->
+            <aside class="col-12 col-md-3 mb-3">
+                <div class="card shadow-sm">
+                    <div class="card-body">
+                        <h5 class="mb-1">Hola, <span id="greetingName">Alberto</span></h5>
+                        <p class="text-muted" style="font-size: .9rem;">Accede a toda la información de tu perfil</p>
+
+                        <div class="list-group list-group-flush mt-3">
+                            <a href="#" class="list-group-item list-group-item-action active">
+                                <i class="fas fa-id-card me-2"></i> Mis datos
+                            </a>
+                            <a href="#" class="list-group-item list-group-item-action">
+                                <i class="fas fa-lock me-2"></i> Contraseña
+                            </a>
+                            <a href="#" class="list-group-item list-group-item-action">
+                                <i class="fas fa-shopping-bag me-2"></i> Mis compras
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </aside>
+
+            <!-- Main content -->
+            <section class="col-12 col-md-9" id="profileSection">
+                <div class="d-flex align-items-center justify-content-between mb-2">
+                    <h3 class="mb-0">Mis datos</h3>
+                    <div class="d-flex align-items-center gap-2">
+                        <a id="editBtn" href="#" class="link-primary" style="font-size: .9rem;"><i class="fas fa-pen me-1"></i> Editar</a>
+                        <span id="editControls" style="display:none;">
+                            <button id="saveBtn" type="button" class="btn btn-sm btn-primary">Guardar</button>
+                            <button id="cancelBtn" type="button" class="btn btn-sm btn-outline-secondary">Cancelar</button>
+                        </span>
+                    </div>
+                </div>
+
+                <div class="card shadow-sm">
+                    <div class="card-body">
+                        <div class="row gy-4">
+                            <div class="col-12 col-md-6">
+                                <small class="text-muted d-block fw-semibold">Nombres y Apellidos</small>
+                                <div class="fs-6" id="nameValue">Alberto Hurtado</div>
+                                <input id="nameInput" type="text" class="form-control form-control-sm mt-1" maxlength="80" placeholder="Nombres y apellidos" style="display:none;">
+                                <div class="invalid-feedback">Escribe tu nombre.</div>
+                            </div>
+                            <div class="col-12 col-md-6">
+                                <small class="text-muted d-block fw-semibold">RUT</small>
+                                <div class="fs-6" id="rutValue">15.298.642-3</div>
+                                <input id="rutInput" type="text" class="form-control form-control-sm mt-1" maxlength="12" placeholder="12.345.678-9" inputmode="numeric" autocomplete="off" style="display:none;">
+                                <div class="invalid-feedback">RUT inválido. Debe ser 7–8 dígitos + DV (ej: 12.345.678-9)</div>
+                            </div>
+
+                            <div class="col-12 col-md-6">
+                                <small class="text-muted d-block fw-semibold">Email</small>
+                                <div class="fs-6" id="emailValue">chupazo@gmail.com</div>
+                                <input id="emailInput" type="email" class="form-control form-control-sm mt-1" maxlength="120" placeholder="tucorreo@dominio.com" style="display:none;">
+                                <div class="invalid-feedback">Correo no válido.</div>
+                            </div>
+
+                            <div class="col-12 col-md-6">
+                                <small class="text-muted d-block fw-semibold">Teléfono</small>
+                                <div class="fs-6" id="phoneValue">+56 9 12568973</div>
+                                <div id="phoneGroup" class="input-group input-group-sm mt-1" style="display:none;">
+                                    <span class="input-group-text">+569</span>
+                                    <input id="phoneInput" type="tel" class="form-control" inputmode="numeric" maxlength="9" placeholder="1234 5678">
+                                    <div class="invalid-feedback w-100">Este campo es obligatorio</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </div>
+    </div>
+
+    <!-- Styles just for this page -->
+    <style>
+        .profile-wrapper .card { border: none; }
+        .profile-wrapper .card.shadow-sm { box-shadow: 0 6px 12px rgba(0,0,0,0.06); }
+        .profile-wrapper .list-group-item { border: 0; }
+        .profile-wrapper .list-group-item.active,
+        .profile-wrapper .list-group-item.active:hover {
+            background: #28a745; /* verde suave */
+            color: #fff;
+        }
+    </style>
+    <br>
+    <br>
+    <br>
+    <br>
+    <br>
+    <br>
+    <br>
+    
+
+
+    <!-- FOOTER -->
+    <footer class="footer">
+        <div class="footer-container">
+            <div class="footer-section">
+                <h3>Euro Elite</h3>
+                <p>Tu tienda especializada en repuestos europeos de alta calidad. Más de 10 años de experiencia en el mercado automotriz.</p>
+                <div class="social-icons">
+                    <a href="#"><i class="fab fa-facebook-f"></i></a>
+                    <a href="#"><i class="fab fa-instagram"></i></a>
+                    <a href="#"><i class="fab fa-twitter"></i></a>
+                    <a href="#"><i class="fab fa-youtube"></i></a>
+                </div>
+            </div>
+
+            <div class="footer-section">
+                <h3>Productos</h3>
+                <ul>
+                    <li><a href="#">Repuestos BMW</a></li>
+                    <li><a href="#">Repuestos Audi</a></li>
+                    <li><a href="#">Repuestos Mercedes-Benz</a></li>
+                    <li><a href="#">Accesorios</a></li>
+                    <li><a href="#">Herramientas</a></li>
+                </ul>
+            </div>
+
+            <div class="footer-section">
+                <h3>Servicios</h3>
+                <ul>
+                    <li><a href="#">Instalación</a></li>
+                    <li><a href="#">Mantención</a></li>
+                    <li><a href="#">Diagnóstico</a></li>
+                    <li><a href="#">Garantía</a></li>
+                    <li><a href="#">Envío a Domicilio</a></li>
+                </ul>
+            </div>
+
+            <div class="footer-section">
+                <h3>Contacto</h3>
+                <ul>
+                    <li><i class="fas fa-map-marker-alt"></i> Cooperativa 1144, Recoleta, Santiago</li>
+                    <li><i class="fas fa-phone"></i> +56 2 1234 5678</li>
+                    <li><i class="fas fa-envelope"></i> info@euroelite.cl</li>
+                    <li><i class="fas fa-clock"></i> Lun-Vie: 9:00-18:00</li>
+                </ul>
+            </div>
+
+            <div class="footer-section">
+                <h3>Legal</h3>
+                <ul>
+                    <li><a href="#">Términos y Condiciones</a></li>
+                    <li><a href="#">Política de Privacidad</a></li>
+                    <li><a href="#">Política de Devoluciones</a></li>
+                    <li><a href="#">Preguntas Frecuentes</a></li>
+                </ul>
+            </div>
+        </div>
+        
+        <div class="footer-bottom" style="text-align: center;">
+            <p>&copy; 2025 Euro Elite. Todos los derechos reservados. | Diseñado con ❤️ para los amantes del automóvil</p>
+        </div>
+    </footer>
+
+    <script>
+      document.addEventListener('DOMContentLoaded', () => {
+        const section = document.getElementById('profileSection');
+        const editBtn = document.getElementById('editBtn');
+        const editControls = document.getElementById('editControls');
+        const saveBtn = document.getElementById('saveBtn');
+        const cancelBtn = document.getElementById('cancelBtn');
+
+        // Helper: obtener elemento de error asociado a un input (directo o por grupo)
+        const getErrorEl = (input) => {
+          if (!input) return null;
+          if (input.nextElementSibling && input.nextElementSibling.classList.contains('invalid-feedback')) return input.nextElementSibling;
+          if (input.parentElement && input.parentElement.nextElementSibling && input.parentElement.nextElementSibling.classList.contains('invalid-feedback')) return input.parentElement.nextElementSibling;
+          return null;
+        };
+
+        // Helpers RUT (Chile)
+        const cleanRut = (v) => (v || '').toString().replace(/[\.\-]/g, '').replace(/[^0-9kK]/g, '').toUpperCase();
+        const formatRut = (v) => {
+          const s = cleanRut(v);
+          if (!s) return '';
+          if (s.length === 1) return s; // aún sin DV
+          const body = s.slice(0, -1);
+          const dv = s.slice(-1);
+          const bodyFmt = body.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+          return `${bodyFmt}-${dv}`;
+        };
+        const rutDV = (bodyDigits) => {
+          let sum = 0, mul = 2;
+          for (let i = bodyDigits.length - 1; i >= 0; i--) {
+            sum += parseInt(bodyDigits[i], 10) * mul;
+            mul = mul === 7 ? 2 : mul + 1;
+          }
+          const res = 11 - (sum % 11);
+          if (res === 11) return '0';
+          if (res === 10) return 'K';
+          return String(res);
+        };
+        const isRutValid = (v) => {
+          const s = cleanRut(v);
+          if (s.length < 2) return false;
+          const body = s.slice(0, -1);
+          const dv = s.slice(-1).toUpperCase();
+          // Solo permitimos cuerpos de 7 u 8 dígitos (personas/naturales)
+          if (body.length < 7 || body.length > 8) return false;
+          return rutDV(body) === dv;
+        };
+
+        // Retorna mensaje específico o null si es válido
+        const rutValidationMessage = (v) => {
+          const s = cleanRut(v);
+          if (s.length < 2) return 'Debes incluir dígito verificador (ej: 12.345.678-9).';
+          const body = s.slice(0, -1);
+          if (body.length < 7 || body.length > 8) return 'El RUT debe tener 7 u 8 dígitos antes del dígito verificador.';
+          if (!isRutValid(s)) return 'El dígito verificador no corresponde (RUT no existe).';
+          return null;
+        };
+
+        const fields = {
+          name: { valueEl: document.getElementById('nameValue'), input: document.getElementById('nameInput'), storage: 'perfil_name', required: true },
+          rut:  { valueEl: document.getElementById('rutValue'),  input: document.getElementById('rutInput'),  storage: 'perfil_rut',  required: false, rut: true },
+          email:{ valueEl: document.getElementById('emailValue'),input: document.getElementById('emailInput'),storage: 'perfil_email', required: true, email: true },
+          phone:{ valueEl: document.getElementById('phoneValue'),input: document.getElementById('phoneInput'),storage: 'perfil_phone', required: true, phone: true }
+        };
+
+        const phoneGroup = document.getElementById('phoneGroup');
+
+        // Helpers Teléfono Chile: +56 9 xxxxxxxx (8 dígitos)
+        const cleanPhoneBody = (v) => {
+          let d = (v || '').toString().replace(/\D/g, '');
+          // remover prefijos 56 y 9 si vienen
+          if (d.startsWith('56')) d = d.slice(2);
+          if (d.startsWith('9')) d = d.slice(1);
+          // limitar a 8 dígitos
+          if (d.length > 8) d = d.slice(-8);
+          return d;
+        };
+        const formatPhoneInput = (body8) => {
+          const d = cleanPhoneBody(body8);
+          if (!d) return '';
+          return d.length > 4 ? `${d.slice(0,4)} ${d.slice(4)}` : d;
+        };
+        const formatPhoneDisplay = (body8) => {
+          const d = cleanPhoneBody(body8);
+          if (!d) return '';
+          return `+56 9 ${formatPhoneInput(d)}`;
+        };
+        const phoneValidationMessage = (body8, required) => {
+          const d = cleanPhoneBody(body8);
+          if (required && !d) return 'Este campo es obligatorio';
+          if (d && d.length !== 8) return 'Debe contener 8 dígitos (ej: 1234 5678)';
+          return null;
+        };
+
+        // Cargar valores guardados
+        Object.values(fields).forEach(f => {
+          const v = localStorage.getItem(f.storage);
+          if (v) f.valueEl.textContent = v;
+        });
+        // Actualizar saludo
+        const greeting = document.getElementById('greetingName');
+        if (greeting && fields.name.valueEl?.textContent?.trim()) {
+          greeting.textContent = fields.name.valueEl.textContent.trim().split(' ')[0];
+        }
+
+        function enterEdit() {
+          if (!section) return;
+          editBtn.style.display = 'none';
+          editControls.style.display = 'inline-block';
+          Object.values(fields).forEach(f => {
+            if (!f.input) return;
+            if (f.phone && phoneGroup) {
+              phoneGroup.style.display = '';
+              // convertir el valor mostrado a cuerpo de 8 dígitos para el input
+              const body = cleanPhoneBody(f.valueEl.textContent.trim());
+              f.input.value = formatPhoneInput(body);
+            } else {
+              f.input.style.display = '';
+              f.input.value = f.valueEl.textContent.trim() === '—' ? '' : f.valueEl.textContent.trim();
+            }
+            if (f.rut) f.input.value = formatRut(f.input.value);
+            f.valueEl.style.display = 'none';
+            f.input.classList.remove('is-invalid');
+          });
+          section.classList.add('profile-editing');
+        }
+
+        function exitEdit(save) {
+          if (!section) return;
+          if (save) {
+            let valid = true;
+            Object.values(fields).forEach(f => {
+              if (!f.input) return;
+              const val = f.input.value.trim();
+              if (f.required && !val) {
+                valid = false;
+                const errEl = getErrorEl(f.input);
+                if (errEl) { errEl.textContent = 'Este campo es obligatorio'; errEl.style.display = 'block'; }
+                f.input.classList.add('is-invalid');
+              } else if (f.email && val && !/^\S+@\S+\.\S+$/.test(val)) {
+                valid = false;
+                f.input.classList.add('is-invalid');
+              } else if (f.rut) {
+                const prevFmt = formatRut(cleanRut(f.valueEl.textContent));
+                const newClean = cleanRut(val);
+                const newFmt = formatRut(newClean);
+                if (newFmt !== prevFmt) { // solo si intenta modificar
+                  const msg = rutValidationMessage(newClean);
+                  const errEl = getErrorEl(f.input);
+                  if (msg) {
+                    valid = false; // no permitimos guardar
+                    if (errEl) { errEl.textContent = msg; errEl.style.display = 'block'; }
+                    f.input.classList.add('is-invalid');
+                  } else {
+                    if (errEl) { errEl.textContent = ''; errEl.style.display = ''; }
+                    f.input.classList.remove('is-invalid');
+                    // normalizar a formato
+                    f.input.value = newFmt;
+                  }
+                }
+              } else if (f.phone) {
+                const body = cleanPhoneBody(val);
+                const msg = phoneValidationMessage(body, f.required);
+                const errEl = getErrorEl(f.input);
+                if (msg) {
+                  valid = false;
+                  if (errEl) { errEl.textContent = msg; errEl.style.display = 'block'; }
+                  f.input.classList.add('is-invalid');
+                } else {
+                  if (errEl) { errEl.textContent = ''; errEl.style.display = ''; }
+                  f.input.classList.remove('is-invalid');
+                  f.input.value = formatPhoneInput(body);
+                }
+              } else {
+                f.input.classList.remove('is-invalid');
+              }
+            });
+            if (!valid) return;
+
+            Object.values(fields).forEach(f => {
+              if (!f.input) return;
+              const val = f.input.value.trim();
+              if (f.rut) {
+                const formatted = formatRut(cleanRut(val));
+                f.valueEl.textContent = formatted || '—';
+              } else if (f.phone) {
+                const body = cleanPhoneBody(val);
+                const formatted = formatPhoneDisplay(body);
+                f.valueEl.textContent = formatted || '—';
+              } else {
+                f.valueEl.textContent = val || '—';
+              }
+              try { localStorage.setItem(f.storage, f.valueEl.textContent); } catch {}
+            });
+            if (greeting) {
+              const full = fields.name.valueEl.textContent.trim();
+              greeting.textContent = full ? full.split(' ')[0] : '—';
+            }
+          }
+          Object.values(fields).forEach(f => {
+            if (!f.input) return;
+            f.valueEl.style.display = '';
+            if (f.phone && phoneGroup) {
+              phoneGroup.style.display = 'none';
+            } else {
+              f.input.style.display = 'none';
+            }
+            f.input.classList.remove('is-invalid');
+            const errEl = getErrorEl(f.input);
+            if (errEl) errEl.textContent = '';
+          });
+          editControls.style.display = 'none';
+          editBtn.style.display = '';
+          section.classList.remove('profile-editing');
+        }
+
+        editBtn?.addEventListener('click', e => { e.preventDefault(); enterEdit(); });
+        saveBtn?.addEventListener('click', () => exitEdit(true));
+        cancelBtn?.addEventListener('click', () => exitEdit(false));
+
+        // Rut formatting while typing
+        if (fields.rut.input) {
+          const ri = fields.rut.input;
+          const handle = () => {
+            const posEnd = ri.selectionEnd;
+            ri.value = formatRut(ri.value);
+            // mover cursor al final para simplicidad
+            ri.selectionStart = ri.selectionEnd = ri.value.length;
+            // validación en vivo (sólo mensaje visual)
+            const msg = rutValidationMessage(ri.value);
+            const errEl = getErrorEl(ri);
+            if (msg) {
+              if (errEl) { errEl.textContent = msg; errEl.style.display = 'block'; }
+              ri.classList.add('is-invalid');
+            } else {
+              if (errEl) { errEl.textContent = ''; errEl.style.display = ''; }
+              ri.classList.remove('is-invalid');
+            }
+          };
+          ri.addEventListener('input', handle);
+          ri.addEventListener('blur', handle);
+        }
+
+        // Phone formatting + hard limit while typing
+        if (fields.phone.input) {
+          const pi = fields.phone.input;
+          const maxPhoneDigits = 8;
+          const willExceed = (incomingDigits) => {
+            const selStart = pi.selectionStart ?? pi.value.length;
+            const selEnd = pi.selectionEnd ?? pi.value.length;
+            const current = cleanPhoneBody(pi.value).length;
+            const selected = cleanPhoneBody(pi.value.substring(selStart, selEnd)).length;
+            return current - selected + incomingDigits > maxPhoneDigits;
+          };
+          const preventIfExceeds = (incomingDigits, e) => {
+            if (incomingDigits && willExceed(incomingDigits)) {
+              e.preventDefault();
+              return true;
+            }
+            return false;
+          };
+          const handlePhone = () => {
+            const body = cleanPhoneBody(pi.value);
+            pi.value = formatPhoneInput(body);
+            const msg = phoneValidationMessage(body, fields.phone.required);
+            const errEl = getErrorEl(pi);
+            if (msg) {
+              if (errEl) { errEl.textContent = msg; errEl.style.display = 'block'; }
+              pi.classList.add('is-invalid');
+            } else {
+              if (errEl) { errEl.textContent = ''; errEl.style.display = ''; }
+              pi.classList.remove('is-invalid');
+            }
+          };
+          // Block exceeding digits via beforeinput/paste/keypress
+          pi.addEventListener('beforeinput', (e) => {
+            if (e.inputType && e.inputType.startsWith('insert')) {
+              const incoming = cleanPhoneBody(e.data || '');
+              if (preventIfExceeds(incoming.length, e)) return;
+            }
+          });
+          pi.addEventListener('paste', (e) => {
+            const text = (e.clipboardData || window.clipboardData)?.getData?.('text') || '';
+            const incoming = cleanPhoneBody(text);
+            preventIfExceeds(incoming.length, e);
+          });
+          pi.addEventListener('keypress', (e) => {
+            if (/\d/.test(e.key)) {
+              preventIfExceeds(1, e);
+            }
+          });
+          pi.addEventListener('input', handlePhone);
+          pi.addEventListener('blur', handlePhone);
+        }
+      });
+    </script>
+    <script src="{% static 'js/main.js' %}"></script>
+</body>
+</html>
