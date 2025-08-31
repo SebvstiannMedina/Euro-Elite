@@ -6,12 +6,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Euro Elite</title>
+    <title>Registro - Euro Elite</title>
     <!-- Bootstrap CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet"
         integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB" crossorigin="anonymous">
     <!-- CSS propio -->
     <link rel="stylesheet" href="{% static 'css/style.css' %}">
+    <link rel="stylesheet" href="{% static 'css/registro.css' %}">
     <!-- Slick CSS -->
     <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/slick-carousel@1.8.1/slick/slick.css" />
     <link rel="stylesheet" type="text/css"
@@ -83,126 +84,48 @@
     
     <br>
     <br>
-    <br>
-    <br>
-    <br>
-    <br>
 
 
-    <!-- 🔍 BUSCADOR Y FILTROS -->
-    <section class="filter-section">
-        <div class="container">
-            <h2 class="filter-title">Filtrar Productos</h2>
-            <div class="filter-container">
-                <input type="text" id="searchInput" placeholder="Buscar producto..." onkeyup="searchProducts()">
-                <select id="categoryFilter" onchange="filterProducts()">
-                    <option value="all">Todas las Categorías</option>
-                    <option value="BMW">BMW</option>
-                    <option value="Audi">Audi</option>
-                    <option value="Mercedes">Mercedes</option>
-                    <option value="Herramientas">Herramientas</option>
-                </select>
-            </div>
-        </div>
-    </section>
+    <div class="form-container">
+        <h2 class="form-title">Registro de Usuario</h2>
+        <form method="post">
+            {% csrf_token %}
 
-
-    <!-- PRODUCTOS EN VENTA -->
-    <section class="products-section" id="products">
-        <h2 class="section-title">Productos en Venta</h2>
-        <div class="products-grid">
-            <div class="product-card">
-                <div class="product-image">
-                    <i class="fas fa-car-battery"></i>
-                </div>
-                <div class="product-content">
-                    <h3 class="product-title">Batería BMW Original</h3>
-                    <p class="product-description">Batería AGM 12V 90Ah para modelos BMW Serie 3 y 5</p>
-                    <div class="product-price">$189.990</div>
-                    <button class="add-to-cart" onclick="addToCart('Batería BMW Original', 189990)">
-                        <i class="fas fa-shopping-cart"></i> Añadir al Carrito
-                    </button>
-                </div>
+            <div class="form-group">
+                <input type="text" name="username" id="username" required placeholder=" " />
+                <label for="username">Nombre de usuario</label>
             </div>
 
-            <div class="product-card">
-                <div class="product-image">
-                    <i class="fas fa-tire"></i>
-                </div>
-                <div class="product-content">
-                    <h3 class="product-title">Neumáticos Audi</h3>
-                    <p class="product-description">Set de 4 neumáticos 225/45R18 para Audi A4</p>
-                    <div class="product-price">$439.990</div>
-                    <button class="add-to-cart" onclick="addToCart('Neumáticos Audi', 439990)">
-                        <i class="fas fa-shopping-cart"></i> Añadir al Carrito
-                    </button>
-                </div>
+            <div class="form-group">
+                <input type="email" name="email" id="email" required placeholder=" " />
+                <label for="email">Correo electrónico</label>
             </div>
 
-            <div class="product-card">
-                <div class="product-image">
-                    <i class="fas fa-lightbulb"></i>
-                </div>
-                <div class="product-content">
-                    <h3 class="product-title">Faros LED Mercedes</h3>
-                    <p class="product-description">Kit de faros LED H7 para Mercedes-Benz Clase C</p>
-                    <div class="product-price">$129.990</div>
-                    <button class="add-to-cart" onclick="addToCart('Faros LED Mercedes', 129990)">
-                        <i class="fas fa-shopping-cart"></i> Añadir al Carrito
-                    </button>
-                </div>
+            <div class="form-group">
+                <input type="password" name="password1" id="password1" required placeholder=" " />
+                <label for="password1">Contraseña</label>
             </div>
 
-            <div class="product-card">
-                <div class="product-image">
-                    <i class="fas fa-wrench"></i>
-                </div>
-                <div class="product-content">
-                    <h3 class="product-title">Kit de Herramientas</h3>
-                    <p class="product-description">Set profesional de herramientas para mantención</p>
-                    <div class="product-price">$89.990</div>
-                    <button class="add-to-cart" onclick="addToCart('Kit de Herramientas', 89990)">
-                        <i class="fas fa-shopping-cart"></i> Añadir al Carrito
-                    </button>
-                </div>
+            <div class="form-group">
+                <input type="password" name="password2" id="password2" required placeholder=" " />
+                <label for="password2">Repetir contraseña</label>
             </div>
 
-            <div class="product-card">
-                <div class="product-image">
-                    <i class="fas fa-thermometer-half"></i>
-                </div>
-                <div class="product-content">
-                    <h3 class="product-title">Radiador BMW</h3>
-                    <p class="product-description">Radiador de aluminio para BMW X3, máxima eficiencia</p>
-                    <div class="product-price">$299.990</div>
-                    <button class="add-to-cart" onclick="addToCart('Radiador BMW', 299990)">
-                        <i class="fas fa-shopping-cart"></i> Añadir al Carrito
-                    </button>
-                </div>
-            </div>
+            <button type="submit">Registrarse</button>
+            <p><a href="{% url 'login' %}">¿Ya tienes cuenta? Inicia sesión</a></p>
+        </form>
+    </div>
 
-            <div class="product-card">
-                <div class="product-image">
-                    <i class="fas fa-tachometer-alt"></i>
-                </div>
-                <div class="product-content">
-                    <h3 class="product-title">Sensores Audi</h3>
-                    <p class="product-description">Sensores de oxígeno originales para motores V6</p>
-                    <div class="product-price">$159.990</div>
-                    <button class="add-to-cart" onclick="addToCart('Sensores Audi', 159990)">
-                        <i class="fas fa-shopping-cart"></i> Añadir al Carrito
-                    </button>
-                </div>
-            </div>
-        </div>
-    </section>
+
+
 
     <!-- FOOTER -->
     <footer class="footer">
         <div class="footer-container">
             <div class="footer-section">
                 <h3>Euro Elite</h3>
-                <p>Tu tienda especializada en repuestos europeos de alta calidad. Más de 10 años de experiencia en el mercado automotriz.</p>
+                <p>Tu tienda especializada en repuestos europeos de alta calidad. Más de 10 años de experiencia en el
+                    mercado automotriz.</p>
                 <div class="social-icons">
                     <a href="#"><i class="fab fa-facebook-f"></i></a>
                     <a href="#"><i class="fab fa-instagram"></i></a>
@@ -253,14 +176,13 @@
                 </ul>
             </div>
         </div>
-        
+
         <div class="footer-bottom" style="text-align: center;">
-            <p>&copy; 2025 Euro Elite. Todos los derechos reservados. | Diseñado con ❤️ para los amantes del automóvil</p>
+            <p>&copy; 2025 Euro Elite. Todos los derechos reservados. | Diseñado con ❤️ para los amantes del automóvil
+            </p>
         </div>
     </footer>
 
-
-    <script src="{% static 'js/filtro.js' %}"></script>
     <script src="{% static 'js/main.js' %}"></script>
 </body>
 

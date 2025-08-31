@@ -25,29 +25,56 @@
 
 <body>
   <!-- NAVBAR -->
-  <header>
     <nav class="navbar">
-      <div class="navbar-container">
-        <!-- Logo -->
-        <a href="{% url 'home' %}" class="navbar-brand">
-          <img src="{% static 'img/LogoApp.png' %}" alt="Logo" class="navbar-logo">
-        </a>
+        <div class="navbar-container">
+            <!-- Logo -->
+            <div class="navbar-logo">
+                <img src="{% static 'img/LogoApp.png' %}" alt="Logo" class="navbar-logo">
+            </div>
 
-        <!-- Menú hamburguesa (móvil) -->
-        <button class="navbar-toggle" id="navbar-toggle" aria-label="Abrir menú">
-          <i class="fas fa-bars"></i>
-        </button>
+            <!-- Botón móvil -->
+            <button class="navbar-toggle" onclick="toggleMobileMenu()" aria-label="Abrir menú">
+                <i class="fas fa-bars"></i>
+            </button>
 
-        <!-- Menú -->
-        <ul class="navbar-menu" id="navbar-menu">
-          <li><a href="#repuestos">REPUESTOS</a></li>
-          <li><a href="#servicios">SERVICIOS</a></li>
-          <li><a href="{% url 'contacto' %}">CONTÁCTANOS</a></li>
-          <li><a href="{% url 'equipo' %}">NUESTRO EQUIPO</a></li>
-        </ul>
-      </div>
+            <!-- Menú principal -->
+            <ul class="navbar-menu" id="navbar-menu">
+                <li><a href="{% url 'home' %}">INICIO</a></li>
+                <li><a href="{% url 'productos' %}">PRODUCTOS</a></li>
+                <li><a href="#services">SERVICIOS</a></li>
+                <li><a href="#contact">CONTACTO</a></li>
+                <li><a href="#team">EQUIPO</a></li>
+            </ul>
+
+            <!-- Acciones usuario y carrito -->
+            <div class="navbar-actions">
+                <!-- Carrito -->
+                <div class="cart-icon" onclick="toggleCart()" role="button" aria-label="Ver carrito">
+                    <i class="fas fa-shopping-cart"></i>
+                    <span class="cart-count" id="cart-count">0</span>
+                </div>
+
+                <!-- Usuario -->
+                <div class="user-icon" onclick="toggleUserMenu()" role="button" aria-haspopup="true"
+                    aria-expanded="false">
+                    <i class="fas fa-user"></i>
+                    <div class="user-dropdown" id="user-dropdown">
+                        {% if user.is_authenticated %}
+                        <span>Hola, {{ user.username }}</span>
+                        <a href="{% url 'perfil' %}">Mi Perfil</a>
+                        <form action="{% url 'logout' %}" method="post" style="display:inline;">
+                            {% csrf_token %}
+                            <button type="submit" class="dropdown-item">Cerrar Sesión</button>
+                        </form>
+                        {% else %}
+                        <a href="{% url 'login' %}">Iniciar Sesión</a>
+                        <a href="{% url 'registro' %}">Registrarse</a>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
     </nav>
-  </header>
 
 
 
@@ -72,6 +99,7 @@
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"
     integrity="sha384-FKyoEForCGlyvwx9Hj09JcYn3nv7wiPVlz7YYwJrWVcXK/BmnVDxM+D2scQbITxI"
     crossorigin="anonymous"></script>
+    <script src="{% static 'js/main.js' %}"></script>
 </body>
 
 </html>

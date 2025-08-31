@@ -8,4 +8,10 @@ python manage.py runserver
 
 carpeta de la página main es app
 
-carpeta start es euroelite
+carpeta startproyect es euroelite
+
+python manage.py createsuperuser
+
+Usuario: Patricio
+Email: mirandaservicespa@gmail.com
+Contraseña: MirandaService

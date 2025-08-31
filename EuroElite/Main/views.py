@@ -1,5 +1,11 @@
-from django.shortcuts import render
+from django.shortcuts import render, redirect
+from django.contrib.auth import login as auth_login, logout as auth_logout
+from django.contrib.auth.decorators import login_required
+from django.contrib.auth.forms import AuthenticationForm
+from django.contrib import messages
+from .forms import RegistroForm
 
+# ========== PÁGINAS PÚBLICAS ==========
 def home(request):
     return render(request, 'Taller/main.html')
 
@@ -12,8 +18,51 @@ def equipo(request):
 def productos(request):
     return render(request, 'Taller/productos.html')
 
-def inicio_crea_session(request):
-    return render(request, 'Taller/inicio_crea_session.html')
 
+# ========== LOGIN ==========
+def login(request):
+    if request.user.is_authenticated:
+        return redirect('perfil')  # Redirige si ya está logueado
+
+    if request.method == 'POST':
+        form = AuthenticationForm(request, data=request.POST)
+        if form.is_valid():
+            user = form.get_user()
+            auth_login(request, user)
+            return redirect('perfil')
+        else:
+            messages.error(request, 'Usuario o contraseña incorrectos')
+    else:
+        form = AuthenticationForm()
+
+    return render(request, 'Taller/login.html', {'form': form})
+
+
+# ========== REGISTRO ==========
+def registro(request):
+    if request.user.is_authenticated:
+        return redirect('perfil')  # Redirige si ya está logueado
+
+    if request.method == 'POST':
+        form = RegistroForm(request.POST)
+        if form.is_valid():
+            form.save()
+            messages.success(request, 'Registro exitoso. Inicia sesión para continuar.')
+            return redirect('login')
+    else:
+        form = RegistroForm()
+
+    return render(request, 'Taller/registro.html', {'form': form})
+
+
+# ========== PERFIL ==========
+@login_required
 def perfil(request):
-    return render(request, 'Taller/perfil.html')
+    return render(request, 'Taller/perfil.html', {'user': request.user})
+
+
+# ========== LOGOUT ==========
+@login_required
+def logout_view(request):
+    auth_logout(request)
+    return redirect('home')
