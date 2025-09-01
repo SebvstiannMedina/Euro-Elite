@@ -8,6 +8,10 @@ let isUserMenuOpen = false;
 function updateCarousel() {
     const track = document.getElementById('carousel-track');
     const dots = document.querySelectorAll('.nav-dot');
+    if (!track || !dots || dots.length === 0) {
+        // No hay carrusel en esta página
+        return;
+    }
 
     track.style.transform = `translateX(-${currentSlide * 33.3333}%)`;
 
@@ -27,7 +31,7 @@ function nextSlide() {
 }
 
 // Auto-slide
-setInterval(nextSlide, 4000);
+try { setInterval(nextSlide, 4000); } catch {}
 
 // =============== MOBILE MENU ===============
 function toggleMobileMenu() {

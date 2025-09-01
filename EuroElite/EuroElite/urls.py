@@ -26,4 +26,5 @@ urlpatterns = [
     path('productos', views.productos, name='productos'),
     path('inicio_crea_session', views.inicio_crea_session, name='inicio_crea_session'),
     path('perfil', views.perfil, name='perfil'),
+    path('nueva_contrasena', views.nueva_contrasena, name='nueva_contrasena'),
 ]

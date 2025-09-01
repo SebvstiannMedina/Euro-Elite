@@ -17,3 +17,6 @@ def inicio_crea_session(request):
 
 def perfil(request):
     return render(request, 'Taller/perfil.html')
+
+def nueva_contrasena(request):
+    return render(request, 'Taller/nueva_contrasena.html')

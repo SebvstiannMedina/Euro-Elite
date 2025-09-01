@@ -517,6 +517,18 @@
         }
       });
     </script>
+    <script>
+      // Redirige el ítem "Contraseña" del sidebar a la página de nueva contraseña
+      document.addEventListener('DOMContentLoaded', function () {
+        var pwIcon = document.querySelector('.list-group i.fa-lock');
+        if (pwIcon && pwIcon.closest) {
+          var pwLink = pwIcon.closest('a');
+          if (pwLink) {
+            pwLink.setAttribute('href', "{% url 'nueva_contrasena' %}");
+          }
+        }
+      });
+    </script>
     <script src="{% static 'js/main.js' %}"></script>
 </body>
 </html>
