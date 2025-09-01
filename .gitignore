@@ -16,12 +16,7 @@ venv.bak/
 
 # Django stuff:
 *.log
-db.sqlite3
-media/
-staticfiles/
 
-# If your build process includes collectstatic, ignore the collected static files
-static/
 
 # Pytest / coverage
 .coverage
