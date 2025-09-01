@@ -27,4 +27,5 @@ urlpatterns = [
     path('inicio_crea_session', views.inicio_crea_session, name='inicio_crea_session'),
     path('perfil', views.perfil, name='perfil'),
     path('nueva_contrasena', views.nueva_contrasena, name='nueva_contrasena'),
+    path('mis_pedidos', views.mis_pedidos, name='mis_pedidos'),
 ]

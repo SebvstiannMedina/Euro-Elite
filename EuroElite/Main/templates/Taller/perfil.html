@@ -72,13 +72,13 @@
                         <p class="text-muted" style="font-size: .9rem;">Accede a toda la información de tu perfil</p>
 
                         <div class="list-group list-group-flush mt-3">
-                            <a href="#" class="list-group-item list-group-item-action active">
+                            <a href="{% url 'perfil' %}" class="list-group-item list-group-item-action active">
                                 <i class="fas fa-id-card me-2"></i> Mis datos
                             </a>
-                            <a href="#" class="list-group-item list-group-item-action">
+                            <a href="{% url 'nueva_contrasena' %}" class="list-group-item list-group-item-action">
                                 <i class="fas fa-lock me-2"></i> Contraseña
                             </a>
-                            <a href="#" class="list-group-item list-group-item-action">
+                            <a href="{% url 'mis_pedidos' %}" class="list-group-item list-group-item-action">
                                 <i class="fas fa-shopping-bag me-2"></i> Mis compras
                             </a>
                         </div>
