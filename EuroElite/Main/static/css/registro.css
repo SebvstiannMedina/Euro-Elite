@@ -1,0 +1,120 @@
+/* ---------- CONTENEDOR DEL FORMULARIO ---------- */
+.form-container {
+    max-width: 500px;
+    margin: 60px auto 80px;
+    padding: 40px 35px;
+    background: rgba(255, 255, 255, 0.95);
+    border-radius: 20px;
+    box-shadow: 0 15px 35px rgba(0,0,0,0.12);
+    transition: transform 0.4s ease, box-shadow 0.4s ease;
+}
+
+.form-container:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 20px 40px rgba(0,0,0,0.18);
+}
+
+/* ---------- TÍTULO DEL FORMULARIO ---------- */
+.form-container h2 {
+    text-align: center;
+    margin-bottom: 30px;
+    font-weight: 600;
+    color: #1a1a1a;
+}
+
+/* ---------- GRUPOS DE INPUTS ---------- */
+.form-group {
+    position: relative;
+    margin-bottom: 25px;
+}
+
+form input {
+    width: 100%;
+    padding: 16px 18px;
+    border: 1px solid #ccc;
+    border-radius: 12px;
+    font-size: 15px;
+    background: rgba(250,250,250,0.9);
+    transition: all 0.35s ease;
+}
+
+form input:focus {
+    outline: none;
+    border-color: #f39c12;
+    box-shadow: 0 0 12px rgba(243,156,18,0.3);
+    background: #fff;
+}
+
+/* ---------- LABELS FLOTANTES ---------- */
+form label {
+    position: absolute;
+    top: 50%;
+    left: 18px;
+    transform: translateY(-50%);
+    color: #aaa;
+    font-size: 14px;
+    pointer-events: none;
+    transition: all 0.35s ease;
+}
+
+form input:focus + label,
+form input:not(:placeholder-shown) + label {
+    top: -12px;
+    font-size: 12px;
+    color: #f39c12;
+    background: rgba(255,255,255,0.95);
+    padding: 0 6px;
+}
+
+/* ---------- BOTÓN DE ENVÍO ---------- */
+form button {
+    width: 100%;
+    padding: 18px;
+    background: linear-gradient(90deg, #1a1a1a, #333);
+    color: #fff;
+    font-size: 16px;
+    font-weight: 600;
+    border: none;
+    border-radius: 16px;
+    cursor: pointer;
+    transition: all 0.35s ease;
+    box-shadow: 0 6px 22px rgba(0,0,0,0.22);
+}
+
+form button:hover {
+    background: linear-gradient(90deg, #f39c12, #e67e22);
+    transform: translateY(-2px) scale(1.02);
+    box-shadow: 0 10px 28px rgba(243,156,18,0.38);
+}
+
+/* ---------- LINK DE LOGIN ---------- */
+form p a {
+    display: block;
+    text-align: center;
+    margin-top: 18px;
+    color: #1a1a1a;
+    font-weight: 500;
+    text-decoration: none;
+    font-size: 14px;
+    transition: color 0.3s, letter-spacing 0.3s;
+}
+
+form p a:hover {
+    color: #f39c12;
+    letter-spacing: 1px;
+}
+
+/* ---------- PLACEHOLDER TRANSPARENTE PARA LABELS ---------- */
+form input::placeholder {
+    color: transparent;
+}
+
+/* ---------- TÍTULO DEL FORMULARIO ---------- */
+.form-title {
+    text-align: center;
+    font-size: 28px;
+    font-weight: 700;
+    color: #1a1a1a;
+    margin-bottom: 30px;
+    letter-spacing: 0.5px;
+}
