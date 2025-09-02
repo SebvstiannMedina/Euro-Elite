@@ -29,5 +29,6 @@ urlpatterns = [
     path('registro', views.registro, name='registro'),
     path('login', views.login, name='login'),
     path('logout/', LogoutView.as_view(next_page='home'), name='logout'),
-    
+    path('notfound', views.notfound, name='notfound'),
+    path('agendar', views.agendar_cita, name='agendar'),
 ]

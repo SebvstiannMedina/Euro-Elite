@@ -4,7 +4,7 @@ from django.contrib.auth.decorators import login_required
 from django.contrib.auth.forms import AuthenticationForm
 from django.contrib import messages
 from .forms import RegistroForm
-
+from .forms import CitaForm
 # ========== PÁGINAS PÚBLICAS ==========
 def home(request):
     return render(request, 'Taller/main.html')
@@ -66,3 +66,25 @@ def perfil(request):
 def logout_view(request):
     auth_logout(request)
     return redirect('home')
+
+def notfound(request):
+    return render(request, 'Taller/notfound.html')
+
+#Vistas de agenda#
+@login_required
+def agendar_cita(request):
+    if request.method == "POST":
+        form = CitaForm(request.POST)
+        if form.is_valid():
+            cita = form.save(commit=False)
+            cita.usuario = request.user
+            cita.save()
+            return redirect('mis_citas')  # Redirige al historial del usuario
+    else:
+        form = CitaForm()
+    return render(request, 'Taller/agendar.html', {'form': form})
+
+@login_required
+def mis_citas(request):
+    citas = request.user.cita_set.all().order_by('-fecha', '-hora')
+    return render(request, 'Taller/mis_citas.html', {'citas': citas})

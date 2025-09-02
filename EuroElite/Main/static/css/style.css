@@ -824,3 +824,42 @@ body {
     .member h3 { font-size: 1.3rem; }
     .values-section h2 { font-size: 1.6rem; }
 }
+
+/* Estilos para la página de error 404 */
+.error-page {
+    text-align: center;
+    padding: 50px;
+}
+
+.error-page h1 {
+    font-size: 3rem;
+    color: #dc3545;
+}
+
+.error-page p {
+    font-size: 1.5rem;
+}
+
+.error-page a {
+    color: #007bff;
+    text-decoration: none;
+    font-weight: bold;
+}
+
+/* Que el body ocupe toda la altura */
+html, body {
+    height: 100%;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+}
+
+/* El contenido principal que empuja el footer */
+main {
+    flex: 1;
+}
+
+/* Footer fijo abajo si hay poco contenido */
+footer {
+    margin-top: auto;
+}
