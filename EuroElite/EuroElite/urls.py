@@ -31,4 +31,6 @@ urlpatterns = [
     path('logout/', LogoutView.as_view(next_page='home'), name='logout'),
     path('notfound', views.notfound, name='notfound'),
     path('agendar', views.agendar_cita, name='agendar'),
+    path('nueva_contrasena', views.nueva_contrasena, name='nueva_contrasena'),
+    path('mis_pedidos', views.mis_pedidos, name='mis_pedidos'),
 ]

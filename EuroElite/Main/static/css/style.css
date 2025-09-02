@@ -459,6 +459,14 @@ body {
     color: var(--white);
 }
 
+/* =============== Perfil =============== */
+/* Unifica estilo del título de secciones del perfil (Mis datos / Contraseña) */
+.profile-wrapper h3.mb-0 {
+    font-weight: 600;
+    font-size: 1.75rem; /* igual a h3 Bootstrap, aseguramos consistencia */
+    line-height: 1.2;
+}
+
 /* Garantiza que los iconos tengan un ancho fijo y se vean alineados */
 .footer-section ul li i {
     min-width: 20px;

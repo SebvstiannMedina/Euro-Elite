@@ -88,3 +88,12 @@ def agendar_cita(request):
 def mis_citas(request):
     citas = request.user.cita_set.all().order_by('-fecha', '-hora')
     return render(request, 'Taller/mis_citas.html', {'citas': citas})
+
+
+def nueva_contrasena(request):
+    return render(request, 'Taller/nueva_contrasena.html')
+
+def mis_pedidos(request):
+    # En esta primera versión solo renderiza la plantilla.
+    # Cuando tengas el modelo listo, pasa la lista `pedidos` en el contexto.
+    return render(request, 'Taller/mis_pedidos.html')
