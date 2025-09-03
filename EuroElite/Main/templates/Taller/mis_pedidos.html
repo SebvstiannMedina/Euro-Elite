@@ -32,21 +32,52 @@
     <!-- NAVBAR -->
     <nav class="navbar">
         <div class="navbar-container">
+            <!-- Logo -->
             <div class="navbar-logo">
                 <img src="{% static 'img/LogoApp.png' %}" alt="Logo" class="navbar-logo">
             </div>
+
+            <!-- Botón móvil -->
             <button class="navbar-toggle" onclick="toggleMobileMenu()" aria-label="Abrir menú">
                 <i class="fas fa-bars"></i>
             </button>
 
-            <ul class="navbar-menu" id="navbar-menu">
-                <li><a href="#home">INICIO</a></li>
-                <li><a href="#products">PRODUCTOS</a></li>
+            <!-- Menú principal -->
+            <ul class="navbar-menu" id="navbar-menu" style="margin-left: 10rem;margin-right: 10rem;">
+                <li><a href="{% url 'home' %}">INICIO</a></li>
+                <li><a href="{% url 'productos' %}">PRODUCTOS</a></li>
                 <li><a href="#services">SERVICIOS</a></li>
                 <li><a href="#contact">CONTACTO</a></li>
                 <li><a href="#team">EQUIPO</a></li>
             </ul>
 
+            <!-- Acciones usuario y carrito -->
+            <div class="navbar-actions">
+                <!-- Carrito -->
+                <div class="cart-icon" onclick="toggleCart()" role="button" aria-label="Ver carrito">
+                    <i class="fas fa-shopping-cart"></i>
+                    <span class="cart-count" id="cart-count">0</span>
+                </div>
+
+                <!-- Usuario -->
+                <div class="user-icon" onclick="toggleUserMenu()" role="button" aria-haspopup="true"
+                    aria-expanded="false">
+                    <i class="fas fa-user"></i>
+                    <div class="user-dropdown" id="user-dropdown">
+                        {% if user.is_authenticated %}
+                        <span>Hola, {{ user.username }}</span>
+                        <a href="{% url 'perfil' %}">Mi Perfil</a>
+                        <form action="{% url 'logout' %}" method="post" style="display:inline;">
+                            {% csrf_token %}
+                            <button type="submit" class="dropdown-item">Cerrar Sesión</button>
+                        </form>
+                        {% else %}
+                        <a href="{% url 'login' %}">Iniciar Sesión</a>
+                        <a href="{% url 'registro' %}">Registrarse</a>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
         </div>
     </nav>
 
