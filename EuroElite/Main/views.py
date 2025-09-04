@@ -5,6 +5,10 @@ from django.contrib.auth.forms import AuthenticationForm
 from django.contrib import messages
 from .forms import RegistroForm
 from .forms import CitaForm
+from django.contrib.auth.decorators import login_required
+from django.shortcuts import render, redirect
+from .forms import PerfilForm
+from .models import Perfil
 # ========== PÁGINAS PÚBLICAS ==========
 def home(request):
     return render(request, 'Taller/main.html')
@@ -41,7 +45,7 @@ def login(request):
 # ========== REGISTRO ==========
 def registro(request):
     if request.user.is_authenticated:
-        return redirect('perfil')  # Redirige si ya está logueado
+        return redirect('home')  # Redirige si ya está logueado
 
     if request.method == 'POST':
         form = RegistroForm(request.POST)
@@ -56,9 +60,20 @@ def registro(request):
 
 
 # ========== PERFIL ==========
+
 @login_required
 def perfil(request):
-    return render(request, 'Taller/perfil.html', {'user': request.user})
+    perfil, created = Perfil.objects.get_or_create(user=request.user)
+
+    if request.method == "POST":
+        form = PerfilForm(request.POST, instance=perfil)
+        if form.is_valid():
+            form.save()
+            return redirect('perfil')  # recarga la página con los datos actualizados
+    else:
+        form = PerfilForm(instance=perfil)
+
+    return render(request, 'Taller/perfil.html', {'form': form, 'user': request.user})
 
 
 # ========== LOGOUT ==========

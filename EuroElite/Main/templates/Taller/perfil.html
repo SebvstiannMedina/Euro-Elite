@@ -4,508 +4,544 @@
 <html lang="es">
 
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Perfil - Euro Elite</title>
-    <!-- Bootstrap CSS -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet">
-    <!-- CSS propio -->
-    <link rel="stylesheet" href="{% static 'css/style.css' %}">
-    <link rel="icon" href="{% static 'img/LogoApp.png' %}" type="image/x-icon">
-    <!-- Font Awesome -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <!-- Google Fonts -->
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Perfil - Euro Elite</title>
+  <!-- Bootstrap CSS -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet">
+  <!-- CSS propio -->
+  <link rel="stylesheet" href="{% static 'css/style.css' %}">
+  <link rel="icon" href="{% static 'img/LogoApp.png' %}" type="image/x-icon">
+  <!-- Font Awesome -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <!-- Google Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 </head>
 
 <body>
-    <!-- NAVBAR -->
-    <nav class="navbar">
-      <div class="navbar-container">
-          <!-- Logo -->
-          <div class="navbar-logo">
-              <img src="{% static 'img/LogoApp.png' %}" alt="Logo" class="navbar-logo">
-          </div>
-
-          <!-- Botón móvil -->
-          <button class="navbar-toggle" onclick="toggleMobileMenu()" aria-label="Abrir menú">
-              <i class="fas fa-bars"></i>
-          </button>
-
-          <!-- Menú principal -->
-          <ul class="navbar-menu" id="navbar-menu" style="margin-left: 10rem;margin-right: 10rem;">
-              <li><a href="{% url 'home' %}">INICIO</a></li>
-              <li><a href="{% url 'productos' %}">PRODUCTOS</a></li>
-              <li><a href="#services">SERVICIOS</a></li>
-              <li><a href="#contact">CONTACTO</a></li>
-              <li><a href="#team">EQUIPO</a></li>
-          </ul>
-
-          <!-- Acciones usuario y carrito -->
-          <div class="navbar-actions">
-              <!-- Carrito -->
-              <div class="cart-icon" onclick="toggleCart()" role="button" aria-label="Ver carrito">
-                  <i class="fas fa-shopping-cart"></i>
-                  <span class="cart-count" id="cart-count">0</span>
-              </div>
-
-              <!-- Usuario -->
-              <div class="user-icon" onclick="toggleUserMenu()" role="button" aria-haspopup="true"
-                  aria-expanded="false">
-                  <i class="fas fa-user"></i>
-                  <div class="user-dropdown" id="user-dropdown">
-                      {% if user.is_authenticated %}
-                      <span>Hola, {{ user.username }}</span>
-                      <a href="{% url 'perfil' %}">Mi Perfil</a>
-                      <form action="{% url 'logout' %}" method="post" style="display:inline;">
-                          {% csrf_token %}
-                          <button type="submit" class="dropdown-item">Cerrar Sesión</button>
-                      </form>
-                      {% else %}
-                      <a href="{% url 'login' %}">Iniciar Sesión</a>
-                      <a href="{% url 'registro' %}">Registrarse</a>
-                      {% endif %}
-                  </div>
-              </div>
-          </div>
+  <!-- NAVBAR -->
+  <nav class="navbar">
+    <div class="navbar-container">
+      <!-- Logo -->
+      <div class="navbar-logo">
+        <img src="{% static 'img/LogoApp.png' %}" alt="Logo" class="navbar-logo">
       </div>
+
+      <!-- Botón móvil -->
+      <button class="navbar-toggle" onclick="toggleMobileMenu()" aria-label="Abrir menú">
+        <i class="fas fa-bars"></i>
+      </button>
+
+      <!-- Menú principal -->
+      <ul class="navbar-menu" id="navbar-menu" style="margin-left: 10rem;margin-right: 10rem;">
+        <li><a href="{% url 'home' %}">INICIO</a></li>
+        <li><a href="{% url 'productos' %}">PRODUCTOS</a></li>
+        <li><a href="#services">SERVICIOS</a></li>
+        <li><a href="#contact">CONTACTO</a></li>
+        <li><a href="#team">EQUIPO</a></li>
+      </ul>
+
+      <!-- Acciones usuario y carrito -->
+      <div class="navbar-actions">
+        <!-- Carrito -->
+        <div class="cart-icon" onclick="toggleCart()" role="button" aria-label="Ver carrito">
+          <i class="fas fa-shopping-cart"></i>
+          <span class="cart-count" id="cart-count">0</span>
+        </div>
+
+        <!-- Usuario -->
+        <div class="user-icon" onclick="toggleUserMenu()" role="button" aria-haspopup="true" aria-expanded="false">
+          <i class="fas fa-user"></i>
+          <div class="user-dropdown" id="user-dropdown">
+            {% if user.is_authenticated %}
+            <span>Hola, {{ user.username }}</span>
+            <a href="{% url 'perfil' %}">Mi Perfil</a>
+            <form action="{% url 'logout' %}" method="post" style="display:inline;">
+              {% csrf_token %}
+              <button type="submit" class="dropdown-item">Cerrar Sesión</button>
+            </form>
+            {% else %}
+            <a href="{% url 'login' %}">Iniciar Sesión</a>
+            <a href="{% url 'registro' %}">Registrarse</a>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+    </div>
   </nav>
 
-    <br>
-    <br>
-    <br>
+  <br>
+  <br>
+  <br>
+  <br>
+  <br>
+  <br>
 
-    <div class="container my-5 profile-wrapper">
-        <div class="row">
-            <!-- Sidebar -->
-            <aside class="col-12 col-md-3 mb-3">
-                <div class="card shadow-sm">
-                    <div class="card-body">
-                        <h5 class="mb-1">Hola, <span>{{ user.username }}</span></h5>
-                        <p class="text-muted" style="font-size: .9rem;">Accede a toda la información de tu perfil</p>
-                        <div class="list-group list-group-flush mt-3">
-                            <a href="{% url 'perfil' %}" class="list-group-item list-group-item-action active">
-                                <i class="fas fa-id-card me-2"></i> Mis datos
-                            </a>
-                            <a href="{% url 'nueva_contrasena' %}" class="list-group-item list-group-item-action">
-                                <i class="fas fa-lock me-2"></i> Contraseña
-                            </a>
-                            <a href="{% url 'mis_pedidos' %}" class="list-group-item list-group-item-action">
-                                <i class="fas fa-shopping-bag me-2"></i> Mis compras
-                            </a>
-                        </div>
-                    </div>
-                </div>
-            </aside>
-
-            <!-- Main content -->
-            <section class="col-12 col-md-9">
-                <h3>Mis datos</h3>
-                <div class="card shadow-sm p-3">
-                    <div class="row gy-3">
-                        <div class="col-12 col-md-6">
-                            <small class="text-muted d-block fw-semibold">Nombre de usuario</small>
-                            <div class="fs-6">{{ user.username }}</div>
-                        </div>
-                        {% if user.email %}
-                        <div class="col-12 col-md-6">
-                            <small class="text-muted d-block fw-semibold">Correo electrónico</small>
-                            <div class="fs-6">{{ user.email }}</div>
-                        </div>
-                        {% endif %}
-                    </div>
-                </div>
-            </section>
+  <div class="container my-5 profile-wrapper">
+    <div class="row">
+      <!-- Sidebar -->
+      <aside class="col-12 col-md-3 mb-3">
+        <div class="card shadow-sm">
+          <div class="card-body">
+            <h5 class="mb-1">Hola, <span>{{ user.username }}</span></h5>
+            <p class="text-muted" style="font-size: .9rem;">Accede a toda la información de tu perfil</p>
+            <div class="list-group list-group-flush mt-3">
+              <a href="{% url 'perfil' %}" class="list-group-item list-group-item-action active">
+                <i class="fas fa-id-card me-2"></i> Mis datos
+              </a>
+              <a href="{% url 'nueva_contrasena' %}" class="list-group-item list-group-item-action">
+                <i class="fas fa-lock me-2"></i> Contraseña
+              </a>
+              <a href="{% url 'mis_pedidos' %}" class="list-group-item list-group-item-action">
+                <i class="fas fa-shopping-bag me-2"></i> Mis compras
+              </a>
+            </div>
+          </div>
         </div>
-    </div>
+      </aside>
 
-    <!-- Styles to match nueva_contrasena sidebar -->
-    <style>
-        .profile-wrapper .card { border: 0; border-radius: 12px; box-shadow: var(--shadow); background: #fff; }
-        .profile-wrapper .list-group-item { border: 0; }
-        /* No override of .active so it matches Bootstrap (azul) */
-    </style>
-    <br>
-    <br>
-    <br>
-    <br>
-    <br>
-    <br>
-    <br>
-    
+      <!-- Main content -->
+      <section class="col-12 col-md-9" id="profileSection">
+        <h3>Mis datos</h3>
+        <div class="card shadow-sm p-3">
+          <form method="post" id="profileForm">
+            {% csrf_token %}
+            <div class="row gy-3">
+              <div class="col-12 col-md-6">
+                <small class="text-muted d-block fw-semibold">Nombre de usuario</small>
+                <div class="fs-6" id="usernameValue">{{ user.username }}</div>
+              </div>
+              {% if user.email %}
+              <div class="col-12 col-md-6">
+                <small class="text-muted d-block fw-semibold">Correo electrónico</small>
+                <div class="fs-6" id="emailValue">{{ user.email }}</div>
+              </div>
+              {% endif %}
+              <div class="col-12 col-md-6">
+                <small class="text-muted d-block fw-semibold">RUT</small>
+                <div class="fs-6" id="rutValue">{{ perfil.rut|default:"—" }}</div>
+                <input type="text" name="rut" id="rutInput" class="form-control" style="display:none;">
+                {% if form.rut.errors %}
+                <div class="text-danger small">{{ form.rut.errors }}</div>
+                {% endif %}
+              </div>
+              <div class="col-12 col-md-6">
+                <small class="text-muted d-block fw-semibold">Teléfono</small>
+                <div class="fs-6" id="phoneValue">{{ perfil.telefono|default:"—" }}</div>
+                <input type="text" name="telefono" id="phoneInput" class="form-control" style="display:none;">
+                {% if form.telefono.errors %}
+                <div class="text-danger small">{{ form.telefono.errors }}</div>
+                {% endif %}
+              </div>
+            </div>
+
+            <!-- Botones de control -->
+            <div class="mt-3">
+              <button type="button" class="btn btn-primary" id="editBtn">Editar datos</button>
+              <span id="editControls" style="display:none;">
+                <button type="submit" class="btn btn-success" id="saveBtn">Guardar</button>
+                <button type="button" class="btn btn-secondary" id="cancelBtn">Cancelar</button>
+              </span>
+            </div>
+          </form>
+        </div>
+      </section>
+
+      <style>
+        .profile-wrapper .card {
+          border: 0;
+          border-radius: 12px;
+          box-shadow: var(--shadow);
+          background: #fff;
+        }
+
+        .profile-wrapper .list-group-item {
+          border: 0;
+        }
+      </style>
+      <br>
+      <br>
+      <br>
+      <br>
+      <br>
+      <br>
+      <br>
 
 
-    <!-- FOOTER -->
-    <footer class="footer">
+
+      <!-- FOOTER -->
+      <footer class="footer">
         <div class="footer-container">
-            <div class="footer-section">
-                <h3>Euro Elite</h3>
-                <p>Tu tienda especializada en repuestos europeos de alta calidad. Más de 10 años de experiencia en el mercado automotriz.</p>
-                <div class="social-icons">
-                    <a href="#"><i class="fab fa-facebook-f"></i></a>
-                    <a href="#"><i class="fab fa-instagram"></i></a>
-                    <a href="#"><i class="fab fa-twitter"></i></a>
-                    <a href="#"><i class="fab fa-youtube"></i></a>
-                </div>
+          <div class="footer-section">
+            <h3>Euro Elite</h3>
+            <p>Tu tienda especializada en repuestos europeos de alta calidad. Más de 10 años de experiencia en el
+              mercado automotriz.</p>
+            <div class="social-icons">
+              <a href="#"><i class="fab fa-facebook-f"></i></a>
+              <a href="#"><i class="fab fa-instagram"></i></a>
+              <a href="#"><i class="fab fa-twitter"></i></a>
+              <a href="#"><i class="fab fa-youtube"></i></a>
             </div>
+          </div>
 
-            <div class="footer-section">
-                <h3>Productos</h3>
-                <ul>
-                    <li><a href="#">Repuestos BMW</a></li>
-                    <li><a href="#">Repuestos Audi</a></li>
-                    <li><a href="#">Repuestos Mercedes-Benz</a></li>
-                    <li><a href="#">Accesorios</a></li>
-                    <li><a href="#">Herramientas</a></li>
-                </ul>
-            </div>
+          <div class="footer-section">
+            <h3>Productos</h3>
+            <ul>
+              <li><a href="#">Repuestos BMW</a></li>
+              <li><a href="#">Repuestos Audi</a></li>
+              <li><a href="#">Repuestos Mercedes-Benz</a></li>
+              <li><a href="#">Accesorios</a></li>
+              <li><a href="#">Herramientas</a></li>
+            </ul>
+          </div>
 
-            <div class="footer-section">
-                <h3>Servicios</h3>
-                <ul>
-                    <li><a href="#">Instalación</a></li>
-                    <li><a href="#">Mantención</a></li>
-                    <li><a href="#">Diagnóstico</a></li>
-                    <li><a href="#">Garantía</a></li>
-                    <li><a href="#">Envío a Domicilio</a></li>
-                </ul>
-            </div>
+          <div class="footer-section">
+            <h3>Servicios</h3>
+            <ul>
+              <li><a href="#">Instalación</a></li>
+              <li><a href="#">Mantención</a></li>
+              <li><a href="#">Diagnóstico</a></li>
+              <li><a href="#">Garantía</a></li>
+              <li><a href="#">Envío a Domicilio</a></li>
+            </ul>
+          </div>
 
-            <div class="footer-section">
-                <h3>Contacto</h3>
-                <ul>
-                    <li><i class="fas fa-map-marker-alt"></i> Cooperativa 1144, Recoleta, Santiago</li>
-                    <li><i class="fas fa-phone"></i> +56 2 1234 5678</li>
-                    <li><i class="fas fa-envelope"></i> info@euroelite.cl</li>
-                    <li><i class="fas fa-clock"></i> Lun-Vie: 9:00-18:00</li>
-                </ul>
-            </div>
+          <div class="footer-section">
+            <h3>Contacto</h3>
+            <ul>
+              <li><i class="fas fa-map-marker-alt"></i> Cooperativa 1144, Recoleta, Santiago</li>
+              <li><i class="fas fa-phone"></i> +56 2 1234 5678</li>
+              <li><i class="fas fa-envelope"></i> info@euroelite.cl</li>
+              <li><i class="fas fa-clock"></i> Lun-Vie: 9:00-18:00</li>
+            </ul>
+          </div>
 
-            <div class="footer-section">
-                <h3>Legal</h3>
-                <ul>
-                    <li><a href="#">Términos y Condiciones</a></li>
-                    <li><a href="#">Política de Privacidad</a></li>
-                    <li><a href="#">Política de Devoluciones</a></li>
-                    <li><a href="#">Preguntas Frecuentes</a></li>
-                </ul>
-            </div>
+          <div class="footer-section">
+            <h3>Legal</h3>
+            <ul>
+              <li><a href="#">Términos y Condiciones</a></li>
+              <li><a href="#">Política de Privacidad</a></li>
+              <li><a href="#">Política de Devoluciones</a></li>
+              <li><a href="#">Preguntas Frecuentes</a></li>
+            </ul>
+          </div>
         </div>
-        
+
         <div class="footer-bottom" style="text-align: center;">
-            <p>&copy; 2025 Euro Elite. Todos los derechos reservados. | Diseñado con ❤️ para los amantes del automóvil</p>
+          <p>&copy; 2025 Euro Elite. Todos los derechos reservados. | Diseñado con ❤️ para los amantes del automóvil</p>
         </div>
-    </footer>
+      </footer>
 
-    <script>
-      document.addEventListener('DOMContentLoaded', () => {
-        const section = document.getElementById('profileSection');
-        const editBtn = document.getElementById('editBtn');
-        const editControls = document.getElementById('editControls');
-        const saveBtn = document.getElementById('saveBtn');
-        const cancelBtn = document.getElementById('cancelBtn');
+      <script>
+        document.addEventListener('DOMContentLoaded', () => {
+          const section = document.getElementById('profileSection');
+          const editBtn = document.getElementById('editBtn');
+          const editControls = document.getElementById('editControls');
+          const saveBtn = document.getElementById('saveBtn');
+          const cancelBtn = document.getElementById('cancelBtn');
 
-        // Helper: obtener elemento de error asociado a un input (directo o por grupo)
-        const getErrorEl = (input) => {
-          if (!input) return null;
-          if (input.nextElementSibling && input.nextElementSibling.classList.contains('invalid-feedback')) return input.nextElementSibling;
-          if (input.parentElement && input.parentElement.nextElementSibling && input.parentElement.nextElementSibling.classList.contains('invalid-feedback')) return input.parentElement.nextElementSibling;
-          return null;
-        };
+          // Helper: obtener elemento de error asociado a un input (directo o por grupo)
+          const getErrorEl = (input) => {
+            if (!input) return null;
+            if (input.nextElementSibling && input.nextElementSibling.classList.contains('invalid-feedback')) return input.nextElementSibling;
+            if (input.parentElement && input.parentElement.nextElementSibling && input.parentElement.nextElementSibling.classList.contains('invalid-feedback')) return input.parentElement.nextElementSibling;
+            return null;
+          };
 
-        // Helpers RUT (Chile)
-        const cleanRut = (v) => (v || '').toString().replace(/[\.\-]/g, '').replace(/[^0-9kK]/g, '').toUpperCase();
-        const formatRut = (v) => {
-          const s = cleanRut(v);
-          if (!s) return '';
-          if (s.length === 1) return s; // aún sin DV
-          const body = s.slice(0, -1);
-          const dv = s.slice(-1);
-          const bodyFmt = body.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
-          return `${bodyFmt}-${dv}`;
-        };
-        const rutDV = (bodyDigits) => {
-          let sum = 0, mul = 2;
-          for (let i = bodyDigits.length - 1; i >= 0; i--) {
-            sum += parseInt(bodyDigits[i], 10) * mul;
-            mul = mul === 7 ? 2 : mul + 1;
-          }
-          const res = 11 - (sum % 11);
-          if (res === 11) return '0';
-          if (res === 10) return 'K';
-          return String(res);
-        };
-        const isRutValid = (v) => {
-          const s = cleanRut(v);
-          if (s.length < 2) return false;
-          const body = s.slice(0, -1);
-          const dv = s.slice(-1).toUpperCase();
-          // Solo permitimos cuerpos de 7 u 8 dígitos (personas/naturales)
-          if (body.length < 7 || body.length > 8) return false;
-          return rutDV(body) === dv;
-        };
-
-        // Retorna mensaje específico o null si es válido
-        const rutValidationMessage = (v) => {
-          const s = cleanRut(v);
-          if (s.length < 2) return 'Debes incluir dígito verificador (ej: 12.345.678-9).';
-          const body = s.slice(0, -1);
-          if (body.length < 7 || body.length > 8) return 'El RUT debe tener 7 u 8 dígitos antes del dígito verificador.';
-          if (!isRutValid(s)) return 'El dígito verificador no corresponde (RUT no existe).';
-          return null;
-        };
-
-        const fields = {
-          name: { valueEl: document.getElementById('nameValue'), input: document.getElementById('nameInput'), storage: 'perfil_name', required: true },
-          rut:  { valueEl: document.getElementById('rutValue'),  input: document.getElementById('rutInput'),  storage: 'perfil_rut',  required: false, rut: true },
-          email:{ valueEl: document.getElementById('emailValue'),input: document.getElementById('emailInput'),storage: 'perfil_email', required: true, email: true },
-          phone:{ valueEl: document.getElementById('phoneValue'),input: document.getElementById('phoneInput'),storage: 'perfil_phone', required: true, phone: true }
-        };
-
-        const phoneGroup = document.getElementById('phoneGroup');
-
-        // Helpers Teléfono Chile: +56 9 xxxxxxxx (8 dígitos)
-        const cleanPhoneBody = (v) => {
-          let d = (v || '').toString().replace(/\D/g, '');
-          // remover prefijos 56 y 9 si vienen
-          if (d.startsWith('56')) d = d.slice(2);
-          if (d.startsWith('9')) d = d.slice(1);
-          // limitar a 8 dígitos
-          if (d.length > 8) d = d.slice(-8);
-          return d;
-        };
-        const formatPhoneInput = (body8) => {
-          const d = cleanPhoneBody(body8);
-          if (!d) return '';
-          return d.length > 4 ? `${d.slice(0,4)} ${d.slice(4)}` : d;
-        };
-        const formatPhoneDisplay = (body8) => {
-          const d = cleanPhoneBody(body8);
-          if (!d) return '';
-          return `+56 9 ${formatPhoneInput(d)}`;
-        };
-        const phoneValidationMessage = (body8, required) => {
-          const d = cleanPhoneBody(body8);
-          if (required && !d) return 'Este campo es obligatorio';
-          if (d && d.length !== 8) return 'Debe contener 8 dígitos (ej: 1234 5678)';
-          return null;
-        };
-
-        // Cargar valores guardados
-        Object.values(fields).forEach(f => {
-          const v = localStorage.getItem(f.storage);
-          if (v) f.valueEl.textContent = v;
-        });
-        // Actualizar saludo
-        const greeting = document.getElementById('greetingName');
-        if (greeting && fields.name.valueEl?.textContent?.trim()) {
-          greeting.textContent = fields.name.valueEl.textContent.trim().split(' ')[0];
-        }
-
-        function enterEdit() {
-          if (!section) return;
-          editBtn.style.display = 'none';
-          editControls.style.display = 'inline-block';
-          Object.values(fields).forEach(f => {
-            if (!f.input) return;
-            if (f.phone && phoneGroup) {
-              phoneGroup.style.display = '';
-              // convertir el valor mostrado a cuerpo de 8 dígitos para el input
-              const body = cleanPhoneBody(f.valueEl.textContent.trim());
-              f.input.value = formatPhoneInput(body);
-            } else {
-              f.input.style.display = '';
-              f.input.value = f.valueEl.textContent.trim() === '—' ? '' : f.valueEl.textContent.trim();
+          // Helpers RUT (Chile)
+          const cleanRut = (v) => (v || '').toString().replace(/[\.\-]/g, '').replace(/[^0-9kK]/g, '').toUpperCase();
+          const formatRut = (v) => {
+            const s = cleanRut(v);
+            if (!s) return '';
+            if (s.length === 1) return s; // aún sin DV
+            const body = s.slice(0, -1);
+            const dv = s.slice(-1);
+            const bodyFmt = body.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+            return `${bodyFmt}-${dv}`;
+          };
+          const rutDV = (bodyDigits) => {
+            let sum = 0, mul = 2;
+            for (let i = bodyDigits.length - 1; i >= 0; i--) {
+              sum += parseInt(bodyDigits[i], 10) * mul;
+              mul = mul === 7 ? 2 : mul + 1;
             }
-            if (f.rut) f.input.value = formatRut(f.input.value);
-            f.valueEl.style.display = 'none';
-            f.input.classList.remove('is-invalid');
-          });
-          section.classList.add('profile-editing');
-        }
+            const res = 11 - (sum % 11);
+            if (res === 11) return '0';
+            if (res === 10) return 'K';
+            return String(res);
+          };
+          const isRutValid = (v) => {
+            const s = cleanRut(v);
+            if (s.length < 2) return false;
+            const body = s.slice(0, -1);
+            const dv = s.slice(-1).toUpperCase();
+            // Solo permitimos cuerpos de 7 u 8 dígitos (personas/naturales)
+            if (body.length < 7 || body.length > 8) return false;
+            return rutDV(body) === dv;
+          };
 
-        function exitEdit(save) {
-          if (!section) return;
-          if (save) {
-            let valid = true;
+          // Retorna mensaje específico o null si es válido
+          const rutValidationMessage = (v) => {
+            const s = cleanRut(v);
+            if (s.length < 2) return 'Debes incluir dígito verificador (ej: 12.345.678-9).';
+            const body = s.slice(0, -1);
+            if (body.length < 7 || body.length > 8) return 'El RUT debe tener 7 u 8 dígitos antes del dígito verificador.';
+            if (!isRutValid(s)) return 'El dígito verificador no corresponde (RUT no existe).';
+            return null;
+          };
+
+          const fields = {
+            name: { valueEl: document.getElementById('nameValue'), input: document.getElementById('nameInput'), storage: 'perfil_name', required: true },
+            rut: { valueEl: document.getElementById('rutValue'), input: document.getElementById('rutInput'), storage: 'perfil_rut', required: false, rut: true },
+            email: { valueEl: document.getElementById('emailValue'), input: document.getElementById('emailInput'), storage: 'perfil_email', required: true, email: true },
+            phone: { valueEl: document.getElementById('phoneValue'), input: document.getElementById('phoneInput'), storage: 'perfil_phone', required: true, phone: true }
+          };
+
+          const phoneGroup = document.getElementById('phoneGroup');
+
+          // Helpers Teléfono Chile: +56 9 xxxxxxxx (8 dígitos)
+          const cleanPhoneBody = (v) => {
+            let d = (v || '').toString().replace(/\D/g, '');
+            // remover prefijos 56 y 9 si vienen
+            if (d.startsWith('56')) d = d.slice(2);
+            if (d.startsWith('9')) d = d.slice(1);
+            // limitar a 8 dígitos
+            if (d.length > 8) d = d.slice(-8);
+            return d;
+          };
+          const formatPhoneInput = (body8) => {
+            const d = cleanPhoneBody(body8);
+            if (!d) return '';
+            return d.length > 4 ? `${d.slice(0, 4)} ${d.slice(4)}` : d;
+          };
+          const formatPhoneDisplay = (body8) => {
+            const d = cleanPhoneBody(body8);
+            if (!d) return '';
+            return `+56 9 ${formatPhoneInput(d)}`;
+          };
+          const phoneValidationMessage = (body8, required) => {
+            const d = cleanPhoneBody(body8);
+            if (required && !d) return 'Este campo es obligatorio';
+            if (d && d.length !== 8) return 'Debe contener 8 dígitos (ej: 1234 5678)';
+            return null;
+          };
+
+          // Cargar valores guardados
+          Object.values(fields).forEach(f => {
+            const v = localStorage.getItem(f.storage);
+            if (v) f.valueEl.textContent = v;
+          });
+          // Actualizar saludo
+          const greeting = document.getElementById('greetingName');
+          if (greeting && fields.name.valueEl?.textContent?.trim()) {
+            greeting.textContent = fields.name.valueEl.textContent.trim().split(' ')[0];
+          }
+
+          function enterEdit() {
+            if (!section) return;
+            editBtn.style.display = 'none';
+            editControls.style.display = 'inline-block';
             Object.values(fields).forEach(f => {
               if (!f.input) return;
-              const val = f.input.value.trim();
-              if (f.required && !val) {
-                valid = false;
-                const errEl = getErrorEl(f.input);
-                if (errEl) { errEl.textContent = 'Este campo es obligatorio'; errEl.style.display = 'block'; }
-                f.input.classList.add('is-invalid');
-              } else if (f.email && val && !/^\S+@\S+\.\S+$/.test(val)) {
-                valid = false;
-                f.input.classList.add('is-invalid');
-              } else if (f.rut) {
-                const prevFmt = formatRut(cleanRut(f.valueEl.textContent));
-                const newClean = cleanRut(val);
-                const newFmt = formatRut(newClean);
-                if (newFmt !== prevFmt) { // solo si intenta modificar
-                  const msg = rutValidationMessage(newClean);
+              if (f.phone && phoneGroup) {
+                phoneGroup.style.display = '';
+                // convertir el valor mostrado a cuerpo de 8 dígitos para el input
+                const body = cleanPhoneBody(f.valueEl.textContent.trim());
+                f.input.value = formatPhoneInput(body);
+              } else {
+                f.input.style.display = '';
+                f.input.value = f.valueEl.textContent.trim() === '—' ? '' : f.valueEl.textContent.trim();
+              }
+              if (f.rut) f.input.value = formatRut(f.input.value);
+              f.valueEl.style.display = 'none';
+              f.input.classList.remove('is-invalid');
+            });
+            section.classList.add('profile-editing');
+          }
+
+          function exitEdit(save) {
+            if (!section) return;
+            if (save) {
+              let valid = true;
+              Object.values(fields).forEach(f => {
+                if (!f.input) return;
+                const val = f.input.value.trim();
+                if (f.required && !val) {
+                  valid = false;
+                  const errEl = getErrorEl(f.input);
+                  if (errEl) { errEl.textContent = 'Este campo es obligatorio'; errEl.style.display = 'block'; }
+                  f.input.classList.add('is-invalid');
+                } else if (f.email && val && !/^\S+@\S+\.\S+$/.test(val)) {
+                  valid = false;
+                  f.input.classList.add('is-invalid');
+                } else if (f.rut) {
+                  const prevFmt = formatRut(cleanRut(f.valueEl.textContent));
+                  const newClean = cleanRut(val);
+                  const newFmt = formatRut(newClean);
+                  if (newFmt !== prevFmt) { // solo si intenta modificar
+                    const msg = rutValidationMessage(newClean);
+                    const errEl = getErrorEl(f.input);
+                    if (msg) {
+                      valid = false; // no permitimos guardar
+                      if (errEl) { errEl.textContent = msg; errEl.style.display = 'block'; }
+                      f.input.classList.add('is-invalid');
+                    } else {
+                      if (errEl) { errEl.textContent = ''; errEl.style.display = ''; }
+                      f.input.classList.remove('is-invalid');
+                      // normalizar a formato
+                      f.input.value = newFmt;
+                    }
+                  }
+                } else if (f.phone) {
+                  const body = cleanPhoneBody(val);
+                  const msg = phoneValidationMessage(body, f.required);
                   const errEl = getErrorEl(f.input);
                   if (msg) {
-                    valid = false; // no permitimos guardar
+                    valid = false;
                     if (errEl) { errEl.textContent = msg; errEl.style.display = 'block'; }
                     f.input.classList.add('is-invalid');
                   } else {
                     if (errEl) { errEl.textContent = ''; errEl.style.display = ''; }
                     f.input.classList.remove('is-invalid');
-                    // normalizar a formato
-                    f.input.value = newFmt;
+                    f.input.value = formatPhoneInput(body);
                   }
-                }
-              } else if (f.phone) {
-                const body = cleanPhoneBody(val);
-                const msg = phoneValidationMessage(body, f.required);
-                const errEl = getErrorEl(f.input);
-                if (msg) {
-                  valid = false;
-                  if (errEl) { errEl.textContent = msg; errEl.style.display = 'block'; }
-                  f.input.classList.add('is-invalid');
                 } else {
-                  if (errEl) { errEl.textContent = ''; errEl.style.display = ''; }
                   f.input.classList.remove('is-invalid');
-                  f.input.value = formatPhoneInput(body);
                 }
-              } else {
-                f.input.classList.remove('is-invalid');
-              }
-            });
-            if (!valid) return;
+              });
+              if (!valid) return;
 
+              Object.values(fields).forEach(f => {
+                if (!f.input) return;
+                const val = f.input.value.trim();
+                if (f.rut) {
+                  const formatted = formatRut(cleanRut(val));
+                  f.valueEl.textContent = formatted || '—';
+                } else if (f.phone) {
+                  const body = cleanPhoneBody(val);
+                  const formatted = formatPhoneDisplay(body);
+                  f.valueEl.textContent = formatted || '—';
+                } else {
+                  f.valueEl.textContent = val || '—';
+                }
+                try { localStorage.setItem(f.storage, f.valueEl.textContent); } catch { }
+              });
+              if (greeting) {
+                const full = fields.name.valueEl.textContent.trim();
+                greeting.textContent = full ? full.split(' ')[0] : '—';
+              }
+            }
             Object.values(fields).forEach(f => {
               if (!f.input) return;
-              const val = f.input.value.trim();
-              if (f.rut) {
-                const formatted = formatRut(cleanRut(val));
-                f.valueEl.textContent = formatted || '—';
-              } else if (f.phone) {
-                const body = cleanPhoneBody(val);
-                const formatted = formatPhoneDisplay(body);
-                f.valueEl.textContent = formatted || '—';
+              f.valueEl.style.display = '';
+              if (f.phone && phoneGroup) {
+                phoneGroup.style.display = 'none';
               } else {
-                f.valueEl.textContent = val || '—';
+                f.input.style.display = 'none';
               }
-              try { localStorage.setItem(f.storage, f.valueEl.textContent); } catch {}
+              f.input.classList.remove('is-invalid');
+              const errEl = getErrorEl(f.input);
+              if (errEl) errEl.textContent = '';
             });
-            if (greeting) {
-              const full = fields.name.valueEl.textContent.trim();
-              greeting.textContent = full ? full.split(' ')[0] : '—';
+            editControls.style.display = 'none';
+            editBtn.style.display = '';
+            section.classList.remove('profile-editing');
+          }
+
+          editBtn?.addEventListener('click', e => { e.preventDefault(); enterEdit(); });
+          saveBtn?.addEventListener('click', () => exitEdit(true));
+          cancelBtn?.addEventListener('click', () => exitEdit(false));
+
+          // Rut formatting while typing
+          if (fields.rut.input) {
+            const ri = fields.rut.input;
+            const handle = () => {
+              const posEnd = ri.selectionEnd;
+              ri.value = formatRut(ri.value);
+              // mover cursor al final para simplicidad
+              ri.selectionStart = ri.selectionEnd = ri.value.length;
+              // validación en vivo (sólo mensaje visual)
+              const msg = rutValidationMessage(ri.value);
+              const errEl = getErrorEl(ri);
+              if (msg) {
+                if (errEl) { errEl.textContent = msg; errEl.style.display = 'block'; }
+                ri.classList.add('is-invalid');
+              } else {
+                if (errEl) { errEl.textContent = ''; errEl.style.display = ''; }
+                ri.classList.remove('is-invalid');
+              }
+            };
+            ri.addEventListener('input', handle);
+            ri.addEventListener('blur', handle);
+          }
+
+          // Phone formatting + hard limit while typing
+          if (fields.phone.input) {
+            const pi = fields.phone.input;
+            const maxPhoneDigits = 8;
+            const willExceed = (incomingDigits) => {
+              const selStart = pi.selectionStart ?? pi.value.length;
+              const selEnd = pi.selectionEnd ?? pi.value.length;
+              const current = cleanPhoneBody(pi.value).length;
+              const selected = cleanPhoneBody(pi.value.substring(selStart, selEnd)).length;
+              return current - selected + incomingDigits > maxPhoneDigits;
+            };
+            const preventIfExceeds = (incomingDigits, e) => {
+              if (incomingDigits && willExceed(incomingDigits)) {
+                e.preventDefault();
+                return true;
+              }
+              return false;
+            };
+            const handlePhone = () => {
+              const body = cleanPhoneBody(pi.value);
+              pi.value = formatPhoneInput(body);
+              const msg = phoneValidationMessage(body, fields.phone.required);
+              const errEl = getErrorEl(pi);
+              if (msg) {
+                if (errEl) { errEl.textContent = msg; errEl.style.display = 'block'; }
+                pi.classList.add('is-invalid');
+              } else {
+                if (errEl) { errEl.textContent = ''; errEl.style.display = ''; }
+                pi.classList.remove('is-invalid');
+              }
+            };
+            // Block exceeding digits via beforeinput/paste/keypress
+            pi.addEventListener('beforeinput', (e) => {
+              if (e.inputType && e.inputType.startsWith('insert')) {
+                const incoming = cleanPhoneBody(e.data || '');
+                if (preventIfExceeds(incoming.length, e)) return;
+              }
+            });
+            pi.addEventListener('paste', (e) => {
+              const text = (e.clipboardData || window.clipboardData)?.getData?.('text') || '';
+              const incoming = cleanPhoneBody(text);
+              preventIfExceeds(incoming.length, e);
+            });
+            pi.addEventListener('keypress', (e) => {
+              if (/\d/.test(e.key)) {
+                preventIfExceeds(1, e);
+              }
+            });
+            pi.addEventListener('input', handlePhone);
+            pi.addEventListener('blur', handlePhone);
+          }
+        });
+      </script>
+      <script>
+        // Redirige el ítem "Contraseña" del sidebar a la página de nueva contraseña
+        document.addEventListener('DOMContentLoaded', function () {
+          var pwIcon = document.querySelector('.list-group i.fa-lock');
+          if (pwIcon && pwIcon.closest) {
+            var pwLink = pwIcon.closest('a');
+            if (pwLink) {
+              pwLink.setAttribute('href', "{% url 'nueva_contrasena' %}");
             }
           }
-          Object.values(fields).forEach(f => {
-            if (!f.input) return;
-            f.valueEl.style.display = '';
-            if (f.phone && phoneGroup) {
-              phoneGroup.style.display = 'none';
-            } else {
-              f.input.style.display = 'none';
-            }
-            f.input.classList.remove('is-invalid');
-            const errEl = getErrorEl(f.input);
-            if (errEl) errEl.textContent = '';
-          });
-          editControls.style.display = 'none';
-          editBtn.style.display = '';
-          section.classList.remove('profile-editing');
-        }
-
-        editBtn?.addEventListener('click', e => { e.preventDefault(); enterEdit(); });
-        saveBtn?.addEventListener('click', () => exitEdit(true));
-        cancelBtn?.addEventListener('click', () => exitEdit(false));
-
-        // Rut formatting while typing
-        if (fields.rut.input) {
-          const ri = fields.rut.input;
-          const handle = () => {
-            const posEnd = ri.selectionEnd;
-            ri.value = formatRut(ri.value);
-            // mover cursor al final para simplicidad
-            ri.selectionStart = ri.selectionEnd = ri.value.length;
-            // validación en vivo (sólo mensaje visual)
-            const msg = rutValidationMessage(ri.value);
-            const errEl = getErrorEl(ri);
-            if (msg) {
-              if (errEl) { errEl.textContent = msg; errEl.style.display = 'block'; }
-              ri.classList.add('is-invalid');
-            } else {
-              if (errEl) { errEl.textContent = ''; errEl.style.display = ''; }
-              ri.classList.remove('is-invalid');
-            }
-          };
-          ri.addEventListener('input', handle);
-          ri.addEventListener('blur', handle);
-        }
-
-        // Phone formatting + hard limit while typing
-        if (fields.phone.input) {
-          const pi = fields.phone.input;
-          const maxPhoneDigits = 8;
-          const willExceed = (incomingDigits) => {
-            const selStart = pi.selectionStart ?? pi.value.length;
-            const selEnd = pi.selectionEnd ?? pi.value.length;
-            const current = cleanPhoneBody(pi.value).length;
-            const selected = cleanPhoneBody(pi.value.substring(selStart, selEnd)).length;
-            return current - selected + incomingDigits > maxPhoneDigits;
-          };
-          const preventIfExceeds = (incomingDigits, e) => {
-            if (incomingDigits && willExceed(incomingDigits)) {
-              e.preventDefault();
-              return true;
-            }
-            return false;
-          };
-          const handlePhone = () => {
-            const body = cleanPhoneBody(pi.value);
-            pi.value = formatPhoneInput(body);
-            const msg = phoneValidationMessage(body, fields.phone.required);
-            const errEl = getErrorEl(pi);
-            if (msg) {
-              if (errEl) { errEl.textContent = msg; errEl.style.display = 'block'; }
-              pi.classList.add('is-invalid');
-            } else {
-              if (errEl) { errEl.textContent = ''; errEl.style.display = ''; }
-              pi.classList.remove('is-invalid');
-            }
-          };
-          // Block exceeding digits via beforeinput/paste/keypress
-          pi.addEventListener('beforeinput', (e) => {
-            if (e.inputType && e.inputType.startsWith('insert')) {
-              const incoming = cleanPhoneBody(e.data || '');
-              if (preventIfExceeds(incoming.length, e)) return;
-            }
-          });
-          pi.addEventListener('paste', (e) => {
-            const text = (e.clipboardData || window.clipboardData)?.getData?.('text') || '';
-            const incoming = cleanPhoneBody(text);
-            preventIfExceeds(incoming.length, e);
-          });
-          pi.addEventListener('keypress', (e) => {
-            if (/\d/.test(e.key)) {
-              preventIfExceeds(1, e);
-            }
-          });
-          pi.addEventListener('input', handlePhone);
-          pi.addEventListener('blur', handlePhone);
-        }
-      });
-    </script>
-    <script>
-      // Redirige el ítem "Contraseña" del sidebar a la página de nueva contraseña
-      document.addEventListener('DOMContentLoaded', function () {
-        var pwIcon = document.querySelector('.list-group i.fa-lock');
-        if (pwIcon && pwIcon.closest) {
-          var pwLink = pwIcon.closest('a');
-          if (pwLink) {
-            pwLink.setAttribute('href', "{% url 'nueva_contrasena' %}");
-          }
-        }
-      });
-    </script>
-    <script src="{% static 'js/main.js' %}"></script>
+        });
+      </script>
+      <script src="{% static 'js/main.js' %}"></script>
 
 </body>
+
 </html>

@@ -2,7 +2,7 @@ from django import forms
 from django.contrib.auth import login
 from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth.models import User
-from .models import Cita
+from .models import Cita, Perfil
 import datetime
 class RegistroForm(UserCreationForm):
     username = forms.CharField(
@@ -74,3 +74,13 @@ class CitaForm(forms.ModelForm):
                 raise forms.ValidationError("No puedes agendar en una hora pasada.")
 
         return cleaned_data
+    
+
+class PerfilForm(forms.ModelForm):
+    class Meta:
+        model = Perfil
+        fields = ['rut', 'telefono']
+        widgets = {
+            'rut': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Ej: 12.345.678-9'}),
+            'telefono': forms.TextInput(attrs={'class': 'form-control', 'placeholder': '+56912345678'}),
+        }
