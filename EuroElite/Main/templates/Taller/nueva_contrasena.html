@@ -1,6 +1,8 @@
 {% load static %}
+
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -11,7 +13,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
   <link rel="icon" href="{% static 'img/LogoApp.png' %}" type="image/x-icon">
   <style>
-    .navbar-logo img, img.navbar-logo { height: 50px; width: auto; }
+    /* .navbar-logo img, img.navbar-logo { height: 50px; width: auto; } */
     .profile-wrapper .card, .pw-card { border: 0; border-radius: 12px; box-shadow: var(--shadow); background: #fff; }
     /* Limita el ancho de la tarjeta para que coincida con el del formulario/botón */
     .pw-card { max-width: 720px; margin-right: auto; }
@@ -51,8 +53,7 @@
             </div>
 
             <!-- Usuario -->
-            <div class="user-icon" onclick="toggleUserMenu()" role="button" aria-haspopup="true"
-                aria-expanded="false">
+            <div class="user-icon" onclick="toggleUserMenu()" role="button" aria-haspopup="true" aria-expanded="false">
                 <i class="fas fa-user"></i>
                 <div class="user-dropdown" id="user-dropdown">
                     {% if user.is_authenticated %}
