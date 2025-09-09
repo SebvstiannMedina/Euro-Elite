@@ -23,6 +23,10 @@ body {
     color: #333;
     overflow-x: hidden;
     opacity: 0;
+    /* Sticky footer layout */
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
 }
 
 /* =============== NAVBAR =============== */
@@ -411,6 +415,8 @@ body {
     background: var(--primary-dark);
     color: var(--white);
     padding: 60px 0 20px;
+    /* Empuja el footer al final si el contenido es corto */
+    margin-top: auto;
 }
 
 /* ====== Footer: forzar alineado superior y mejor espaciado ====== */

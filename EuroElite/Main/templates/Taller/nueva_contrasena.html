@@ -1,17 +1,19 @@
 {% load static %}
+
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Nueva contrase&ntilde;a - Euro Elite</title>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet" crossorigin="anonymous">
-  <link rel="stylesheet" href="{% static 'css/style.css' %}">
+  <link rel="stylesheet" href="{% static 'css/style.css' %}?v=2">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
   <link rel="icon" href="{% static 'img/LogoApp.png' %}" type="image/x-icon">
   <style>
-    .navbar-logo img, img.navbar-logo { height: 50px; width: auto; }
+    /* .navbar-logo img, img.navbar-logo { height: 50px; width: auto; } */
     .profile-wrapper .card, .pw-card { border: 0; border-radius: 12px; box-shadow: var(--shadow); background: #fff; }
     /* Limita el ancho de la tarjeta para que coincida con el del formulario/botón */
     .pw-card { max-width: 720px; margin-right: auto; }
@@ -51,8 +53,7 @@
             </div>
 
             <!-- Usuario -->
-            <div class="user-icon" onclick="toggleUserMenu()" role="button" aria-haspopup="true"
-                aria-expanded="false">
+            <div class="user-icon" onclick="toggleUserMenu()" role="button" aria-haspopup="true" aria-expanded="false">
                 <i class="fas fa-user"></i>
                 <div class="user-dropdown" id="user-dropdown">
                     {% if user.is_authenticated %}
@@ -256,6 +257,6 @@
     });
   </script>
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js" crossorigin="anonymous"></script>
-  <script src="{% static 'js/main.js' %}"></script>
+  <script src="{% static 'js/main.js' %}?v=2"></script>
 </body>
 </html>
