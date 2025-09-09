@@ -118,3 +118,9 @@ def pago(request):
 
 def carrito_compras(request):
     return render(request, 'Taller/carrito_compras.html')
+
+def terminos(request):
+    return render(request, 'Taller/terminos.html')
+
+def privacidad(request):
+    return render(request, 'Taller/privacidad.html')
