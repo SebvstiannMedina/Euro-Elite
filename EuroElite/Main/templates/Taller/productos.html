@@ -80,7 +80,7 @@
             </div>
         </div>
     </nav>
-    
+
     <br>
     <br>
     <br>
@@ -89,110 +89,70 @@
     <br>
 
 
-    <!-- 🔍 BUSCADOR Y FILTROS -->
-    <section class="filter-section">
-        <div class="container">
-            <h2 class="filter-title">Filtrar Productos</h2>
-            <div class="filter-container">
-                <input type="text" id="searchInput" placeholder="Buscar producto..." onkeyup="searchProducts()">
-                <select id="categoryFilter" onchange="filterProducts()">
-                    <option value="all">Todas las Categorías</option>
-                    <option value="BMW">BMW</option>
-                    <option value="Audi">Audi</option>
-                    <option value="Mercedes">Mercedes</option>
-                    <option value="Herramientas">Herramientas</option>
-                </select>
-            </div>
+
+    <!-- FILTROS -->
+    <section class="py-4 bg-light">
+        <div class="container d-flex flex-wrap justify-content-center gap-3">
+            <input type="text" id="searchInput" placeholder="Buscar producto..." class="form-control w-auto"
+                onkeyup="searchProducts()">
+            <select id="categoryFilter" class="form-select w-auto" onchange="filterProducts()">
+                <option value="all">Todas las Categorías</option>
+                <option value="BMW">BMW</option>
+                <option value="Audi">Audi</option>
+                <option value="Mercedes">Mercedes</option>
+                <option value="Herramientas">Herramientas</option>
+            </select>
         </div>
     </section>
 
+    <!-- PRODUCTOS -->
+    <section class="py-5">
+        <div class="container">
+            <h2 class="mb-4 text-center">Productos en Venta</h2>
+            <div class="row g-4" id="products">
+                <!-- Producto ejemplo -->
+                <div class="col-sm-6 col-md-4 col-lg-3">
+                    <div class="card h-100 shadow-sm border-0">
+                        <div class="card-body text-center">
+                            <i class="fas fa-car-battery fa-3x mb-3 text-primary"></i>
+                            <h5 class="card-title">Batería BMW Original</h5>
+                            <p class="card-text small">Batería AGM 12V 90Ah para modelos BMW Serie 3 y 5</p>
+                            <div class="fw-bold mb-3">$189.990</div>
+                            <button class="btn btn-primary mb-2"
+                                onclick="showProductDetail('Batería BMW Original', 'Batería AGM 12V 90Ah para modelos BMW Serie 3 y 5', 189990)">
+                                Ver Detalle
+                            </button>
+                            <button class="btn btn-danger w-100" onclick="addToCart('Batería BMW Original', 189990)">
+                                <i class="fas fa-shopping-cart me-2"></i>Añadir al Carrito
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                <!-- Repite productos usando la misma estructura -->
+                 <!-- Producto ejemplo -->
+                <div class="col-sm-6 col-md-4 col-lg-3">
+                    <div class="card h-100 shadow-sm border-0">
+                        <div class="card-body text-center">
+                            <i class="fas fa-car-battery fa-3x mb-3 text-primary"></i>
+                            <h5 class="card-title">Llantas BMW m3</h5> 
+                            <p class="card-text small">Juego de llantas para modelos BMW Serie 3 y 5</p>
+                            <div class="fw-bold mb-3">$789.990</div>
+                            <button class="btn btn-primary mb-2"
+                                onclick="showProductDetail('Llantas M3 escenciales con estructura moderna', 'LLantas aro 16 ', 189990)">
+                                Ver Detalle
+                            </button>
+                            <button class="btn btn-danger w-100" onclick="addToCart('Batería BMW Original', 189990)">
+                                <i class="fas fa-shopping-cart me-2"></i>Añadir al Carrito
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                
 
-    <!-- PRODUCTOS EN VENTA -->
-    <section class="products-section" id="products">
-        <h2 class="section-title">Productos en Venta</h2>
-        <div class="products-grid">
-            <div class="product-card">
-                <div class="product-image">
-                    <i class="fas fa-car-battery"></i>
-                </div>
-                <div class="product-content">
-                    <h3 class="product-title">Batería BMW Original</h3>
-                    <p class="product-description">Batería AGM 12V 90Ah para modelos BMW Serie 3 y 5</p>
-                    <div class="product-price">$189.990</div>
-                    <button class="add-to-cart" onclick="addToCart('Batería BMW Original', 189990)">
-                        <i class="fas fa-shopping-cart"></i> Añadir al Carrito
-                    </button>
-                </div>
-            </div>
 
-            <div class="product-card">
-                <div class="product-image">
-                    <i class="fas fa-tire"></i>
-                </div>
-                <div class="product-content">
-                    <h3 class="product-title">Neumáticos Audi</h3>
-                    <p class="product-description">Set de 4 neumáticos 225/45R18 para Audi A4</p>
-                    <div class="product-price">$439.990</div>
-                    <button class="add-to-cart" onclick="addToCart('Neumáticos Audi', 439990)">
-                        <i class="fas fa-shopping-cart"></i> Añadir al Carrito
-                    </button>
-                </div>
-            </div>
 
-            <div class="product-card">
-                <div class="product-image">
-                    <i class="fas fa-lightbulb"></i>
-                </div>
-                <div class="product-content">
-                    <h3 class="product-title">Faros LED Mercedes</h3>
-                    <p class="product-description">Kit de faros LED H7 para Mercedes-Benz Clase C</p>
-                    <div class="product-price">$129.990</div>
-                    <button class="add-to-cart" onclick="addToCart('Faros LED Mercedes', 129990)">
-                        <i class="fas fa-shopping-cart"></i> Añadir al Carrito
-                    </button>
-                </div>
-            </div>
 
-            <div class="product-card">
-                <div class="product-image">
-                    <i class="fas fa-wrench"></i>
-                </div>
-                <div class="product-content">
-                    <h3 class="product-title">Kit de Herramientas</h3>
-                    <p class="product-description">Set profesional de herramientas para mantención</p>
-                    <div class="product-price">$89.990</div>
-                    <button class="add-to-cart" onclick="addToCart('Kit de Herramientas', 89990)">
-                        <i class="fas fa-shopping-cart"></i> Añadir al Carrito
-                    </button>
-                </div>
-            </div>
 
-            <div class="product-card">
-                <div class="product-image">
-                    <i class="fas fa-thermometer-half"></i>
-                </div>
-                <div class="product-content">
-                    <h3 class="product-title">Radiador BMW</h3>
-                    <p class="product-description">Radiador de aluminio para BMW X3, máxima eficiencia</p>
-                    <div class="product-price">$299.990</div>
-                    <button class="add-to-cart" onclick="addToCart('Radiador BMW', 299990)">
-                        <i class="fas fa-shopping-cart"></i> Añadir al Carrito
-                    </button>
-                </div>
-            </div>
-
-            <div class="product-card">
-                <div class="product-image">
-                    <i class="fas fa-tachometer-alt"></i>
-                </div>
-                <div class="product-content">
-                    <h3 class="product-title">Sensores Audi</h3>
-                    <p class="product-description">Sensores de oxígeno originales para motores V6</p>
-                    <div class="product-price">$159.990</div>
-                    <button class="add-to-cart" onclick="addToCart('Sensores Audi', 159990)">
-                        <i class="fas fa-shopping-cart"></i> Añadir al Carrito
-                    </button>
-                </div>
             </div>
         </div>
     </section>
@@ -202,7 +162,8 @@
         <div class="footer-container">
             <div class="footer-section">
                 <h3>Euro Elite</h3>
-                <p>Tu tienda especializada en repuestos europeos de alta calidad. Más de 10 años de experiencia en el mercado automotriz.</p>
+                <p>Tu tienda especializada en repuestos europeos de alta calidad. Más de 10 años de experiencia en el
+                    mercado automotriz.</p>
                 <div class="social-icons">
                     <a href="#"><i class="fab fa-facebook-f"></i></a>
                     <a href="#"><i class="fab fa-instagram"></i></a>
@@ -253,9 +214,10 @@
                 </ul>
             </div>
         </div>
-        
+
         <div class="footer-bottom" style="text-align: center;">
-            <p>&copy; 2025 Euro Elite. Todos los derechos reservados. | Diseñado con ❤️ para los amantes del automóvil</p>
+            <p>&copy; 2025 Euro Elite. Todos los derechos reservados. | Diseñado con ❤️ para los amantes del automóvil
+            </p>
         </div>
     </footer>
 

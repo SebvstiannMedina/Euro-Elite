@@ -98,9 +98,10 @@
             </form>
         </div>
     </main>
-
+    <br>
+    <br>
     <!-- FOOTER -->
-    <footer class="footer">
+    <footer class="footer"  style="margin-bottom: 0rem;">
         <div class="footer-container">
             <div class="footer-section">
                 <h3>Euro Elite</h3>
@@ -109,8 +110,6 @@
                 <div class="social-icons">
                     <a href="#"><i class="fab fa-facebook-f"></i></a>
                     <a href="#"><i class="fab fa-instagram"></i></a>
-                    <a href="#"><i class="fab fa-twitter"></i></a>
-                    <a href="#"><i class="fab fa-youtube"></i></a>
                 </div>
             </div>
 
@@ -128,11 +127,10 @@
             <div class="footer-section">
                 <h3>Servicios</h3>
                 <ul>
-                    <li><a href="#">Instalación</a></li>
-                    <li><a href="#">Mantención</a></li>
-                    <li><a href="#">Diagnóstico</a></li>
-                    <li><a href="#">Garantía</a></li>
-                    <li><a href="#">Envío a Domicilio</a></li>
+                    <li><a href="{% url 'agendar' %}">Instalación</a></li>
+                    <li><a href="{% url 'agendar' %}">Mantención</a></li>
+                    <li><a href="{% url 'agendar' %}">Diagnóstico</a></li>
+                    <li><a href="{% url 'agendar' %}">Garantía</a></li>
                 </ul>
             </div>
 
@@ -140,7 +138,7 @@
                 <h3>Contacto</h3>
                 <ul>
                     <li><i class="fas fa-map-marker-alt"></i> Cooperativa 1144, Recoleta, Santiago</li>
-                    <li><i class="fas fa-phone"></i> +56 2 1234 5678</li>
+                    <li><i class="fas fa-phone"></i> +56 9 1234 5678</li>
                     <li><i class="fas fa-envelope"></i> info@euroelite.cl</li>
                     <li><i class="fas fa-clock"></i> Lun-Vie: 9:00-18:00</li>
                 </ul>
@@ -149,10 +147,9 @@
             <div class="footer-section">
                 <h3>Legal</h3>
                 <ul>
-                    <li><a href="#">Términos y Condiciones</a></li>
-                    <li><a href="#">Política de Privacidad</a></li>
-                    <li><a href="#">Política de Devoluciones</a></li>
-                    <li><a href="#">Preguntas Frecuentes</a></li>
+                    <li><a href="{% url 'terminos' %}">Términos y Condiciones</a></li>
+                    <li><a href="{% url 'privacidad' %}">Política de Privacidad</a></li>
+                    <li><a href="{% url 'privacidad' %}">Política de Devoluciones</a></li>
                 </ul>
             </div>
         </div>

@@ -357,3 +357,48 @@ function renderCartPage() {
         <button onclick="checkout(); renderCartPage();">Proceder al Pago</button>
     `;
 }
+
+// =============== PRODUCTOS ===============
+function showProductDetail(name, description, price) {
+    const modal = document.createElement('div');
+    modal.innerHTML = `
+    <div style="
+        position: fixed;
+        top:0;
+        left:0;
+        width:100%;
+        height:100%;
+        background: rgba(0,0,0,0.6);
+        display:flex;
+        align-items:center;
+        justify-content:center;
+        z-index:10000;
+    " onclick="this.remove()">
+        <div style="
+            background:white;
+            padding:30px;
+            border-radius:12px;
+            max-width:500px;
+            width:90%;
+            position:relative;
+        " onclick="event.stopPropagation()">
+            <button onclick="this.closest('div').parentElement.remove()" style="
+                position:absolute;
+                top:10px;
+                right:10px;
+                font-size:1.5rem;
+                border:none;
+                background:none;
+                cursor:pointer;
+            ">×</button>
+            <h3>${name}</h3>
+            <p>${description}</p>
+            <h4>$${price.toLocaleString()}</h4>
+            <button class="btn btn-danger w-100" onclick="addToCart('${name}', ${price}); this.closest('div').parentElement.remove()">
+                <i class="fas fa-shopping-cart me-2"></i>Añadir al Carrito
+            </button>
+        </div>
+    </div>
+    `;
+    document.body.appendChild(modal);
+}
