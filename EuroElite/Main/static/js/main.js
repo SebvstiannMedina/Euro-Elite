@@ -1,7 +1,7 @@
 // =============== VARIABLES GLOBALES ===============
 let currentSlide = 0;
 const totalSlides = 3;
-let cart = [];
+let cart = JSON.parse(localStorage.getItem("cart")) || [];
 let isUserMenuOpen = false;
 
 // =============== CAROUSEL ===============
@@ -64,6 +64,7 @@ function addToCart(productName, price) {
     }
 
     updateCartCount();
+    saveCart();
     showCartNotification(productName);
 }
 
@@ -216,6 +217,7 @@ function toggleCart() {
 
 function removeFromCart(index) {
     cart.splice(index, 1);
+    saveCart();
     updateCartCount();
     const backdrop = document.querySelector('[style*="position: fixed"][style*="background: rgba(0,0,0,0.5)"]');
     if (backdrop) backdrop.remove();
@@ -227,9 +229,14 @@ function removeFromCart(index) {
 function checkout() {
     alert('Funcionalidad de pago en desarrollo. ¡Gracias por tu compra!');
     cart = [];
+    saveCart();
     updateCartCount();
     const backdrop = document.querySelector('[style*="position: fixed"][style*="background: rgba(0,0,0,0.5)"]');
     if (backdrop) backdrop.remove();
+}
+
+function saveCart() {
+    localStorage.setItem("cart", JSON.stringify(cart));
 }
 
 // =============== USUARIO MENU ===============
@@ -310,6 +317,43 @@ document.addEventListener('keydown', function(e) {
 });
 
 // =============== LOADING ANIMATION ===============
+document.addEventListener("DOMContentLoaded", () => {
+    updateCartCount();
+    if (document.getElementById("cart-page")) {
+        renderCartPage();
+    }
+});
+
 window.addEventListener('load', function() {
     document.body.style.animation = 'fadeIn 0.5s ease forwards';
 });
+
+// =============== CART ===============
+function renderCartPage() {
+    const container = document.getElementById("cart-page");
+    if (!container) return;
+
+    container.innerHTML = "";
+    if (cart.length === 0) {
+        container.innerHTML = "<p>Tu carrito está vacío</p>";
+        return;
+    }
+
+    let total = 0;
+    cart.forEach((item, index) => {
+        const subtotal = item.price * item.quantity;
+        total += subtotal;
+        container.innerHTML += `
+            <div class="cart-item">
+                <strong>${item.name}</strong> — ${item.quantity} × $${item.price.toLocaleString()} =
+                <b>$${subtotal.toLocaleString()}</b>
+                <button onclick="removeFromCart(${index}); renderCartPage();">❌</button>
+            </div>
+        `;
+    });
+
+    container.innerHTML += `
+        <h3>Total: $${total.toLocaleString()}</h3>
+        <button onclick="checkout(); renderCartPage();">Proceder al Pago</button>
+    `;
+}

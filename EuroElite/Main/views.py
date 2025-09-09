@@ -112,3 +112,9 @@ def mis_pedidos(request):
     # En esta primera versión solo renderiza la plantilla.
     # Cuando tengas el modelo listo, pasa la lista `pedidos` en el contexto.
     return render(request, 'Taller/mis_pedidos.html')
+
+def pago(request):
+    return render(request, 'Taller/pago.html')
+
+def carrito_compras(request):
+    return render(request, 'Taller/carrito_compras.html')

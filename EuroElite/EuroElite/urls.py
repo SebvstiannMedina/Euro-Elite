@@ -33,4 +33,6 @@ urlpatterns = [
     path('agendar', views.agendar_cita, name='agendar'),
     path('nueva_contrasena', views.nueva_contrasena, name='nueva_contrasena'),
     path('mis_pedidos', views.mis_pedidos, name='mis_pedidos'),
+    path('pago', views.pago, name='pago'),
+    path('carrito_compras', views.carrito_compras, name='carrito_compras'),
 ]
