@@ -122,7 +122,9 @@
                     <h3 class="mb-0">Mis compras</h3>
                 </div>
 
-                <div class="orders-wrapper">
+                <!-- Contenedor con el mismo estilo de "Mis datos" -->
+                <div class="card shadow-sm p-3">
+                    <div class="orders-wrapper">
                     {% if pedidos %}
                         {% for p in pedidos %}
                             {% ifchanged p.fecha|date:"j \\de F \\de Y" %}
@@ -183,6 +185,7 @@
                             <a href="/" class="btn btn-primary btn-sm">Explorar productos</a>
                         </div>
                     {% endif %}
+                    </div>
                 </div>
             </section>
         </div>
@@ -198,13 +201,8 @@
 
 
     <br>
-    <br>
-    <br>
-    <br>
-    <br>
-    <br>
-    <br>
-    
+    <br><br><br><br>
+
 
 
     <!-- FOOTER -->
@@ -274,8 +272,9 @@
     <style>
         .orders-wrapper { margin-top: .5rem; }
         .date-separator { color: #6b7280; font-weight: 600; margin: 1.25rem 0 .5rem; }
-        .order-card { background: #fff; border: 1px solid #e5e7eb; border-radius: 12px; padding: 16px; margin-bottom: 14px; }
-        .order-image { width: 72px; height: 72px; object-fit: cover; border: 1px solid #e5e7eb; border-radius: 10px; background: #f8fafc; }
+        .order-card { background: #fff; border: 0; border-radius: 12px; padding: 16px; margin-bottom: 14px; }
+        .order-image { width: 72px; height: 72px; object-fit: cover; border: 0; border-radius: 10px; background: #f8fafc; }
+        #ordersSection .empty-state { border: 0 !important; }
         .order-title { font-weight: 600; font-size: 1.05rem; }
         .order-subtitle { color: #6b7280; font-size: .9rem; }
         .seller-name { font-size: .92rem; font-weight: 500; }
