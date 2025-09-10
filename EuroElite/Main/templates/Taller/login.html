@@ -161,7 +161,11 @@
             </p>
         </div>
     </footer>
+    <!--El const carrito URL es para que la página de carrito cargue la URL correcta-->
 
+    <script>
+        const carritoURL = "{% url 'carrito_compras' %}";
+    </script>
     <script src="{% static 'js/main.js' %}?v=2"></script>
 </body>
 

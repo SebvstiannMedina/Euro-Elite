@@ -28,7 +28,7 @@
         href="https://cdnjs.cloudflare.com/ajax/libs/OwlCarousel2/2.3.4/assets/owl.theme.default.min.css">
 </head>
 
-<body>
+<body data-auth="{% if user.is_authenticated %}true{% else %}false{% endif %}">
     <!-- NAVBAR -->
     <nav class="navbar">
         <div class="navbar-container">
@@ -276,7 +276,7 @@
     </section>
 
     <!-- FOOTER -->
-    <footer class="footer"  style="margin-bottom: 0rem;">
+    <footer class="footer" style="margin-bottom: 0rem;">
         <div class="footer-container">
             <div class="footer-section">
                 <h3>Euro Elite</h3>
@@ -334,7 +334,11 @@
             </p>
         </div>
     </footer>
+<!--El const carrito URL es para que la página de carrito cargue la URL correcta-->
 
+    <script>
+        const carritoURL = "{% url 'carrito_compras' %}";
+    </script>
     <script src="{% static 'js/main.js' %}?v=2"></script>
 </body>
 

@@ -31,7 +31,7 @@ function nextSlide() {
 }
 
 // Auto-slide
-try { setInterval(nextSlide, 4000); } catch {}
+try { setInterval(nextSlide, 4000); } catch { }
 
 // =============== MOBILE MENU ===============
 function toggleMobileMenu() {
@@ -151,14 +151,15 @@ function toggleCart() {
     });
 
     cartHTML += `
-        </div>
-        <div style="
-            margin-top: 20px;
-            padding-top: 20px;
-            border-top: 2px solid var(--primary-dark);
-            text-align: center;
-        ">
-            <h4>Total: ${total.toLocaleString()}</h4>
+    </div>
+    <div style="
+        margin-top: 20px;
+        padding-top: 20px;
+        border-top: 2px solid var(--primary-dark);
+        text-align: center;
+    ">
+        <h4>Total: ${total.toLocaleString()}</h4>
+        <div style="display: flex; justify-content: center; gap: 10px; flex-wrap: wrap;">
             <button onclick="checkout()" style="
                 background: var(--primary-dark);
                 color: white;
@@ -167,12 +168,24 @@ function toggleCart() {
                 border-radius: 8px;
                 font-weight: bold;
                 cursor: pointer;
-                margin-top: 10px;
             ">
                 Proceder al Pago
             </button>
+            <button onclick="window.location.href=carritoURL" style="
+                background: var(--primary-dark);
+                color: white;
+                border: none;
+                padding: 12px 30px;
+                border-radius: 8px;
+                font-weight: bold;
+                cursor: pointer;
+            ">
+                <i class="fas fa-shopping-cart"></i> Ver Carrito
+            </button>
         </div>
-    `;
+    </div>
+`;
+
 
     const modal = document.createElement('div');
     modal.innerHTML = `
@@ -246,7 +259,7 @@ function toggleUserMenu() {
     isUserMenuOpen = !isUserMenuOpen;
 }
 
-document.addEventListener('click', function(event) {
+document.addEventListener('click', function (event) {
     const userIcon = document.querySelector('.user-icon');
     const dropdown = document.getElementById('user-dropdown');
 
@@ -271,7 +284,7 @@ document.querySelectorAll('a[href^="#"]').forEach(anchor => {
 });
 
 // =============== EFFECTO SCROLL NAVBAR ===============
-window.addEventListener('scroll', function() {
+window.addEventListener('scroll', function () {
     const navbar = document.querySelector('.navbar');
     if (window.scrollY > 100) {
         navbar.style.background = 'linear-gradient(135deg, rgba(6, 43, 97, 0.95), rgba(0, 51, 153, 0.95))';
@@ -303,7 +316,7 @@ document.querySelectorAll('.offer-card, .product-card').forEach(card => {
     observer.observe(card);
 });
 
-document.addEventListener('keydown', function(e) {
+document.addEventListener('keydown', function (e) {
     // ESC key closes modals and menus
     if (e.key === 'Escape') {
         const modal = document.querySelector('[style*="position: fixed"][style*="background: rgba(0,0,0,0.5)"]');
@@ -324,7 +337,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 });
 
-window.addEventListener('load', function() {
+window.addEventListener('load', function () {
     document.body.style.animation = 'fadeIn 0.5s ease forwards';
 });
 
