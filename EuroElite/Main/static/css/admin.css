@@ -1,59 +1,58 @@
-/* ===== Estilos generales ===== */
-body {
-    font-family: 'Poppins', sans-serif;
-    background-color: #f4f6f8;
-    padding: 20px;
-}
-
-h1 {
-    text-align: center;
-    color: #333;
-}
-
-/* ===== Formulario ===== */
+/* ===== Formulario de Productos ===== */
 #productForm {
-    background-color: #fff;
-    padding: 20px;
-    border-radius: 12px;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-    margin-bottom: 30px;
+    background: #fff;
+    padding: 25px;
+    border-radius: 15px;
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+    margin-bottom: 40px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 15px;
+    align-items: center;
 }
 
 #productForm .form-control,
 #productForm .form-select {
-    border-radius: 8px;
+    border-radius: 10px;
     border: 1px solid #ced4da;
+    padding: 10px 12px;
     transition: all 0.3s ease;
 }
 
 #productForm .form-control:focus,
 #productForm .form-select:focus {
-    border-color: #198754;
-    box-shadow: 0 0 5px rgba(25,135,84,0.3);
+    border-color: #1abc9c;
+    box-shadow: 0 0 8px rgba(26, 188, 156, 0.3);
 }
 
 #productForm button {
-    border-radius: 8px;
+    background: #1abc9c;
+    color: #fff;
     font-weight: 600;
-    background-color: #198754;
     border: none;
+    border-radius: 10px;
+    padding: 10px 0;
+    cursor: pointer;
     transition: all 0.3s ease;
 }
 
 #productForm button:hover {
-    background-color: #145c33;
+    background: #16a085;
 }
 
-/* ===== Tabla ===== */
+/* ===== Tabla de Productos ===== */
 table {
-    background-color: #fff;
-    border-radius: 12px;
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+    border-radius: 15px;
     overflow: hidden;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    background: #fff;
+    box-shadow: 0 8px 20px rgba(0,0,0,0.1);
 }
 
 table thead {
-    background-color: #198754;
+    background: #1abc9c;
     color: #fff;
     text-align: center;
 }
@@ -62,37 +61,68 @@ table th, table td {
     padding: 12px 15px;
     text-align: center;
     vertical-align: middle;
+    font-size: 14px;
+}
+
+table tbody tr {
+    transition: all 0.3s ease;
 }
 
 table tbody tr:nth-child(even) {
-    background-color: #f9f9f9;
+    background: #f9f9f9;
 }
 
+table tbody tr:hover {
+    background: #e8f6f3;
+}
+
+/* Imagen del producto */
 table tbody img {
     width: 60px;
     height: 60px;
     object-fit: cover;
-    border-radius: 8px;
+    border-radius: 12px;
+    border: 1px solid #ccc;
 }
 
-/* ===== Botones de acción ===== */
+/* Botones de acción */
 button.btn-warning {
-    background-color: #ffc107;
-    color: #212529;
+    background: #f39c12;
+    color: #fff;
     border-radius: 8px;
     border: none;
+    padding: 6px 10px;
+    transition: all 0.3s ease;
 }
 
 button.btn-warning:hover {
-    background-color: #e0a800;
+    background: #d68910;
 }
 
 button.btn-danger {
-    background-color: #dc3545;
+    background: #e74c3c;
+    color: #fff;
     border-radius: 8px;
     border: none;
+    padding: 6px 10px;
+    transition: all 0.3s ease;
 }
 
 button.btn-danger:hover {
-    background-color: #a71d2a;
+    background: #c0392b;
+}
+
+/* ===== Responsive ===== */
+@media (max-width: 768px) {
+    #productForm {
+        flex-direction: column;
+    }
+    table th, table td {
+        font-size: 12px;
+        padding: 8px 10px;
+    }
+    table tbody img {
+        width: 50px;
+        height: 50px;
+    }
 }
