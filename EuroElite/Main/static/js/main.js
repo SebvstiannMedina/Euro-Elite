@@ -82,7 +82,7 @@ function showCartNotification(productName) {
     notification.innerHTML = `
         <div style="
             position: fixed; top: 100px; right: 20px;
-            background: var(--accent-red); color: white;
+            background: #28a745; color: white;
             padding: 15px 20px; border-radius: 8px;
             box-shadow: var(--shadow-hover); z-index: 9999;
             animation: slideInRight 0.3s ease;">
