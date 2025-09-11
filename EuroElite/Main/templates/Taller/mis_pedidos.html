@@ -1,97 +1,13 @@
+{% extends 'base.html' %}
 {% load static %}
-
-<!DOCTYPE html>
-<html lang="en">
-
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Euro Elite</title>
-    <!-- Bootstrap CSS -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet"
-        integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB" crossorigin="anonymous">
-    <!-- CSS propio -->
-    <link rel="stylesheet" href="{% static 'css/style.css' %}?v=2">
-    <!-- Slick CSS -->
-    <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/slick-carousel@1.8.1/slick/slick.css" />
-    <link rel="stylesheet" type="text/css"
-        href="https://cdn.jsdelivr.net/npm/slick-carousel@1.8.1/slick/slick-theme.css" />
-    <!-- Font Awesome -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <!-- Google Fonts -->
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="icon" href="{% static 'img/LogoApp.png' %}" type="image/x-icon">
-    <!-- Owl Carousel CSS -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/OwlCarousel2/2.3.4/assets/owl.carousel.min.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/OwlCarousel2/2.3.4/assets/owl.theme.default.min.css">
-    <style>.profile-wrapper .card, .pw-card { border: 0; border-radius: 12px; box-shadow: var(--shadow); background: #fff; }</style>
-</head>
-
-
-<body>
-    <!-- NAVBAR -->
-    <nav class="navbar">
-        <div class="navbar-container">
-            <!-- Logo -->
-            <div class="navbar-logo">
-                <img src="{% static 'img/LogoApp.png' %}" alt="Logo" class="navbar-logo">
-            </div>
-
-            <!-- Botón móvil -->
-            <button class="navbar-toggle" onclick="toggleMobileMenu()" aria-label="Abrir menú">
-                <i class="fas fa-bars"></i>
-            </button>
-
-            <!-- Menú principal -->
-            <ul class="navbar-menu" id="navbar-menu" style="margin-left: 10rem;margin-right: 10rem;">
-                <li><a href="{% url 'home' %}">INICIO</a></li>
-                <li><a href="{% url 'productos' %}">PRODUCTOS</a></li>
-                <li><a href="#services">SERVICIOS</a></li>
-                <li><a href="#contact">CONTACTO</a></li>
-                <li><a href="#team">EQUIPO</a></li>
-            </ul>
-
-            <!-- Acciones usuario y carrito -->
-            <div class="navbar-actions">
-                <!-- Carrito -->
-                <div class="cart-icon" onclick="toggleCart()" role="button" aria-label="Ver carrito">
-                    <i class="fas fa-shopping-cart"></i>
-                    <span class="cart-count" id="cart-count">0</span>
-                </div>
-
-                <!-- Usuario -->
-                <div class="user-icon" onclick="toggleUserMenu()" role="button" aria-haspopup="true"
-                    aria-expanded="false">
-                    <i class="fas fa-user"></i>
-                    <div class="user-dropdown" id="user-dropdown">
-                        {% if user.is_authenticated %}
-                        <span>Hola, {{ user.username }}</span>
-                        <a href="{% url 'perfil' %}">Mi Perfil</a>
-                        <form action="{% url 'logout' %}" method="post" style="display:inline;">
-                            {% csrf_token %}
-                            <button type="submit" class="dropdown-item">Cerrar Sesión</button>
-                        </form>
-                        {% else %}
-                        <a href="{% url 'login' %}">Iniciar Sesión</a>
-                        <a href="{% url 'registro' %}">Registrarse</a>
-                        {% endif %}
-                    </div>
-                </div>
-            </div>
-        </div>
-    </nav>
-
-
-
+{% block title %}Inicio - Euro Elite{% endblock %}
+{% block content %}
     <br>
     <br>
     <br>
     <br>
     <br>
     <br>
-
-
-
         <!-- PERFIL -->
     <div class="container my-4 profile-wrapper">
         <div class="row">
@@ -190,82 +106,10 @@
             </section>
         </div>
     </div>
-
-
-
-
-
-
-
-
-
-
     <br>
     <br><br><br><br>
 
-
-
-    <!-- FOOTER -->
-    <footer class="footer"  style="margin-bottom: 0rem;">
-        <div class="footer-container">
-            <div class="footer-section">
-                <h3>Euro Elite</h3>
-                <p>Tu tienda especializada en repuestos europeos de alta calidad. Más de 10 años de experiencia en el
-                    mercado automotriz.</p>
-                <div class="social-icons">
-                    <a href="#"><i class="fab fa-facebook-f"></i></a>
-                    <a href="#"><i class="fab fa-instagram"></i></a>
-                </div>
-            </div>
-
-            <div class="footer-section">
-                <h3>Productos</h3>
-                <ul>
-                    <li><a href="#">Repuestos BMW</a></li>
-                    <li><a href="#">Repuestos Audi</a></li>
-                    <li><a href="#">Repuestos Mercedes-Benz</a></li>
-                    <li><a href="#">Accesorios</a></li>
-                    <li><a href="#">Herramientas</a></li>
-                </ul>
-            </div>
-
-            <div class="footer-section">
-                <h3>Servicios</h3>
-                <ul>
-                    <li><a href="{% url 'agendar' %}">Instalación</a></li>
-                    <li><a href="{% url 'agendar' %}">Mantención</a></li>
-                    <li><a href="{% url 'agendar' %}">Diagnóstico</a></li>
-                    <li><a href="{% url 'agendar' %}">Garantía</a></li>
-                </ul>
-            </div>
-
-            <div class="footer-section">
-                <h3>Contacto</h3>
-                <ul>
-                    <li><i class="fas fa-map-marker-alt"></i> Cooperativa 1144, Recoleta, Santiago</li>
-                    <li><i class="fas fa-phone"></i> +56 9 1234 5678</li>
-                    <li><i class="fas fa-envelope"></i> info@euroelite.cl</li>
-                    <li><i class="fas fa-clock"></i> Lun-Vie: 9:00-18:00</li>
-                </ul>
-            </div>
-
-            <div class="footer-section">
-                <h3>Legal</h3>
-                <ul>
-                    <li><a href="{% url 'terminos' %}">Términos y Condiciones</a></li>
-                    <li><a href="{% url 'privacidad' %}">Política de Privacidad</a></li>
-                    <li><a href="{% url 'privacidad' %}">Política de Devoluciones</a></li>
-                </ul>
-            </div>
-        </div>
-
-        <div class="footer-bottom" style="text-align: center;">
-            <p>&copy; 2025 Euro Elite. Todos los derechos reservados. | Diseñado con ❤️ para los amantes del automóvil
-            </p>
-        </div>
-    </footer>
-
-    <!--El const carrito URL es para que la página de carrito cargue la URL correcta-->
+{% endblock %}
 
     <script>
         const carritoURL = "{% url 'carrito_compras' %}";

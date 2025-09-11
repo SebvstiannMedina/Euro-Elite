@@ -125,5 +125,12 @@ def terminos(request):
 def privacidad(request):
     return render(request, 'Taller/privacidad.html')
 
+@login_required
 def agregar_editar(request):
     return render(request, 'Taller/agregar_editar.html')
+
+def prueba(request):
+    return render(request, 'Taller/prueba.html')
+
+def compra_exitosa(request):
+    return render(request, 'Taller/compra_exitosa.html')
