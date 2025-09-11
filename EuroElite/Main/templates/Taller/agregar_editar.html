@@ -1,7 +1,86 @@
-{% extends 'base.html' %}
 {% load static %}
-{% block title %}Inicio - Euro Elite{% endblock %}
-{% block content %}
+
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Euro Elite</title>
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet"
+        integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB" crossorigin="anonymous">
+    <!-- CSS propio -->
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+    <link rel="stylesheet" href="{% static 'css/admin.css' %}">
+    <!-- Slick CSS -->
+    <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/slick-carousel@1.8.1/slick/slick.css" />
+    <link rel="stylesheet" type="text/css"
+        href="https://cdn.jsdelivr.net/npm/slick-carousel@1.8.1/slick/slick-theme.css" />
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap"
+        rel="stylesheet">
+    <link rel="icon" href="{% static 'img/LogoApp.png' %}" type="image/x-icon">
+    <!-- Owl Carousel CSS -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/OwlCarousel2/2.3.4/assets/owl.carousel.min.css">
+    <link rel="stylesheet"
+        href="https://cdnjs.cloudflare.com/ajax/libs/OwlCarousel2/2.3.4/assets/owl.theme.default.min.css">
+</head>
+
+<body data-auth="{% if user.is_authenticated %}true{% else %}false{% endif %}">
+    <!-- NAVBAR -->
+    <nav class="navbar">
+        <div class="navbar-container">
+            <!-- Logo -->
+            <div class="navbar-logo">
+                <img src="{% static 'img/LogoApp.png' %}" alt="Logo" class="navbar-logo">
+            </div>
+
+            <!-- Botón móvil -->
+            <button class="navbar-toggle" onclick="toggleMobileMenu()" aria-label="Abrir menú">
+                <i class="fas fa-bars"></i>
+            </button>
+
+            <!-- Menú principal -->
+            <ul class="navbar-menu" id="navbar-menu" style="margin-left: 10rem;margin-right: 10rem;">
+                <li><a href="{% url 'home' %}">INICIO</a></li>
+                <li><a href="{% url 'productos' %}">PRODUCTOS</a></li>
+                <li><a href="#services">SERVICIOS</a></li>
+                <li><a href="#contact">CONTACTO</a></li>
+                <li><a href="#team">EQUIPO</a></li>
+            </ul>
+            <!-- Acciones usuario y carrito -->
+            <div class="navbar-actions">
+                <!-- Carrito -->
+                <div class="cart-icon" onclick="toggleCart()" role="button" aria-label="Ver carrito">
+                    <i class="fas fa-shopping-cart"></i>
+                    <span class="cart-count" id="cart-count">0</span>
+                </div>
+
+                <!-- Usuario -->
+                <div class="user-icon" onclick="toggleUserMenu()" role="button" aria-haspopup="true"
+                    aria-expanded="false">
+                    <i class="fas fa-user"></i>
+                    <div class="user-dropdown" id="user-dropdown">
+                        {% if user.is_authenticated %}
+                        <span>Hola, {{ user.username }}</span>
+                        <a href="{% url 'perfil' %}">Mi Perfil</a>
+                        <form action="{% url 'logout' %}" method="post" style="display:inline;">
+                            {% csrf_token %}
+                            <button type="submit" class="dropdown-item">Cerrar Sesión</button>
+                        </form>
+                        {% else %}
+                        <a href="{% url 'login' %}">Iniciar Sesión</a>
+                        <a href="{% url 'registro' %}">Registrarse</a>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </nav>
+
     <br>
     <br>
     <br>
@@ -17,21 +96,17 @@
 
     <h1 class="mb-4">Gestión de Productos</h1>
 
-    <!-- Formulario -->
     <form id="productForm" class="row g-3 mb-4">
         <input type="hidden" id="productId">
-        <div class="col-md-3">
-            <input type="text" id="productName" class="form-control" placeholder="Nombre" required>
+        <div class="col-md-3"><input type="text" id="productName" class="form-control" placeholder="Nombre" required>
         </div>
-        <div class="col-md-3">
-            <input type="text" id="productDescription" class="form-control" placeholder="Descripción" required>
+        <div class="col-md-3"><input type="text" id="productDescription" class="form-control" placeholder="Descripción"
+                required></div>
+        <div class="col-md-2"><input type="number" id="productPrice" class="form-control" placeholder="Precio" required>
         </div>
-        <div class="col-md-2">
-            <input type="number" id="productPrice" class="form-control" placeholder="Precio" required>
+        <div class="col-md-2"><input type="number" id="productStock" class="form-control" placeholder="Stock" required>
         </div>
-        <div class="col-md-2">
-            <input type="file" id="productImage" class="form-control" accept="image/*" required>
-        </div>
+        <div class="col-md-2"><input type="file" id="productImage" class="form-control" accept="image/*" required></div>
         <div class="col-md-2">
             <select id="productCategory" class="form-select" required>
                 <option value="">Categoría...</option>
@@ -46,7 +121,6 @@
         </div>
     </form>
 
-    <!-- Tabla de productos -->
     <table class="table table-bordered">
         <thead>
             <tr>
@@ -54,23 +128,90 @@
                 <th>Descripción</th>
                 <th>Precio</th>
                 <th>Categoría</th>
-                <th>Imagen Producto</th>
+                <th>Stock</th>
+                <th>Imagen</th>
                 <th>Acciones</th>
             </tr>
         </thead>
         <tbody id="productTable"></tbody>
     </table>
-{% endblock %}
+
+    <br>
+    <br>
+    <br>
+
+    <!-- FOOTER -->
+    <footer class="footer" style="margin-bottom: 0rem;">
+        <div class="footer-container">
+            <div class="footer-section">
+                <h3>Euro Elite</h3>
+                <p>Tu tienda especializada en repuestos europeos de alta calidad. Más de 10 años de experiencia en el
+                    mercado automotriz.</p>
+                <div class="social-icons">
+                    <a href="#"><i class="fab fa-facebook-f"></i></a>
+                    <a href="#"><i class="fab fa-instagram"></i></a>
+                </div>
+            </div>
+
+            <div class="footer-section">
+                <h3>Productos</h3>
+                <ul>
+                    <li><a href="#">Repuestos BMW</a></li>
+                    <li><a href="#">Repuestos Audi</a></li>
+                    <li><a href="#">Repuestos Mercedes-Benz</a></li>
+                    <li><a href="#">Accesorios</a></li>
+                    <li><a href="#">Herramientas</a></li>
+                </ul>
+            </div>
+
+            <div class="footer-section">
+                <h3>Servicios</h3>
+                <ul>
+                    <li><a href="{% url 'agendar' %}">Instalación</a></li>
+                    <li><a href="{% url 'agendar' %}">Mantención</a></li>
+                    <li><a href="{% url 'agendar' %}">Diagnóstico</a></li>
+                    <li><a href="{% url 'agendar' %}">Garantía</a></li>
+                </ul>
+            </div>
+
+            <div class="footer-section">
+                <h3>Contacto</h3>
+                <ul>
+                    <li><i class="fas fa-map-marker-alt"></i> Cooperativa 1144, Recoleta, Santiago</li>
+                    <li><i class="fas fa-phone"></i> +56 9 1234 5678</li>
+                    <li><i class="fas fa-envelope"></i> info@euroelite.cl</li>
+                    <li><i class="fas fa-clock"></i> Lun-Vie: 9:00-18:00</li>
+                </ul>
+            </div>
+
+            <div class="footer-section">
+                <h3>Legal</h3>
+                <ul>
+                    <li><a href="{% url 'terminos' %}">Términos y Condiciones</a></li>
+                    <li><a href="{% url 'privacidad' %}">Política de Privacidad</a></li>
+                    <li><a href="{% url 'privacidad' %}">Política de Devoluciones</a></li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="footer-bottom" style="text-align: center;">
+            <p>&copy; 2025 Euro Elite. Todos los derechos reservados. | Diseñado con ❤️ para los amantes del automóvil
+            </p>
+        </div>
+    </footer>
+
+    <!--El const carrito URL es para que la página de carrito cargue la URL correcta-->
+
     <script>
         const carritoURL = "{% url 'carrito_compras' %}";
     </script>
     <script>
         let editingIndex = null;
 
-        // Cargar productos al iniciar
+        // ✅ Cargar productos al iniciar
         document.addEventListener("DOMContentLoaded", loadProducts);
 
-        // Guardar producto
+        // ✅ Guardar producto
         document.getElementById("productForm").addEventListener("submit", function (e) {
             e.preventDefault();
 
@@ -78,6 +219,7 @@
             const description = document.getElementById("productDescription").value;
             const price = parseFloat(document.getElementById("productPrice").value);
             const category = document.getElementById("productCategory").value;
+            const stock = parseInt(document.getElementById("productStock").value) || 0;
             const file = document.getElementById("productImage").files[0];
 
             if (!file && editingIndex === null) {
@@ -87,16 +229,34 @@
 
             const reader = new FileReader();
             reader.onload = function (event) {
-                const imageBase64 = file ? event.target.result : JSON.parse(localStorage.getItem("products"))[editingIndex].image;
+                const products = JSON.parse(localStorage.getItem("products")) || [];
 
-                let products = JSON.parse(localStorage.getItem("products")) || [];
+                const imageBase64 = file
+                    ? event.target.result
+                    : products[editingIndex].image;
 
-                const newProduct = { name, description, price, category, image: imageBase64 };
+                const newProduct = { name, description, price, category, stock, image: imageBase64 };
 
                 if (editingIndex !== null) {
+                    // 🟢 Editar producto existente
                     products[editingIndex] = newProduct;
+
+                    // 🟢 También actualizar carrito si ya estaba
+                    let cart = JSON.parse(localStorage.getItem("cart")) || [];
+                    cart = cart.map(item => {
+                        if (item.name === newProduct.name) {
+                            return {
+                                ...item,
+                                stock: newProduct.stock // sincronizar stock en el carrito
+                            };
+                        }
+                        return item;
+                    });
+                    localStorage.setItem("cart", JSON.stringify(cart));
+
                     editingIndex = null;
                 } else {
+                    // 🟢 Nuevo producto
                     products.push(newProduct);
                 }
 
@@ -112,7 +272,7 @@
             }
         });
 
-        // Cargar productos en la tabla
+        // ✅ Cargar productos en la tabla
         function loadProducts() {
             const products = JSON.parse(localStorage.getItem("products")) || [];
             const table = document.getElementById("productTable");
@@ -120,25 +280,26 @@
 
             products.forEach((p, index) => {
                 const row = `
-        <tr>
-          <td>${p.name}</td>
-          <td>${p.description}</td>
-          <td>$${p.price.toLocaleString()}</td>
-          <td>${p.category}</td>
-          <td>
-            <img src="${p.image}" alt="${p.name}" width="60" height="60" style="object-fit:cover; border-radius:5px;">
-          </td>
-          <td>
-            <button class="btn btn-warning btn-sm" onclick="editProduct(${index})">Editar</button>
-            <button class="btn btn-danger btn-sm" onclick="deleteProduct(${index})">Eliminar</button>
-          </td>
-        </tr>
-      `;
+            <tr>
+                <td>${p.name}</td>
+                <td>${p.description}</td>
+                <td>$${p.price.toLocaleString()}</td>
+                <td>${p.category}</td>
+                <td>${p.stock}</td>
+                <td>
+                    <img src="${p.image}" alt="${p.name}" width="60" height="60" 
+                         style="object-fit:cover; border-radius:5px;">
+                </td>
+                <td>
+                    <button class="btn btn-warning btn-sm" onclick="editProduct(${index})">Editar</button>
+                    <button class="btn btn-danger btn-sm" onclick="deleteProduct(${index})">Eliminar</button>
+                </td>
+            </tr>`;
                 table.innerHTML += row;
             });
         }
 
-        // Editar producto
+        // ✅ Editar producto
         function editProduct(index) {
             const products = JSON.parse(localStorage.getItem("products")) || [];
             const product = products[index];
@@ -147,17 +308,27 @@
             document.getElementById("productDescription").value = product.description;
             document.getElementById("productPrice").value = product.price;
             document.getElementById("productCategory").value = product.category;
+            document.getElementById("productStock").value = product.stock;
 
             editingIndex = index;
         }
 
-        // Eliminar producto
+        // ✅ Eliminar producto
         function deleteProduct(index) {
             let products = JSON.parse(localStorage.getItem("products")) || [];
+            const deleted = products[index];
+
             products.splice(index, 1);
             localStorage.setItem("products", JSON.stringify(products));
+
+            // 🟢 También quitar del carrito si estaba
+            let cart = JSON.parse(localStorage.getItem("cart")) || [];
+            cart = cart.filter(item => item.name !== deleted.name);
+            localStorage.setItem("cart", JSON.stringify(cart));
+
             loadProducts();
         }
+
     </script>
     <script src="{% static 'js/main.js' %}?v=2"></script>
 </body>

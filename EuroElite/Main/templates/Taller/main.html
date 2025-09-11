@@ -3,203 +3,79 @@
 {% block title %}Inicio - Euro Elite{% endblock %}
 {% block content %}
 
-    <!-- CAROUSEL -->
-    <section class="hero-section" id="home">
-        <div class="carousel-container">
-            <div class="carousel-track" id="carousel-track">
-                <div class="carousel-slide">
-                    <div class="slide-content">
-                        <h1 class="slide-title">Euro Elite</h1>
-                        <p class="slide-description">Los mejores repuestos europeos para tu automóvil</p>
-                        <a href="#products" class="cta-button">Ver Productos</a>
-                    </div>
-                </div>
-                <div class="carousel-slide">
-                    <div class="slide-content">
-                        <h1 class="slide-title">Calidad Premium</h1>
-                        <p class="slide-description">Repuestos originales BMW, Audi y Mercedes-Benz</p>
-                        <a href="#offers" class="cta-button">Ver Ofertas</a>
-                    </div>
-                </div>
-                <div class="carousel-slide">
-                    <div class="slide-content">
-                        <h1 class="slide-title">Servicio Experto</h1>
-                        <p class="slide-description">Asesoría profesional para tu vehículo</p>
-                        <a href="#services" class="cta-button">Conocer Más</a>
-                    </div>
+<!-- CAROUSEL -->
+<section class="hero-section" id="home">
+    <div class="carousel-container">
+        <div class="carousel-track" id="carousel-track">
+            <div class="carousel-slide">
+                <div class="slide-content">
+                    <h1 class="slide-title">Euro Elite</h1>
+                    <p class="slide-description">Los mejores repuestos europeos para tu automóvil</p>
+                    <a href="#products" class="cta-button">Ver Productos</a>
                 </div>
             </div>
-            <div class="carousel-nav">
-                <div class="nav-dot active" onclick="goToSlide(0)"></div>
-                <div class="nav-dot" onclick="goToSlide(1)"></div>
-                <div class="nav-dot" onclick="goToSlide(2)"></div>
-            </div>
-        </div>
-    </section>
-
-    <!-- CTA BANNER -->
-    <section class="cta-banner">
-        <h2>¡Encuentra los Mejores Repuestos para tu Auto!</h2>
-        <p>Calidad europea garantizada</p>
-        <a href="#products" class="cta-button">Explorar Catálogo</a>
-    </section>
-
-    <!-- OFERTAS DESTACADAS -->
-    <section class="featured-offers" id="offers">
-        <h2 class="section-title">Ofertas Destacadas</h2>
-        <div class="offers-grid">
-            <div class="offer-card">
-                <div class="offer-badge">-25%</div>
-                <div class="offer-image">
-                    <i class="fas fa-brake-disc"></i>
-                </div>
-                <div class="offer-content">
-                    <h3 class="offer-title">Discos de Freno BMW</h3>
-                    <p class="offer-description">Discos de freno originales para Serie 3, alta durabilidad</p>
-                    <div class="offer-price">
-                        <span class="current-price">$149.990</span>
-                        <span class="original-price">$199.990</span>
-                    </div>
-                    <button class="add-to-cart" onclick="addToCart('Discos de Freno BMW', 149990)">
-                        <i class="fas fa-shopping-cart"></i> Añadir al Carrito
-                    </button>
+            <div class="carousel-slide">
+                <div class="slide-content">
+                    <h1 class="slide-title">Calidad Premium</h1>
+                    <p class="slide-description">Repuestos originales BMW, Audi y Mercedes-Benz</p>
+                    <a href="#offers" class="cta-button">Ver Ofertas</a>
                 </div>
             </div>
-
-            <div class="offer-card">
-                <div class="offer-badge">-30%</div>
-                <div class="offer-image">
-                    <i class="fas fa-cog"></i>
-                </div>
-                <div class="offer-content">
-                    <h3 class="offer-title">Filtro de Aire Audi</h3>
-                    <p class="offer-description">Filtro de aire de alto rendimiento para motores TFSI</p>
-                    <div class="offer-price">
-                        <span class="current-price">$45.990</span>
-                        <span class="original-price">$65.990</span>
-                    </div>
-                    <button class="add-to-cart" onclick="addToCart('Filtro de Aire Audi', 45990)">
-                        <i class="fas fa-shopping-cart"></i> Añadir al Carrito
-                    </button>
-                </div>
-            </div>
-
-            <div class="offer-card">
-                <div class="offer-badge">-20%</div>
-                <div class="offer-image">
-                    <i class="fas fa-oil-can"></i>
-                </div>
-                <div class="offer-content">
-                    <h3 class="offer-title">Aceite Mercedes-Benz</h3>
-                    <p class="offer-description">Aceite sintético 5W-30 MB 229.5, 5 litros</p>
-                    <div class="offer-price">
-                        <span class="current-price">$79.990</span>
-                        <span class="original-price">$99.990</span>
-                    </div>
-                    <button class="add-to-cart" onclick="addToCart('Aceite Mercedes-Benz', 79990)">
-                        <i class="fas fa-shopping-cart"></i> Añadir al Carrito
-                    </button>
+            <div class="carousel-slide">
+                <div class="slide-content">
+                    <h1 class="slide-title">Servicio Experto</h1>
+                    <p class="slide-description">Asesoría profesional para tu vehículo</p>
+                    <a href="#services" class="cta-button">Conocer Más</a>
                 </div>
             </div>
         </div>
-    </section>
-
-    <!-- PRODUCTOS EN VENTA -->
-    <section class="products-section" id="products">
-        <h2 class="section-title">Productos en Venta</h2>
-        <div class="products-grid">
-            <div class="product-card">
-                <div class="product-image">
-                    <i class="fas fa-car-battery"></i>
-                </div>
-                <div class="product-content">
-                    <h3 class="product-title">Batería BMW Original</h3>
-                    <p class="product-description">Batería AGM 12V 90Ah para modelos BMW Serie 3 y 5</p>
-                    <div class="product-price">$189.990</div>
-                    <button class="add-to-cart" onclick="addToCart('Batería BMW Original', 189990)">
-                        <i class="fas fa-shopping-cart"></i> Añadir al Carrito
-                    </button>
-                </div>
-            </div>
-
-            <div class="product-card">
-                <div class="product-image">
-                    <i class="fas fa-tire"></i>
-                </div>
-                <div class="product-content">
-                    <h3 class="product-title">Neumáticos Audi</h3>
-                    <p class="product-description">Set de 4 neumáticos 225/45R18 para Audi A4</p>
-                    <div class="product-price">$439.990</div>
-                    <button class="add-to-cart" onclick="addToCart('Neumáticos Audi', 439990)">
-                        <i class="fas fa-shopping-cart"></i> Añadir al Carrito
-                    </button>
-                </div>
-            </div>
-
-            <div class="product-card">
-                <div class="product-image">
-                    <i class="fas fa-lightbulb"></i>
-                </div>
-                <div class="product-content">
-                    <h3 class="product-title">Faros LED Mercedes</h3>
-                    <p class="product-description">Kit de faros LED H7 para Mercedes-Benz Clase C</p>
-                    <div class="product-price">$129.990</div>
-                    <button class="add-to-cart" onclick="addToCart('Faros LED Mercedes', 129990)">
-                        <i class="fas fa-shopping-cart"></i> Añadir al Carrito
-                    </button>
-                </div>
-            </div>
-
-            <div class="product-card">
-                <div class="product-image">
-                    <i class="fas fa-wrench"></i>
-                </div>
-                <div class="product-content">
-                    <h3 class="product-title">Kit de Herramientas</h3>
-                    <p class="product-description">Set profesional de herramientas para mantención</p>
-                    <div class="product-price">$89.990</div>
-                    <button class="add-to-cart" onclick="addToCart('Kit de Herramientas', 89990)">
-                        <i class="fas fa-shopping-cart"></i> Añadir al Carrito
-                    </button>
-                </div>
-            </div>
-
-            <div class="product-card">
-                <div class="product-image">
-                    <i class="fas fa-thermometer-half"></i>
-                </div>
-                <div class="product-content">
-                    <h3 class="product-title">Radiador BMW</h3>
-                    <p class="product-description">Radiador de aluminio para BMW X3, máxima eficiencia</p>
-                    <div class="product-price">$299.990</div>
-                    <button class="add-to-cart" onclick="addToCart('Radiador BMW', 299990)">
-                        <i class="fas fa-shopping-cart"></i> Añadir al Carrito
-                    </button>
-                </div>
-            </div>
-
-            <div class="product-card">
-                <div class="product-image">
-                    <i class="fas fa-tachometer-alt"></i>
-                </div>
-                <div class="product-content">
-                    <h3 class="product-title">Sensores Audi</h3>
-                    <p class="product-description">Sensores de oxígeno originales para motores V6</p>
-                    <div class="product-price">$159.990</div>
-                    <button class="add-to-cart" onclick="addToCart('Sensores Audi', 159990)">
-                        <i class="fas fa-shopping-cart"></i> Añadir al Carrito
-                    </button>
-                </div>
-            </div>
+        <div class="carousel-nav">
+            <div class="nav-dot active" onclick="goToSlide(0)"></div>
+            <div class="nav-dot" onclick="goToSlide(1)"></div>
+            <div class="nav-dot" onclick="goToSlide(2)"></div>
         </div>
-    </section>
+    </div>
+</section>
+
+<!-- CTA BANNER -->
+<section class="cta-banner">
+    <h2>¡Encuentra los Mejores Repuestos para tu Auto!</h2>
+    <p>Calidad europea garantizada</p>
+    <a href="#products" class="cta-button">Explorar Catálogo</a>
+</section>
+
+<!-- OFERTAS DESTACADAS -->
+<section class="featured-offers" id="offers">
+    <h2 class="section-title">Ofertas Destacadas</h2>
+    <div class="offers-grid">
+        <div class="offer-card">
+            <h3 class="offer-title">Discos de Freno BMW</h3>
+            <p>Discos originales Serie 3</p>
+            <div class="offer-price">$149.990</div>
+            <button class="add-to-cart" onclick="addToCart('Discos de Freno BMW',149990)">
+                <i class="fas fa-shopping-cart"></i> Añadir al Carrito
+            </button>
+        </div>
+
+        <div class="offer-card">
+            <h3 class="offer-title">Filtro de Aire Audi</h3>
+            <p>Filtro TFSI alto rendimiento</p>
+            <div class="offer-price">$45.990</div>
+            <button class="add-to-cart" onclick="addToCart('Filtro de Aire Audi',45990)">
+                <i class="fas fa-shopping-cart"></i> Añadir al Carrito
+            </button>
+        </div>
+    </div>
+</section>
+
+
 {% endblock %}
 <!--El const carrito URL es para que la página de carrito cargue la URL correcta-->
 
-    <script>
-        const carritoURL = "{% url 'carrito_compras' %}";
-    </script>
-    <script src="{% static 'js/main.js' %}?v=2"></script>
+<script>
+    const carritoURL = "{% url 'carrito_compras' %}";
+</script>
+<script src="{% static 'js/main.js' %}?v=2"></script>
 </body>
 
 </html>
