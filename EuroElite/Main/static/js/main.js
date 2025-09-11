@@ -107,7 +107,7 @@ function toggleCart() {
                 </div>
                 <div>
                     <strong>${itemTotal.toLocaleString()}</strong>
-                    <button onclick="removeFromCart(${index})" style="
+                    <button class="remove-btn" data-index="${index}" style="
                         margin-left: 10px; background: var(--accent-red); color: white;
                         border: none; border-radius: 4px; padding: 4px 8px; cursor: pointer;">
                         <i class="fas fa-trash"></i>
@@ -258,8 +258,12 @@ window.addEventListener('load', function () { document.body.style.animation = 'f
 function renderCartPage() {
     const container = document.getElementById("cart-page");
     if (!container) return;
+
     container.innerHTML = "";
-    if (cart.length === 0) { container.innerHTML = "<p>Tu carrito está vacío</p>"; return; }
+    if (cart.length === 0) {
+        container.innerHTML = "<p style='text-align:center; font-size:1.1rem;'>Tu carrito está vacío 🛒</p>";
+        return;
+    }
 
     let total = 0;
     cart.forEach((item, index) => {
@@ -267,16 +271,35 @@ function renderCartPage() {
         total += subtotal;
         container.innerHTML += `
             <div class="cart-item">
-                <strong>${item.name}</strong> — ${item.quantity} × $${item.price.toLocaleString()}
-                <small>(Stock: ${item.stock})</small> =
-                <b>$${subtotal.toLocaleString()}</b>
-                <button onclick="removeFromCart(${index}); renderCartPage();">❌</button>
-            </div>`;
+                <div>
+                    <strong>${item.name}</strong><br>
+                    <small>${item.quantity} × $${item.price.toLocaleString()}</small>
+                </div>
+                <div>
+                    <b>$${subtotal.toLocaleString()}</b>
+                    <button class="remove-btn" data-index="${index}">❌</button>
+                </div>
+            </div>
+        `;
     });
+
     container.innerHTML += `
         <h3>Total: $${total.toLocaleString()}</h3>
-        <button onclick="checkout(); renderCartPage();">Proceder al Pago</button>`;
+        <div class="cart-actions">
+            <button onclick="checkout(); renderCartPage();">Proceder al Pago</button>
+            <button onclick="window.location.href='{% url 'productos' %}'">Seguir Comprando</button>
+        </div>
+    `;
 }
+
+// ✅ Delegación de eventos para los botones ❌
+document.addEventListener("click", function (e) {
+    if (e.target.classList.contains("remove-btn")) {
+        const index = e.target.getAttribute("data-index");
+        removeFromCart(index);
+        renderCartPage();
+    }
+});
 
 // =============== PRODUCTO DETALLE ===============
 function showProductDetail(name, description, price, image) {

@@ -865,12 +865,15 @@ body {
 
 /*Carrito de Compras*/
 
-/* ================== CARRITO ================== */
+/* ==== ESTILOS PARA EL CARRITO ==== */
 .cart-container {
     background: #fff;
     border-radius: 12px;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-    padding: 20px;
+    padding: 25px;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+    max-width: 800px;
+    margin: auto;
+    font-family: 'Poppins', sans-serif;
 }
 
 .cart-item {
@@ -879,63 +882,67 @@ body {
     align-items: center;
     padding: 15px 10px;
     border-bottom: 1px solid #eee;
+    transition: background 0.2s ease-in-out;
 }
 
-.cart-item:last-child {
-    border-bottom: none;
+.cart-item:hover {
+    background: #f9f9f9;
 }
 
-.cart-item-info {
-    flex: 1;
+.cart-item strong {
+    font-size: 1rem;
+    color: #063061;
 }
 
-.cart-item-info strong {
-    font-size: 1.1rem;
-    color: var(--primary-dark);
-}
-
-.cart-item-actions {
-    display: flex;
-    align-items: center;
-    gap: 10px;
+.cart-item small {
+    font-size: 0.9rem;
+    color: #666;
 }
 
 .cart-item button {
-    background: var(--accent-red);
+    background: #dc3545;
     border: none;
-    padding: 6px 12px;
     color: #fff;
     border-radius: 6px;
+    padding: 6px 12px;
     cursor: pointer;
-    transition: background 0.2s;
+    transition: 0.2s ease;
 }
 
 .cart-item button:hover {
-    background: #b22222;
+    background: #b02a37;
 }
 
-.cart-total {
-    text-align: right;
+/* ==== TOTAL ==== */
+.cart-container h3 {
     margin-top: 20px;
-}
-
-.cart-total h4 {
+    text-align: right;
     font-size: 1.3rem;
-    margin-bottom: 15px;
+    color: #063061;
 }
 
-.cart-total button {
-    background: var(--primary-dark);
+/* ==== BOTONES ==== */
+.cart-actions {
+    margin-top: 25px;
+    display: flex;
+    justify-content: flex-end;
+    gap: 15px;
+    flex-wrap: wrap;
+}
+
+.cart-actions button {
+    background: linear-gradient(135deg, #063061, #003399);
     color: #fff;
     border: none;
-    padding: 12px 30px;
+    padding: 12px 25px;
     border-radius: 8px;
-    font-weight: bold;
+    font-size: 1rem;
+    font-weight: 600;
     cursor: pointer;
-    transition: background 0.2s;
+    transition: 0.3s ease;
 }
 
-.cart-total button:hover {
-    background: #001f5c;
+.cart-actions button:hover {
+    background: linear-gradient(135deg, #004080, #002266);
+    transform: translateY(-2px);
 }
-
