@@ -43,6 +43,9 @@ INSTALLED_APPS = [
     'Main'
 ]
 
+# Usuario personalizado
+AUTH_USER_MODEL = 'Main.Usuario'
+
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
@@ -52,6 +55,7 @@ MIDDLEWARE = [
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
+
 
 ROOT_URLCONF = 'EuroElite.urls'
 
@@ -121,7 +125,7 @@ USE_TZ = True
 STATIC_URL = 'static/'
 
 STATICFILES_DIRS = [
-    os.path.join(BASE_DIR, "static"),
+    BASE_DIR / "Main" / "static",
 ]
 
 # Default primary key field type

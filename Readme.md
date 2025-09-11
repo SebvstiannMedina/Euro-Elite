@@ -3,6 +3,7 @@ INSTRUCCIONES BÁSICA PARA EJECUTAR LA PÁGINA:
 -Instalar python
 -Instalar Django
 -dirigirse a "cd Euro-Elite/euroelite"
+python -m pip install Pillow
 python manage.py runserver
 
 

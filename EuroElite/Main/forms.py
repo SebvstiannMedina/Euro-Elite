@@ -1,9 +1,24 @@
 from django import forms
-from django.contrib.auth import login
 from django.contrib.auth.forms import UserCreationForm
-from django.contrib.auth.models import User
-from .models import Cita, Perfil
-import datetime
+from django.contrib.auth import get_user_model
+from .models import Cita, BloqueHorario
+
+Usuario = get_user_model()
+
+
+class PerfilForm(forms.ModelForm):
+    """Formulario para que el usuario edite su perfil básico."""
+    class Meta:
+        model = Usuario
+        fields = ['username', 'email', 'telefono']
+        widgets = {
+            'username': forms.TextInput(attrs={'class': 'form-control'}),
+            'email': forms.EmailInput(attrs={'class': 'form-control'}),
+            'telefono': forms.TextInput(attrs={'class': 'form-control'}),
+        }
+
+
+# ========== FORMULARIO DE REGISTRO ==========
 class RegistroForm(UserCreationForm):
     username = forms.CharField(
         label="Nombre de usuario",
@@ -23,64 +38,38 @@ class RegistroForm(UserCreationForm):
     )
 
     class Meta:
-        model = User
+        model = Usuario
         fields = ['username', 'email', 'password1', 'password2']
 
 
-
 # ========== FORMULARIO DE AGENDA ==========
-
-def generar_horarios():
-    """Genera intervalos de 30 min desde 10:00 hasta 17:00."""
-    horas = []
-    inicio = datetime.time(10, 0)
-    fin = datetime.time(17, 0)
-    actual = datetime.datetime.combine(datetime.date.today(), inicio)
-
-    while actual.time() <= fin:
-        horas.append((actual.time().strftime("%H:%M"), actual.time().strftime("%H:%M")))
-        actual += datetime.timedelta(minutes=30)
-    return horas
-
 class CitaForm(forms.ModelForm):
-    hora = forms.ChoiceField(choices=generar_horarios(), widget=forms.Select(attrs={'class': 'form-control'}))
+    """
+    Permite al usuario reservar una cita en un bloque de horario disponible.
+    """
+
+    # Generamos la lista de bloques disponibles en el momento de mostrar el formulario
+    bloque = forms.ModelChoiceField(
+        queryset=BloqueHorario.objects.filter(bloqueado=False).order_by('inicio'),
+        label="Bloque de horario",
+        widget=forms.Select(attrs={'class': 'form-control'})
+    )
 
     class Meta:
         model = Cita
-        fields = ['servicio', 'fecha', 'hora', 'descripcion']
+        fields = ['servicio', 'bloque', 'a_domicilio', 'direccion_domicilio']
         widgets = {
             'servicio': forms.Select(attrs={'class': 'form-control'}),
-            'fecha': forms.DateInput(
-                attrs={
-                    'type': 'date',
-                    'class': 'form-control',
-                    'min': datetime.date.today().strftime("%Y-%m-%d")  # evita fechas pasadas
-                }
-            ),
-            'descripcion': forms.Textarea(attrs={'rows': 3, 'class': 'form-control'}),
+            'a_domicilio': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
+            'direccion_domicilio': forms.Select(attrs={'class': 'form-control'}),
         }
 
-    # 🔹 Validación extra para evitar horas pasadas si la fecha es hoy
     def clean(self):
         cleaned_data = super().clean()
-        fecha = cleaned_data.get("fecha")
-        hora_str = cleaned_data.get("hora")
+        bloque = cleaned_data.get("bloque")
 
-        if fecha and hora_str:
-            hora = datetime.datetime.strptime(hora_str, "%H:%M").time()
-
-            # Si la fecha es hoy, verificar que la hora no sea pasada
-            if fecha == datetime.date.today() and hora <= datetime.datetime.now().time():
-                raise forms.ValidationError("No puedes agendar en una hora pasada.")
+        # Validación: impedir reservar un bloque pasado
+        if bloque and bloque.inicio <= timezone.now():
+            raise forms.ValidationError("No puedes agendar en un bloque de tiempo pasado.")
 
         return cleaned_data
-    
-
-class PerfilForm(forms.ModelForm):
-    class Meta:
-        model = Perfil
-        fields = ['rut', 'telefono']
-        widgets = {
-            'rut': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Ej: 12.345.678-9'}),
-            'telefono': forms.TextInput(attrs={'class': 'form-control', 'placeholder': '+56912345678'}),
-        }

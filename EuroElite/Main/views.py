@@ -3,12 +3,9 @@ from django.contrib.auth import login as auth_login, logout as auth_logout
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.forms import AuthenticationForm
 from django.contrib import messages
-from .forms import RegistroForm
-from .forms import CitaForm
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import render, redirect
-from .forms import PerfilForm
-from .models import Perfil
+from .forms import RegistroForm, CitaForm, PerfilForm
 # ========== PÁGINAS PÚBLICAS ==========
 def home(request):
     return render(request, 'Taller/main.html')
@@ -63,17 +60,17 @@ def registro(request):
 
 @login_required
 def perfil(request):
-    perfil, created = Perfil.objects.get_or_create(user=request.user)
-
+    usuario = request.user  # ya es una instancia de Usuario
     if request.method == "POST":
-        form = PerfilForm(request.POST, instance=perfil)
+        form = PerfilForm(request.POST, instance=usuario)
         if form.is_valid():
             form.save()
-            return redirect('perfil')  # recarga la página con los datos actualizados
+            return redirect('perfil')
     else:
-        form = PerfilForm(instance=perfil)
+        form = PerfilForm(instance=usuario)
 
-    return render(request, 'Taller/perfil.html', {'form': form, 'user': request.user})
+    return render(request, 'Taller/perfil.html', {'form': form, 'user': usuario})
+
 
 
 # ========== LOGOUT ==========
@@ -101,7 +98,7 @@ def agendar_cita(request):
 
 @login_required
 def mis_citas(request):
-    citas = request.user.cita_set.all().order_by('-fecha', '-hora')
+    citas = request.user.citas.select_related('bloque').order_by('-bloque__inicio')
     return render(request, 'Taller/mis_citas.html', {'citas': citas})
 
 
