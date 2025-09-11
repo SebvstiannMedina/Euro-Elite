@@ -111,6 +111,58 @@
         <div class="row g-4" id="products"></div>
     </div>
 
+{% block content %}
+<section class="featured-offers" id="offers">
+    <h2 class="section-title">Productos en Venta</h2>
+    <div class="offers-grid">
+        {% for p in productos %}
+            <div class="offer-card">
+                {% if p.promocion %}
+                    <div class="offer-badge">
+                        {% if p.promocion.tipo == 'PORCENTAJE' %}
+                            -{{ p.promocion.valor|floatformat:0 }}%
+                        {% else %}
+                            Oferta
+                        {% endif %}
+                    </div>
+                {% endif %}
+
+                <div class="offer-image">
+                    {% if p.imagen %}
+                        <img src="{{ p.imagen.url }}" alt="{{ p.nombre }}">
+                    {% else %}
+                        <img src="{% static 'img/no-image.png' %}" alt="Sin imagen">
+                    {% endif %}
+                </div>
+
+                <div class="offer-content">
+                    <h3 class="offer-title">{{ p.nombre }}</h3>
+                    <p class="offer-description">{{ p.descripcion|truncatewords:20 }}</p>
+
+                    <div class="offer-price">
+                        {% if p.promocion %}
+                            <span class="current-price">${{ p.precio_descuento }}</span>
+                            <span class="original-price">${{ p.precio }}</span>
+                        {% else %}
+                            <span class="current-price">${{ p.precio }}</span>
+                        {% endif %}
+                    </div>
+
+                    <button class="add-to-cart" onclick="addToCart('{{ p.nombre }}', '{{ p.precio_descuento }}')">
+                        <i class="fas fa-shopping-cart"></i> Añadir al Carrito
+                    </button>
+                </div>
+            </div>
+        {% empty %}
+            <p class="text-center">No hay productos disponibles.</p>
+        {% endfor %}
+    </div>
+</section>
+{% endblock %}
+
+
+
+
     <!-- FOOTER -->
     <footer class="footer" style="margin-bottom: 0rem;">
         <div class="footer-container">

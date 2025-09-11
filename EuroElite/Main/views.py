@@ -6,6 +6,8 @@ from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import render, redirect
 from .forms import RegistroForm, CitaForm, PerfilForm
+from .models import Producto
+
 # ========== PÁGINAS PÚBLICAS ==========
 def home(request):
     return render(request, 'Taller/main.html')
@@ -17,7 +19,11 @@ def equipo(request):
     return render(request, 'Taller/equipo.html')
 
 def productos(request):
-    return render(request, 'Taller/productos.html')
+    productos = Producto.objects.filter(activo=True)
+    for p in productos:
+        p.promocion = p.promocion_vigente
+        p.precio_descuento = p.precio_con_descuento
+    return render(request, 'Taller/productos.html', {'productos': productos})
 
 
 # ========== LOGIN ==========

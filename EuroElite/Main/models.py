@@ -3,6 +3,12 @@ from django.contrib.auth.models import AbstractUser
 from django.core.validators import MinValueValidator, MaxValueValidator
 from django.db import models, transaction
 from django.utils import timezone
+from decimal import Decimal
+from django.utils import timezone
+from decimal import Decimal
+from django.db import models
+from django.utils import timezone
+from django.core.validators import MinValueValidator
 
 # =============================
 #   BASE: timestamps genéricos
@@ -79,8 +85,11 @@ class Producto(MarcaTiempo):
     stock = models.PositiveIntegerField(default=0)
     stock_minimo = models.PositiveIntegerField(default=3)
     activo = models.BooleanField(default=True)
-
-    categoria = models.ForeignKey(Categoria, null=True, blank=True, on_delete=models.SET_NULL, related_name="productos")
+    categoria = models.ForeignKey(
+        Categoria, null=True, blank=True,
+        on_delete=models.SET_NULL, related_name="productos"
+    )
+    imagen = models.ImageField(upload_to='productos/', blank=True, null=True)
 
     def __str__(self):
         return f"{self.nombre} ({self.sku})"
@@ -88,6 +97,32 @@ class Producto(MarcaTiempo):
     @property
     def bajo_stock(self):
         return self.stock <= self.stock_minimo
+
+
+    @property
+    def promocion_vigente(self):
+        ahora = timezone.now()
+        return (
+            self.promociones.filter(
+                activa=True
+            )
+            .filter(models.Q(inicio__isnull=True) | models.Q(inicio__lte=ahora))
+            .filter(models.Q(fin__isnull=True) | models.Q(fin__gte=ahora))
+            .order_by('-valor')
+            .first()
+        )
+
+
+    @property
+    def precio_con_descuento(self):
+        promo = self.promocion_vigente
+        if promo:
+            if promo.tipo == Promocion.Tipo.PORCENTAJE:
+                descuento = (self.precio * promo.valor) / Decimal(100)
+                return (self.precio - descuento).quantize(Decimal('0.01'))
+            elif promo.tipo == Promocion.Tipo.MONTO:
+                return max(self.precio - promo.valor, Decimal('0.00')).quantize(Decimal('0.01'))
+        return self.precio
 
 
 class ImagenProducto(MarcaTiempo):
@@ -113,14 +148,19 @@ class Promocion(MarcaTiempo):
     activa = models.BooleanField(default=True)
     mostrar_en_inicio = models.BooleanField(default=False)
 
-    productos = models.ManyToManyField(Producto, related_name="promociones", blank=True)
+    productos = models.ManyToManyField("Producto", related_name="promociones", blank=True)
 
     def __str__(self):
         return self.nombre
 
     def vigente(self):
+        """Comprueba si la promoción está activa en la fecha actual."""
         ahora = timezone.now()
-        return self.activa and (not self.inicio or ahora >= self.inicio) and (not self.fin or ahora <= self.fin)
+        return (
+            self.activa and
+            (not self.inicio or self.inicio <= ahora) and
+            (not self.fin or self.fin >= ahora)
+        )
 
 
 # =============================

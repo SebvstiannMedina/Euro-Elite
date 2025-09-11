@@ -286,14 +286,21 @@ body {
 }
 
 .offer-image {
-    width: 100%;
-    height: 200px;
-    background: var(--primary-light);
+    background-color: #1e73be;    
     display: flex;
-    align-items: center;
     justify-content: center;
-    color: var(--white);
-    font-size: 4rem;
+    align-items: center;
+    height: 220px;                 
+    overflow: hidden;           
+    border-top-left-radius: 12px;
+    border-top-right-radius: 12px;
+}
+
+.offer-image img {
+    max-height: 100%;
+    max-width: 100%;
+    object-fit: cover;             
+    border-radius: 0;           
 }
 
 .offer-content {
@@ -946,3 +953,5 @@ body {
     background: linear-gradient(135deg, #004080, #002266);
     transform: translateY(-2px);
 }
+
+
