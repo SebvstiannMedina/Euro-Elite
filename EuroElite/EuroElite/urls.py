@@ -36,5 +36,6 @@ urlpatterns = [
     path('pago', views.pago, name='pago'),
     path('carrito_compras', views.carrito_compras, name='carrito_compras'),
     path('terminos', views.terminos, name='terminos'),
-    path('privacidad', views.privacidad, name='privacidad'),    
+    path('privacidad', views.privacidad, name='privacidad'),
+    path('agregar_editar', views.agregar_editar, name='agregar_editar'),  
 ]

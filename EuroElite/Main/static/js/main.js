@@ -415,3 +415,82 @@ function showProductDetail(name, description, price) {
     `;
     document.body.appendChild(modal);
 }
+
+function showProductDetail(name, description, price, image) {
+  const modal = document.createElement('div');
+  modal.innerHTML = `
+    <div style="
+        position: fixed;
+        top:0;
+        left:0;
+        width:100%;
+        height:100%;
+        background: rgba(0,0,0,0.6);
+        display:flex;
+        align-items:center;
+        justify-content:center;
+        z-index:10000;
+    " onclick="this.remove()">
+        <div style="
+            background:white;
+            padding:30px;
+            border-radius:12px;
+            max-width:500px;
+            width:90%;
+            position:relative;
+        " onclick="event.stopPropagation()">
+            <button onclick="this.closest('div').parentElement.remove()" style="
+                position:absolute;
+                top:10px;
+                right:10px;
+                font-size:1.5rem;
+                border:none;
+                background:none;
+                cursor:pointer;
+            ">×</button>
+            <img src="${image}" alt="${name}" style="width:100%; border-radius:8px; margin-bottom:15px;">
+            <h3>${name}</h3>
+            <p>${description}</p>
+            <h4>$${price.toLocaleString()}</h4>
+            <button class="btn btn-danger w-100" onclick="addToCart('${name}', ${price}); this.closest('div').parentElement.remove()">
+                <i class="fas fa-shopping-cart me-2"></i>Añadir al Carrito
+            </button>
+        </div>
+    </div>
+  `;
+  document.body.appendChild(modal);
+}
+
+document.addEventListener("DOMContentLoaded", () => {
+  const products = JSON.parse(localStorage.getItem("products")) || [];
+  const container = document.getElementById("products");
+
+  container.innerHTML = "";
+  products.forEach(p => {
+    container.innerHTML += `
+      <div class="col-sm-6 col-md-4 col-lg-3">
+        <div class="card h-100 shadow-sm border-0">
+          <img src="${p.image}" class="card-img-top" alt="${p.name}" style="height:200px; object-fit:cover;">
+          <div class="card-body text-center">
+            <h5 class="card-title">${p.name}</h5>
+            <p class="card-text small">${p.description}</p>
+            <div class="fw-bold mb-3">$${p.price.toLocaleString()}</div>
+            <button class="btn btn-primary mb-2"
+                onclick="showProductDetail('${p.name}', '${p.description}', ${p.price}, '${p.image}')">
+                Ver Detalle
+            </button>
+            <button class="btn btn-danger w-100"
+                onclick="addToCart('${p.name}', ${p.price})">
+                <i class="fas fa-shopping-cart me-2"></i>Añadir al Carrito
+            </button>
+          </div>
+        </div>
+      </div>
+    `;
+  });
+});
+
+// Función ejemplo de carrito
+function addToCart(name, price) {
+  alert(`Producto agregado: ${name} ($${price.toLocaleString()})`);
+}

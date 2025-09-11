@@ -124,3 +124,6 @@ def terminos(request):
 
 def privacidad(request):
     return render(request, 'Taller/privacidad.html')
+
+def agregar_editar(request):
+    return render(request, 'Taller/agregar_editar.html')
