@@ -2,6 +2,8 @@ from django import forms
 from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth import get_user_model
 from .models import Cita, BloqueHorario
+from django import forms
+from .models import Producto
 
 Usuario = get_user_model()
 
@@ -73,3 +75,13 @@ class CitaForm(forms.ModelForm):
             raise forms.ValidationError("No puedes agendar en un bloque de tiempo pasado.")
 
         return cleaned_data
+
+
+class ProductoForm(forms.ModelForm):
+    class Meta:
+        model = Producto
+        fields = ['nombre', 'sku', 'marca', 'descripcion', 'precio', 'costo', 'stock',
+                  'stock_minimo', 'activo', 'categoria', 'imagen']
+        widgets = {
+            'descripcion': forms.Textarea(attrs={'rows': 3}),
+        }

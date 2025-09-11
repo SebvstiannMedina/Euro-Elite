@@ -128,9 +128,32 @@ def terminos(request):
 def privacidad(request):
     return render(request, 'Taller/privacidad.html')
 
+from .forms import ProductoForm
+from .models import Producto
+
 @login_required
-def agregar_editar(request):
-    return render(request, 'Taller/agregar_editar.html')
+def agregar_editar(request, pk=None):
+    if pk:  # editar
+        producto = Producto.objects.get(pk=pk)
+    else:   # agregar
+        producto = None
+
+    if request.method == 'POST':
+        form = ProductoForm(request.POST, request.FILES, instance=producto)
+        if form.is_valid():
+            form.save()
+            messages.success(request, 'Producto guardado correctamente.')
+            return redirect('agregar_editar')  # puedes redirigir a otra vista si quieres
+    else:
+        form = ProductoForm(instance=producto)
+
+    productos = Producto.objects.all().order_by('-id')
+    return render(request, 'Taller/agregar_editar.html', {
+        'form': form,
+        'productos': productos,
+        'editando': producto is not None
+    })
+
 
 def prueba(request):
     return render(request, 'Taller/prueba.html')
