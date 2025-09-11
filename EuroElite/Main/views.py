@@ -134,3 +134,31 @@ def prueba(request):
 
 def compra_exitosa(request):
     return render(request, 'Taller/compra_exitosa.html')
+
+def ofertas(request):
+    return render(request, 'Taller/ofertas.html')
+
+def retiro_despacho(request):
+    return render(request, 'Taller/retiro_despacho.html')
+
+def admin_agendamientos(request):
+    return render(request, 'Taller/admin_agendamientos.html')
+
+def admin_configuracion(request):
+    return render(request, 'Taller/admin_agendamientos.html')
+
+def admin_dashboard(request):
+    return render(request, 'Taller/admin_agendamientos.html')
+
+def admin_pedidos(request):
+    return render(request, 'Taller/admin_agendamientos.html')
+
+def admin_reportes(request):
+    return render(request, 'Taller/admin_agendamientos.html')
+
+def admin_usuarios(request):
+    return render(request, 'Taller/admin_agendamientos.html')
+
+
+
+

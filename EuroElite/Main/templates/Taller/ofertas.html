@@ -1,0 +1,64 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}Inicio - Euro Elite{% endblock %}
+{% block content %}
+    <!-- OFERTAS DESTACADAS -->
+    <section class="featured-offers" id="offers">
+        <h2 class="section-title">Ofertas Destacadas</h2>
+        <div class="offers-grid">
+            <div class="offer-card">
+                <div class="offer-badge">-25%</div>
+                <div class="offer-image">
+                    <i class="fas fa-brake-disc"></i>
+                </div>
+                <div class="offer-content">
+                    <h3 class="offer-title">Discos de Freno BMW</h3>
+                    <p class="offer-description">Discos de freno originales para Serie 3, alta durabilidad</p>
+                    <div class="offer-price">
+                        <span class="current-price">$149.990</span>
+                        <span class="original-price">$199.990</span>
+                    </div>
+                    <button class="add-to-cart" onclick="addToCart('Discos de Freno BMW', 149990)">
+                        <i class="fas fa-shopping-cart"></i> Añadir al Carrito
+                    </button>
+                </div>
+            </div>
+
+            <div class="offer-card">
+                <div class="offer-badge">-30%</div>
+                <div class="offer-image">
+                    <i class="fas fa-cog"></i>
+                </div>
+                <div class="offer-content">
+                    <h3 class="offer-title">Filtro de Aire Audi</h3>
+                    <p class="offer-description">Filtro de aire de alto rendimiento para motores TFSI</p>
+                    <div class="offer-price">
+                        <span class="current-price">$45.990</span>
+                        <span class="original-price">$65.990</span>
+                    </div>
+                    <button class="add-to-cart" onclick="addToCart('Filtro de Aire Audi', 45990)">
+                        <i class="fas fa-shopping-cart"></i> Añadir al Carrito
+                    </button>
+                </div>
+            </div>
+
+            <div class="offer-card">
+                <div class="offer-badge">-20%</div>
+                <div class="offer-image">
+                    <i class="fas fa-oil-can"></i>
+                </div>
+                <div class="offer-content">
+                    <h3 class="offer-title">Aceite Mercedes-Benz</h3>
+                    <p class="offer-description">Aceite sintético 5W-30 MB 229.5, 5 litros</p>
+                    <div class="offer-price">
+                        <span class="current-price">$79.990</span>
+                        <span class="original-price">$99.990</span>
+                    </div>
+                    <button class="add-to-cart" onclick="addToCart('Aceite Mercedes-Benz', 79990)">
+                        <i class="fas fa-shopping-cart"></i> Añadir al Carrito
+                    </button>
+                </div>
+            </div>
+        </div>
+    </section>
+{% endblock %}
