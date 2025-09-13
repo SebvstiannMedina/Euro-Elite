@@ -1,6 +1,129 @@
 {% extends 'base.html' %}
 {% load static %}
-{% block title %}Inicio - Euro Elite{% endblock %}
+{% block title %}Compra exitosa - Euro Elite{% endblock %}
 {% block content %}
+
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+
+<div class="container my-4">
+  <div class="row justify-content-center">
+    <div class="col-12 col-lg-8">
+      <!-- Mensaje principal de éxito -->
+      <div class="card shadow-sm p-4 text-center success-card">
+        <div class="success-icon mx-auto mb-3">
+          <i class="fa-solid fa-check"></i>
+        </div>
+        <h2 class="mb-1">¡Compra exitosa!</h2>
+        <p class="text-muted mb-3">Tu pedido fue confirmado correctamente.</p>
+        <p class="mb-4">
+          Hemos enviado la confirmación a
+          <strong>{{ user.email|default:"tu correo registrado" }}</strong>.
+        </p>
+
+        <!-- Resumen del pedido (campos opcionales si el backend aún no los envía) -->
+        <div class="bg-light rounded-3 p-3 text-start mx-auto" style="max-width: 520px;">
+          <div class="d-flex py-1">
+            <span class="text-muted">Fecha&nbsp;&nbsp;</span>
+            <span>{% now "d/m/Y H:i" %}</span>
+          </div>
+          {% if numero_pedido or pedido or orden or order %}
+          <div class="d-flex justify-content-between py-1">
+            <span class="text-muted">N° de pedido</span>
+            <span>
+              {% if numero_pedido %}{{ numero_pedido }}
+              {% elif pedido and pedido.numero %}{{ pedido.numero }}
+              {% elif pedido and pedido.id %}{{ pedido.id }}
+              {% elif orden and orden.numero %}{{ orden.numero }}
+              {% elif orden and orden.id %}{{ orden.id }}
+              {% elif order and order.number %}{{ order.number }}
+              {% elif order and order.id %}{{ order.id }}
+              {% endif %}
+            </span>
+          </div>
+          {% endif %}
+          {% if total or monto_total or order and order.total %}
+          <div class="d-flex justify-content-between py-1">
+            <span class="text-muted">Total</span>
+            <span>
+              {% if total %}{{ total }}
+              {% elif monto_total %}{{ monto_total }}
+              {% elif order and order.total %}{{ order.total }}
+              {% endif %}
+            </span>
+          </div>
+          {% endif %}
+          {% if metodo_pago or medio_pago %}
+          <div class="d-flex justify-content-between py-1">
+            <span class="text-muted">Método de pago</span>
+            <span>{% if metodo_pago %}{{ metodo_pago }}{% else %}{{ medio_pago }}{% endif %}</span>
+          </div>
+          {% endif %}
+        </div>
+
+        <!-- Acciones -->
+        <div class="d-flex flex-wrap gap-2 justify-content-center mt-4">
+          <a href="{% url 'mis_pedidos' %}" class="btn btn-primary">
+            <i class="fa-solid fa-bag-shopping me-2"></i> Ver mis compras
+          </a>
+          <a href="{% url 'productos' %}" class="btn btn-outline-primary">
+            <i class="fa-solid fa-shop me-2"></i> Seguir comprando
+          </a>
+          {% if comprobante_url %}
+          <a href="{{ comprobante_url }}" class="btn btn-outline-secondary" target="_blank" rel="noopener">
+            <i class="fa-solid fa-file-arrow-down me-2"></i> Descargar comprobante
+          </a>
+          {% endif %}
+        </div>
+
+        <!-- Aviso -->
+        <p class="small text-muted mt-3 mb-0">
+          Te notificaremos por correo cada actualización del estado del pedido.
+        </p>
+      </div>
+
+      <!-- Siguiente paso (informativo) -->
+      <div class="card shadow-sm p-3 mt-3">
+        <div class="row text-center g-3 align-items-center">
+          <div class="col-6 col-md-3">
+            <div class="step-dot bg-success-subtle text-success"><i class="fa-solid fa-circle-check"></i></div>
+            <div class="step-label">Pago confirmado</div>
+          </div>
+          <div class="col-6 col-md-3">
+            <div class="step-dot"><i class="fa-solid fa-box"></i></div>
+            <div class="step-label">Preparación</div>
+          </div>
+          <div class="col-6 col-md-3">
+            <div class="step-dot"><i class="fa-solid fa-truck"></i></div>
+            <div class="step-label">En camino</div>
+          </div>
+          <div class="col-6 col-md-3">
+            <div class="step-dot"><i class="fa-solid fa-flag-checkered"></i></div>
+            <div class="step-label">Entrega</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<style>
+  .success-card { border: 0; border-radius: 12px; }
+  .success-icon {
+    width: 72px; height: 72px; border-radius: 50%;
+    display: grid; place-items: center;
+    background: #e9f7ef; color: #198754; font-size: 1.8rem;
+  }
+  .step-dot {
+    width: 44px; height: 44px; border-radius: 50%;
+    margin: 0 auto 6px; display: grid; place-items: center;
+    background: #f1f5f9; color: #0d6efd;
+  }
+  .step-label { font-size: .9rem; color: #4b5563; }
+</style>
 
 {% endblock %}
