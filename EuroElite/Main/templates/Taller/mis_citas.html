@@ -1,0 +1,53 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}Mis citas - Euro Elite{% endblock %}
+{% block content %}
+
+<br><br><br><br><br><br>
+
+<div class="container my-4">
+  <div class="row">
+    <div class="col-12">
+      <h3 class="mb-3">Mis citas</h3>
+
+      {% if citas %}
+      <div class="list-group">
+        {% for c in citas %}
+        <div class="list-group-item border-0 shadow-sm mb-3 rounded-3">
+          <div class="row align-items-center g-3">
+            <div class="col-12 col-md-7">
+              <div class="small fw-semibold {% if c.estado == 'COMPLETADA' %}text-success{% elif c.estado == 'CANCELADA' %}text-danger{% else %}text-primary{% endif %}">
+                {{ c.get_estado_display }}
+              </div>
+              <div class="fs-6 fw-semibold">{{ c.servicio.nombre }}</div>
+              <div class="text-muted">
+                {{ c.bloque.inicio|date:'d/m/Y H:i' }} — {{ c.bloque.fin|date:'H:i' }}
+              </div>
+            </div>
+            <div class="col-12 col-md-3">
+              {% if c.a_domicilio %}
+                <span class="badge text-bg-info">A domicilio</span>
+              {% else %}
+                <span class="badge text-bg-secondary">En taller</span>
+              {% endif %}
+            </div>
+            <div class="col-12 col-md-2 text-md-end">
+              <a href="{% url 'agendar' %}" class="btn btn-outline-primary btn-sm">Nueva cita</a>
+            </div>
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+      {% else %}
+      <div class="text-center p-5 bg-white border-0 rounded-3 shadow-sm">
+        <img src="{% static 'img/LogoApp.png' %}" alt="Euro Elite" style="width:72px;height:72px;opacity:.7;">
+        <h5 class="mt-3 mb-1">Aún no tienes citas</h5>
+        <p class="text-muted mb-3">Agenda tu primera visita con nuestros especialistas.</p>
+        <a href="{% url 'agendar' %}" class="btn btn-primary btn-sm">Agendar ahora</a>
+      </div>
+      {% endif %}
+    </div>
+  </div>
+</div>
+
+{% endblock %}
