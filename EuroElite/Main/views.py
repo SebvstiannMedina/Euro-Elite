@@ -8,6 +8,8 @@ from django.contrib.auth.decorators import login_required
 from django.shortcuts import render, redirect
 from .forms import RegistroForm, CitaForm, PerfilForm
 from .models import Producto
+from .models import Direccion
+from .models import ConfigSitio
 
 # ========== PÁGINAS PÚBLICAS ==========
 def home(request):
@@ -204,4 +206,62 @@ def mis_pedidos(request):
     return render(request, 'Taller/mis_pedidos.html', {
         'pedidos': pedidos,
         'DEBUG': settings.DEBUG,
+    })
+
+
+def resumen_compra(request):
+    shipping_cost = 4990
+    try:
+        cfg = ConfigSitio.objects.first()
+        if cfg and cfg.costo_envio_base is not None:
+            shipping_cost = int(cfg.costo_envio_base)
+    except Exception:
+        pass
+    return render(request, 'Taller/resumen_compra.html', {
+        'shipping_cost': shipping_cost,
+    })
+
+
+from django.contrib.auth.decorators import login_required
+@login_required
+def confirmacion_datos(request):
+    user = request.user
+    rut = request.session.get('checkout_rut', '')
+    addr = Direccion.objects.filter(usuario=user).order_by('-predeterminada', '-id').first()
+
+    if request.method == 'POST':
+        rut = request.POST.get('rut', '').strip()
+        nombre_completo = request.POST.get('nombre_completo', '').strip()
+        telefono = request.POST.get('telefono', '').strip()
+        direccion_txt = request.POST.get('direccion', '').strip()
+
+        # Guarda datos bsicos del usuario
+        if telefono:
+            user.telefono = telefono
+            user.save(update_fields=['telefono'])
+
+        # Guarda/actualiza direccin de envo predeterminada
+        if not addr:
+            addr = Direccion(usuario=user, tipo=Direccion.Tipo.ENVIO)
+        if nombre_completo:
+            addr.nombre_completo = nombre_completo
+        if telefono:
+            addr.telefono = telefono
+        if direccion_txt:
+            addr.linea1 = direccion_txt
+        if not addr.ciudad:
+            addr.ciudad = 'Santiago'
+        addr.predeterminada = True
+        addr.save()
+
+        # Rut en sesin para el checkout
+        request.session['checkout_rut'] = rut
+
+        # Luego de guardar, continuar al siguiente paso (pago)
+        return redirect('pago')
+
+    return render(request, 'Taller/confirmacion_datos.html', {
+        'rut': rut,
+        'addr': addr,
+        'user': user,
     })

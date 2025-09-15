@@ -120,7 +120,7 @@ function toggleCart() {
     <div style="margin-top:20px; padding-top:20px; border-top:2px solid var(--primary-dark); text-align:center;">
         <h4>Total: ${total.toLocaleString()}</h4>
         <div style="display:flex; justify-content:center; gap:10px; flex-wrap:wrap;">
-            <button onclick="checkout()" style="
+            <button onclick="goToResumen()" style="
                 background: var(--primary-dark); color: white; border: none;
                 padding: 12px 30px; border-radius: 8px; font-weight: bold; cursor: pointer;">
                 Proceder al Pago
@@ -286,10 +286,19 @@ function renderCartPage() {
     container.innerHTML += `
         <h3>Total: $${total.toLocaleString()}</h3>
         <div class="cart-actions">
-            <button onclick="checkout(); renderCartPage();">Proceder al Pago</button>
+            <button onclick="goToResumen();">Proceder al Pago</button>
             <button onclick="window.location.href='{% url 'productos' %}'">Seguir Comprando</button>
         </div>
     `;
+}
+
+function goToResumen() {
+    try {
+        const url = window.resumenURL || '/resumen_compra';
+        window.location.href = url;
+    } catch (e) {
+        window.location.href = '/resumen_compra';
+    }
 }
 
 // ✅ Delegación de eventos para los botones ❌

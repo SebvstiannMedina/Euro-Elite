@@ -1,0 +1,183 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}Resumen de compra - Euro Elite{% endblock %}
+{% block content %}
+
+<br><br><br><br><br>
+
+<div class="container my-4">
+  <div class="row g-3">
+    <!-- Lista de productos -->
+    <div class="col-12 col-lg-8">
+      <div class="card shadow-sm p-3">
+        <h4 class="mb-3">Tus productos</h4>
+        <div id="resumen-items"></div>
+      </div>
+    </div>
+
+    <!-- Sidebar de resumen -->
+    <div class="col-12 col-lg-4">
+      <div id="resumen-sidebar" class="card shadow-sm p-3" data-envio="{{ shipping_cost|default:'4990' }}">
+        <h5 class="mb-3">Resumen</h5>
+        <div class="mb-3">
+          <div class="form-label">Método de entrega</div>
+          <div class="form-check">
+            <input class="form-check-input" type="radio" name="delivery-method" id="delivery-envio" value="envio" checked>
+            <label class="form-check-label" for="delivery-envio">Envío a domicilio</label>
+          </div>
+          <div class="form-check">
+            <input class="form-check-input" type="radio" name="delivery-method" id="delivery-retiro" value="retiro">
+            <label class="form-check-label" for="delivery-retiro">Retiro en tienda (gratis)</label>
+          </div>
+        </div>
+        <div class="d-flex justify-content-between mb-2">
+          <span>Subtotal</span>
+          <strong id="subtotal-text">$0</strong>
+        </div>
+        <div class="d-flex justify-content-between mb-2">
+          <span>Envío</span>
+          <strong id="envio-text">$0</strong>
+        </div>
+        <hr>
+        <div class="d-flex justify-content-between mb-3">
+          <span>Total</span>
+          <strong id="total-text">$0</strong>
+        </div>
+        <a href="{% url 'carrito_compras' %}" class="btn btn-outline-secondary w-100 mb-2">Volver al carrito</a>
+        <a href="{% url 'confirmacion_datos' %}" class="btn btn-primary w-100">Continuar</a>
+      </div>
+    </div>
+  </div>
+  <br>
+</div>
+
+<style>
+  #resumen-items .item-row { padding: 12px 0; border-bottom: 1px solid #eef2f7; }
+  #resumen-items .item-row:last-child { border-bottom: 0; }
+  .price { font-weight: 600; }
+  .muted { color: #6b7280; }
+  .card { border: 0; border-radius: 12px; }
+  .btn { border-radius: 8px; }
+  @media (max-width: 767.98px) {
+    #resumen-items .item-row { padding: 10px 0; }
+  }
+  .empty-cart { text-align:center; padding: 32px 8px; color:#6b7280; }
+  .empty-cart img { width: 72px; height: 72px; opacity: .7; }
+  .empty-cart h6 { margin-top: 10px; }
+  .empty-cart a { margin-top: 10px; }
+  .qty { min-width: 56px; text-align: end; }
+  .subtotal { min-width: 90px; text-align: end; }
+  .name-col { min-width: 140px; }
+  .row-head { font-size:.85rem; color:#6b7280; }
+  .row-head > div { padding-bottom:6px; }
+  .row-head, .item-row { display:flex; gap:12px; align-items:center; justify-content:space-between; }
+  .row-head > div, .item-row > div { flex: 1 1 0; }
+  .row-head .name-col, .item-row .name-col { flex: 2 1 0; }
+  .row-head .price, .item-row .price, .qty, .subtotal { text-align: end; }
+  .sr-only { position:absolute; left:-10000px; top:auto; width:1px; height:1px; overflow:hidden; }
+  .summary-note { font-size: .88rem; color:#6b7280; }
+  .summary-note strong { color: inherit; }
+</style>
+
+<script>
+  (function () {
+    const itemsContainer = document.getElementById('resumen-items');
+    const sidebar = document.getElementById('resumen-sidebar');
+    if (!itemsContainer || !sidebar) return;
+
+    // Lee carrito desde localStorage (mismo formato que main.js)
+    let cart = [];
+    try { cart = JSON.parse(localStorage.getItem('cart')) || []; } catch { cart = []; }
+
+    const shippingBase = parseInt(sidebar.dataset.envio || '0', 10) || 0;
+
+    // Selección de método de entrega
+    const radioEnvio = document.getElementById('delivery-envio');
+    const radioRetiro = document.getElementById('delivery-retiro');
+    let delivery = (localStorage.getItem('delivery_method') === 'retiro') ? 'retiro' : 'envio';
+    if (radioEnvio && radioRetiro) {
+      radioEnvio.checked = (delivery === 'envio');
+      radioRetiro.checked = (delivery === 'retiro');
+    }
+
+    // Cabecera de columnas
+    const head = document.createElement('div');
+    head.className = 'row-head';
+    head.innerHTML = `
+      <div class="name-col">Producto</div>
+      <div class="price">Precio</div>
+      <div class="qty">Cant.</div>
+      <div class="subtotal">Subtotal</div>
+    `;
+
+    // subtotal global para cálculos
+    let subtotal = 0;
+
+    // Función para actualizar totales según método
+    function updateTotals() {
+      const envio = (delivery === 'retiro') ? 0 : shippingBase;
+      const total = subtotal + envio;
+      document.getElementById('subtotal-text').textContent = (subtotal).toLocaleString('es-CL', { style: 'currency', currency: 'CLP' });
+      document.getElementById('envio-text').textContent = (envio).toLocaleString('es-CL', { style: 'currency', currency: 'CLP' });
+      document.getElementById('total-text').textContent = (total).toLocaleString('es-CL', { style: 'currency', currency: 'CLP' });
+    }
+
+    // Listeners para cambiar método
+    if (radioEnvio) radioEnvio.addEventListener('change', () => {
+      if (radioEnvio.checked) {
+        delivery = 'envio';
+        localStorage.setItem('delivery_method', delivery);
+        updateTotals();
+      }
+    });
+    if (radioRetiro) radioRetiro.addEventListener('change', () => {
+      if (radioRetiro.checked) {
+        delivery = 'retiro';
+        localStorage.setItem('delivery_method', delivery);
+        updateTotals();
+      }
+    });
+
+    if (!cart.length) {
+      itemsContainer.innerHTML = `
+        <div class="empty-cart">
+          <img src="{% static 'img/LogoApp.png' %}" alt="Euro Elite">
+          <h6>Tu carrito está vacío</h6>
+          <p class="muted">Agrega productos para ver el resumen de compra.</p>
+          <a href="{% url 'productos' %}" class="btn btn-primary btn-sm">Explorar productos</a>
+        </div>`;
+      // Actualiza resumen considerando método
+      subtotal = 0;
+      updateTotals();
+      return;
+    }
+
+    itemsContainer.appendChild(head);
+
+    // Recalcula subtotal con items
+    cart.forEach(item => {
+      const itemSubtotal = (Number(item.price) || 0) * (Number(item.quantity) || 0);
+      subtotal += itemSubtotal;
+
+      const row = document.createElement('div');
+      row.className = 'item-row';
+      row.innerHTML = `
+        <div class="name-col">
+          <div class="fw-semibold">${item.name || 'Producto'}</div>
+          <div class="muted small">${item.sku ? 'SKU: ' + item.sku : ''}</div>
+        </div>
+        <div class="price">${(Number(item.price) || 0).toLocaleString('es-CL', { style: 'currency', currency: 'CLP' })}</div>
+        <div class="qty">${Number(item.quantity) || 0}</div>
+        <div class="subtotal">${itemSubtotal.toLocaleString('es-CL', { style: 'currency', currency: 'CLP' })}</div>
+      `;
+      itemsContainer.appendChild(row);
+    });
+
+    // Render inicial de totales (envío o retiro)
+    updateTotals();
+  })();
+</script>
+
+<script src="{% static 'js/main.js' %}"></script>
+
+{% endblock %}
