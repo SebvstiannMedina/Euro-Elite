@@ -39,8 +39,36 @@
 
       <div class="card shadow-sm p-3">
         <div class="orders-wrapper">
-        {% if citas %}
-          {% for c in citas %}
+        <div id="real-citas">
+          {% if citas %}
+            {% for c in citas %}
+              <div class="order-card shadow-sm">
+                <div class="row align-items-center gy-3">
+                  <!-- Izquierda: imagen + resumen -->
+                  <div class="col-12 col-md-7 d-flex">
+                    <div class="order-image-wrap">
+                      <img src="{% static 'img/LogoApp.png' %}" alt="Cita" class="order-image">
+                    </div>
+                    <div class="ms-3 flex-grow-1">
+                      <div class="small fw-semibold mb-1 {% if c.estado == 'COMPLETADA' %}text-success{% elif c.estado == 'CANCELADA' %}text-danger{% else %}text-primary{% endif %}">{{ c.get_estado_display }}</div>
+                      <div class="order-title">Cita el {{ c.bloque.inicio|date:"j \\de F" }}</div>
+                      <div class="order-subtitle">{{ c.servicio.nombre }}</div>
+                      <div class="order-subtitle">{{ c.bloque.inicio|date:"H:i" }} - {{ c.bloque.fin|date:"H:i" }}</div>
+                    </div>
+                  </div>
+
+                  <!-- Centro: modalidad -->
+                  <div class="col-12 col-md-3">
+                    <div class="seller-name">{% if c.a_domicilio %}A domicilio{% else %}En taller{% endif %}</div>
+                  </div>
+
+                  <!-- Derecha: acciones -->
+                  <div class="col-12 col-md-2 order-actions text-md-end"></div>
+                </div>
+              </div>
+            {% endfor %}
+          {% else %}
+            <!-- Ejemplo: 2 reservas simuladas cuando no hay citas -->
             <div class="order-card shadow-sm">
               <div class="row align-items-center gy-3">
                 <!-- Izquierda: imagen + resumen -->
@@ -49,31 +77,102 @@
                     <img src="{% static 'img/LogoApp.png' %}" alt="Cita" class="order-image">
                   </div>
                   <div class="ms-3 flex-grow-1">
-                    <div class="small fw-semibold mb-1 {% if c.estado == 'COMPLETADA' %}text-success{% elif c.estado == 'CANCELADA' %}text-danger{% else %}text-primary{% endif %}">{{ c.get_estado_display }}</div>
-                    <div class="order-title">Cita el {{ c.bloque.inicio|date:"j \\de F" }}</div>
-                    <div class="order-subtitle">{{ c.servicio.nombre }}</div>
-                    <div class="order-subtitle">{{ c.bloque.inicio|date:"H:i" }} - {{ c.bloque.fin|date:"H:i" }}</div>
+                    <div class="small fw-semibold mb-1 text-primary">Agendada</div>
+                    <div class="order-title">Cita el 18 de septiembre</div>
+                    <div class="order-subtitle">Mantenimiento b&aacute;sico</div>
+                    <div class="order-subtitle">10:00 - 11:00</div>
                   </div>
                 </div>
 
                 <!-- Centro: modalidad -->
                 <div class="col-12 col-md-3">
-                  <div class="seller-name">{% if c.a_domicilio %}A domicilio{% else %}En taller{% endif %}</div>
+                  <div class="seller-name">En taller</div>
                 </div>
 
                 <!-- Derecha: acciones -->
                 <div class="col-12 col-md-2 order-actions text-md-end"></div>
               </div>
             </div>
-          {% endfor %}
-        {% else %}
-          <div class="empty-state text-center p-5 bg-white border rounded-3">
-            <img src="{% static 'img/LogoApp.png' %}" alt="Euro Elite" style="width:72px;height:72px;opacity:.7;">
-            <h5 class="mt-3 mb-1">A&uacute;n no tienes citas</h5>
-            <p class="text-muted mb-3">Agenda tu primera visita con nuestros especialistas.</p>
-            <a href="{% url 'agendar' %}" class="btn btn-primary btn-sm">Agendar ahora</a>
+
+            <div class="order-card shadow-sm">
+              <div class="row align-items-center gy-3">
+                <!-- Izquierda: imagen + resumen -->
+                <div class="col-12 col-md-7 d-flex">
+                  <div class="order-image-wrap">
+                    <img src="{% static 'img/LogoApp.png' %}" alt="Cita" class="order-image">
+                  </div>
+                  <div class="ms-3 flex-grow-1">
+                    <div class="small fw-semibold mb-1 text-success">Completada</div>
+                    <div class="order-title">Cita el 12 de septiembre</div>
+                    <div class="order-subtitle">Cambio de aceite</div>
+                    <div class="order-subtitle">15:00 - 16:00</div>
+                  </div>
+                </div>
+
+                <!-- Centro: modalidad -->
+                <div class="col-12 col-md-3">
+                  <div class="seller-name">A domicilio</div>
+                </div>
+
+                <!-- Derecha: acciones -->
+                <div class="col-12 col-md-2 order-actions text-md-end"></div>
+              </div>
+            </div>
+          {% endif %}
+        </div>
+
+        <!-- Bloque de demostraci&oacute;n: muestra 2 reservas si se invoca con ?demo=1 -->
+        <div id="demo-citas" style="display:none;">
+          <div class="order-card shadow-sm">
+            <div class="row align-items-center gy-3">
+              <!-- Izquierda: imagen + resumen -->
+              <div class="col-12 col-md-7 d-flex">
+                <div class="order-image-wrap">
+                  <img src="{% static 'img/LogoApp.png' %}" alt="Cita" class="order-image">
+                </div>
+                <div class="ms-3 flex-grow-1">
+                  <div class="small fw-semibold mb-1 text-primary">Agendada</div>
+                  <div class="order-title">Cita el 18 de septiembre</div>
+                  <div class="order-subtitle">Mantenimiento b&aacute;sico</div>
+                  <div class="order-subtitle">10:00 - 11:00</div>
+                </div>
+              </div>
+
+              <!-- Centro: modalidad -->
+              <div class="col-12 col-md-3">
+                <div class="seller-name">En taller</div>
+              </div>
+
+              <!-- Derecha: acciones -->
+              <div class="col-12 col-md-2 order-actions text-md-end"></div>
+            </div>
           </div>
-        {% endif %}
+
+          <div class="order-card shadow-sm">
+            <div class="row align-items-center gy-3">
+              <!-- Izquierda: imagen + resumen -->
+              <div class="col-12 col-md-7 d-flex">
+                <div class="order-image-wrap">
+                  <img src="{% static 'img/LogoApp.png' %}" alt="Cita" class="order-image">
+                </div>
+                <div class="ms-3 flex-grow-1">
+                  <div class="small fw-semibold mb-1 text-success">Completada</div>
+                  <div class="order-title">Cita el 12 de septiembre</div>
+                  <div class="order-subtitle">Cambio de aceite</div>
+                  <div class="order-subtitle">15:00 - 16:00</div>
+                </div>
+              </div>
+
+              <!-- Centro: modalidad -->
+              <div class="col-12 col-md-3">
+                <div class="seller-name">A domicilio</div>
+              </div>
+
+              <!-- Derecha: acciones -->
+              <div class="col-12 col-md-2 order-actions text-md-end"></div>
+            </div>
+          </div>
+        </div>
         </div>
       </div>
     </section>
@@ -103,5 +202,20 @@
   }
 </style>
 
-{% endblock %}
+<script>
+  (function () {
+    try {
+      var params = new URLSearchParams(window.location.search);
+      if (params.get('demo') === '1') {
+        var demo = document.getElementById('demo-citas');
+        if (demo) demo.style.display = '';
+        var real = document.getElementById('real-citas');
+        if (real) real.style.display = 'none';
+      }
+    } catch (e) {
+      // sin bloqueo si falla
+    }
+  })();
+  </script>
 
+{% endblock %}
