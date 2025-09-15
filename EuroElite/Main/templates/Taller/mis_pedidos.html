@@ -80,9 +80,7 @@
                                     <!-- Centro: vendedor / mensajes -->
                                     <div class="col-12 col-md-3">
                                         <div class="seller-name">{{ p.vendedor|default:"" }}</div>
-                                        {% if p.mensajes_url %}
-                                            <a class="small link-primary" href="{{ p.mensajes_url }}">Ver mensajes</a>
-                                        {% endif %}
+                                        {# En esta vista se eliminó el acceso a mensajes #}
                                     </div>
 
                                     <!-- Derecha: acciones -->
@@ -97,12 +95,73 @@
                         {% endfor %}
                     {% else %}
                         <!-- Estado vacío -->
-                        <div class="empty-state text-center p-5 bg-white border rounded-3">
+                        <div class="empty-state text-center p-5 bg-white border rounded-3" {% if DEBUG %}style="display:none;"{% endif %}>
                             <img src="{% static 'img/LogoApp.png' %}" alt="Euro Elite" style="width:72px;height:72px;opacity:.7;">
                             <h5 class="mt-3 mb-1">Aún no tienes compras</h5>
                             <p class="text-muted mb-3">Cuando compres, verás tus pedidos aquí.</p>
                             <a href="/" class="btn btn-primary btn-sm">Explorar productos</a>
                         </div>
+
+                        {% if DEBUG %}
+                        <div class="date-separator">28 de septiembre de 2025</div>
+                         <div class="order-card shadow-sm">
+                             <div class="row align-items-center gy-3">
+                                 <!-- Izquierda: imagen + resumen -->
+                                 <div class="col-12 col-md-7 d-flex">
+                                     <div class="order-image-wrap">
+                                         <img src="{% static 'img/LogoApp.png' %}" alt="Producto" class="order-image">
+                                     </div>
+                                     <div class="ms-3 flex-grow-1">
+                                        <div class="small fw-semibold mb-1 text-primary">En preparación</div>
+                                        <div class="order-title">Retiro en tienda</div>
+                                         <div class="order-subtitle">Filtro de aceite premium</div>
+                                         <div class="order-subtitle">2 unidades</div>
+                                     </div>
+                                 </div>
+
+                                <!-- Centro: vendedor / mensajes -->
+                                <div class="col-12 col-md-3">
+                                    <div class="seller-name">Tienda Online</div>
+                                </div>
+
+                                <!-- Derecha: acciones -->
+                                <div class="col-12 col-md-2 order-actions text-md-end">
+                                    <a class="btn btn-primary btn-sm w-100" href="#">Ver compra</a>
+                                    <a class="btn btn-outline-primary btn-sm w-100 mt-2" href="#">Volver a comprar</a>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="date-separator">22 de septiembre de 2025</div>
+                        <div class="order-card shadow-sm">
+                            <div class="row align-items-center gy-3">
+                                <!-- Izquierda: imagen + resumen -->
+                                <div class="col-12 col-md-7 d-flex">
+                                    <div class="order-image-wrap">
+                                        <img src="{% static 'img/LogoApp.png' %}" alt="Producto" class="order-image">
+                                    </div>
+                                    <div class="ms-3 flex-grow-1">
+                                        <div class="small fw-semibold mb-1 text-success">Entregado</div>
+                                        <div class="order-title">Llega el 22 de septiembre</div>
+                                        <div class="order-subtitle">Kit de frenos delantero</div>
+                                        <div class="order-subtitle">1 unidad</div>
+                                    </div>
+                                </div>
+
+                                <!-- Centro: vendedor / mensajes -->
+                                <div class="col-12 col-md-3">
+                                    <div class="seller-name">Tienda Online</div>
+                                    
+                                </div>
+
+                                <!-- Derecha: acciones -->
+                                <div class="col-12 col-md-2 order-actions text-md-end">
+                                    <a class="btn btn-primary btn-sm w-100" href="#">Ver compra</a>
+                                    <a class="btn btn-outline-primary btn-sm w-100 mt-2" href="#">Volver a comprar</a>
+                                </div>
+                            </div>
+                        </div>
+                        {% endif %}
                     {% endif %}
                     </div>
                 </div>

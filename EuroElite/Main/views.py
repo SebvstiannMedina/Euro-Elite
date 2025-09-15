@@ -1,4 +1,5 @@
 from django.shortcuts import render, redirect
+from django.conf import settings
 from django.contrib.auth import login as auth_login, logout as auth_logout
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.forms import AuthenticationForm
@@ -188,3 +189,19 @@ def admin_usuarios(request):
 
 
 
+
+# Sobrescribe la vista para ordenar pedidos por fecha de compra (desc)
+def mis_pedidos(request):
+    pedidos_qs = request.user.pedidos.all().order_by('-creado') if request.user.is_authenticated else []
+    # La plantilla usa `p.fecha` para agrupar por da; proveemos ese alias
+    pedidos = [
+        {
+            'fecha': p.creado,
+            'estado': p.get_estado_display() if hasattr(p, 'get_estado_display') else '',
+        }
+        for p in pedidos_qs
+    ]
+    return render(request, 'Taller/mis_pedidos.html', {
+        'pedidos': pedidos,
+        'DEBUG': settings.DEBUG,
+    })
