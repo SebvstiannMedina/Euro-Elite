@@ -25,6 +25,9 @@
                             <a href="{% url 'nueva_contrasena' %}" class="list-group-item list-group-item-action">
                                 <i class="fas fa-lock me-2"></i> Contraseña
                             </a>
+                            <a href="{% url 'mis_citas' %}" class="list-group-item list-group-item-action">
+                                <i class="fas fa-calendar-alt me-2"></i> Mis citas
+                            </a>
                             <a href="{% url 'mis_pedidos' %}" class="list-group-item list-group-item-action active">
                                 <i class="fas fa-shopping-bag me-2"></i> Mis compras
                             </a>
@@ -109,6 +112,28 @@
     <br>
     <br><br><br><br>
 
+    <style>
+        .profile-wrapper .card {
+          border: 0;
+          border-radius: 12px;
+          box-shadow: var(--shadow);
+          background: #fff;
+        }
+        .profile-wrapper .list-group-item { border: 0; }
+        .orders-wrapper { margin-top: .5rem; }
+        .date-separator { color: #6b7280; font-weight: 600; margin: 1.25rem 0 .5rem; }
+        .order-card { background: #fff; border: 0; border-radius: 12px; padding: 16px; margin-bottom: 14px; }
+        .order-image { width: 72px; height: 72px; object-fit: cover; border: 0; border-radius: 10px; background: #f8fafc; }
+        #ordersSection .empty-state { border: 0 !important; }
+        .order-title { font-weight: 600; font-size: 1.05rem; }
+        .order-subtitle { color: #6b7280; font-size: .9rem; }
+        .seller-name { font-size: .92rem; font-weight: 500; }
+        .order-actions .btn { min-width: 140px; }
+        @media (max-width: 767.98px) {
+            .order-actions .btn { min-width: 100%; }
+        }
+    </style>
+
 {% endblock %}
 
     <script>
@@ -133,4 +158,13 @@
         @media (max-width: 767.98px) {
             .order-actions .btn { min-width: 100%; }
         }
+    </style>
+    <style>
+        .profile-wrapper .card {
+          border: 0;
+          border-radius: 12px;
+          box-shadow: var(--shadow);
+          background: #fff;
+        }
+        .profile-wrapper .list-group-item { border: 0; }
     </style>

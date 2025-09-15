@@ -20,6 +20,9 @@
               <a href="{% url 'nueva_contrasena' %}" class="list-group-item list-group-item-action active">
                 <i class="fas fa-lock me-2"></i> Contrase&ntilde;a
               </a>
+              <a href="{% url 'mis_citas' %}" class="list-group-item list-group-item-action">
+                <i class="fas fa-calendar-alt me-2"></i> Mis citas
+              </a>
               <a href="{% url 'mis_pedidos' %}" class="list-group-item list-group-item-action">
                 <i class="fas fa-shopping-bag me-2"></i> Mis compras
               </a>
@@ -83,6 +86,16 @@
     <br>
     <br>
     <br>
+
+      <style>
+        .profile-wrapper .card {
+          border: 0;
+          border-radius: 12px;
+          box-shadow: var(--shadow);
+          background: #fff;
+        }
+        .profile-wrapper .list-group-item { border: 0; }
+      </style>
 
 {% endblock %}
 
