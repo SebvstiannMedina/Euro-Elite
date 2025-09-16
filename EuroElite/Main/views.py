@@ -265,3 +265,6 @@ def confirmacion_datos(request):
         'addr': addr,
         'user': user,
     })
+
+def olvide_contra(request):
+    return render(request, 'Taller/olvide_contra.html')
