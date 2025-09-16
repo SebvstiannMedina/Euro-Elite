@@ -32,6 +32,7 @@ class Usuario(AbstractUser):
 
     email = models.EmailField(unique=True)
     telefono = models.CharField(max_length=20, blank=True)
+    rut = models.CharField(max_length=12, blank=True, null=True ,unique=True)
     rol = models.CharField(max_length=12, choices=Rol.choices, default=Rol.CLIENTE, db_index=True)
     bloqueado = models.BooleanField(default=False)
 
@@ -46,6 +47,25 @@ class Direccion(MarcaTiempo):
         ENVIO = "ENVIO", "Envío"
         FACTURACION = "FACTURACION", "Facturación"
 
+    REGIONES_CHILE = [
+        ("Arica y Parinacota", "Arica y Parinacota"),
+        ("Tarapacá", "Tarapacá"),
+        ("Antofagasta", "Antofagasta"),
+        ("Atacama", "Atacama"),
+        ("Coquimbo", "Coquimbo"),
+        ("Valparaíso", "Valparaíso"),
+        ("Metropolitana de Santiago", "Metropolitana de Santiago"),
+        ("O'Higgins", "O'Higgins"),
+        ("Maule", "Maule"),
+        ("Ñuble", "Ñuble"),
+        ("Biobío", "Biobío"),
+        ("La Araucanía", "La Araucanía"),
+        ("Los Ríos", "Los Ríos"),
+        ("Los Lagos", "Los Lagos"),
+        ("Aysén", "Aysén"),
+        ("Magallanes y la Antártica Chilena", "Magallanes y la Antártica Chilena"),
+    ]
+
     usuario = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="direcciones")
     tipo = models.CharField(max_length=12, choices=Tipo.choices, default=Tipo.ENVIO)
     nombre_completo = models.CharField(max_length=120)
@@ -54,7 +74,7 @@ class Direccion(MarcaTiempo):
     linea2 = models.CharField(max_length=200, blank=True)
     comuna = models.CharField(max_length=100)
     ciudad = models.CharField(max_length=100, default="Santiago")
-    region = models.CharField(max_length=100, blank=True)
+    region = models.CharField(max_length=50, choices=REGIONES_CHILE, blank=True)
     codigo_postal = models.CharField(max_length=20, blank=True)
     predeterminada = models.BooleanField(default=False)
 

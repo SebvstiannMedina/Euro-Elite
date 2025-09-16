@@ -6,7 +6,7 @@ from django.contrib.auth.forms import AuthenticationForm
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import render, redirect
-from .forms import RegistroForm, CitaForm, PerfilForm
+from .forms import RegistroForm, CitaForm, PerfilForm, DireccionForm
 from .models import Producto
 from .models import Direccion
 from .models import ConfigSitio
@@ -69,20 +69,33 @@ def registro(request):
 
 @login_required
 def perfil(request):
-    usuario = request.user  # ya es una instancia de Usuario
-    # Dirección predeterminada (o la más reciente) del usuario para mostrar en el perfil
+    usuario = request.user
+    # Buscar la dirección más reciente del usuario
     addr = Direccion.objects.filter(usuario=usuario).order_by('-predeterminada', '-id').first()
+
     if request.method == "POST":
-        form = PerfilForm(request.POST, instance=usuario)
-        if form.is_valid():
-            form.save()
-            return redirect('perfil')
+        perfil_form = PerfilForm(request.POST, instance=usuario)
+        direccion_form = DireccionForm(request.POST, instance=addr)
+
+        if perfil_form.is_valid() and direccion_form.is_valid():
+            perfil_form.save()
+
+            direccion = direccion_form.save(commit=False)
+            direccion.usuario = usuario
+            direccion.save()
+
+            messages.success(request, "Perfil actualizado correctamente ✅")
+            return redirect("perfil")
     else:
-        form = PerfilForm(instance=usuario)
+        perfil_form = PerfilForm(instance=usuario)
+        direccion_form = DireccionForm(instance=addr)
 
-    return render(request, 'Taller/perfil.html', {'form': form, 'user': usuario, 'addr': addr})
-
-
+    return render(request, "Taller/perfil.html", {
+        "form": perfil_form,
+        "direccion_form": direccion_form,
+        "user": usuario,
+        "addr": addr,
+    })
 
 # ========== LOGOUT ==========
 @login_required

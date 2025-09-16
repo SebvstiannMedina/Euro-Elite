@@ -3,7 +3,7 @@ from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth import get_user_model
 from .models import Cita, BloqueHorario
 from django import forms
-from .models import Producto
+from .models import Producto, Direccion
 
 Usuario = get_user_model()
 
@@ -12,11 +12,12 @@ class PerfilForm(forms.ModelForm):
     """Formulario para que el usuario edite su perfil básico."""
     class Meta:
         model = Usuario
-        fields = ['username', 'email', 'telefono']
+        fields = ['username', 'email', 'telefono', 'rut']
         widgets = {
             'username': forms.TextInput(attrs={'class': 'form-control'}),
             'email': forms.EmailInput(attrs={'class': 'form-control'}),
             'telefono': forms.TextInput(attrs={'class': 'form-control'}),
+            'rut': forms.TextInput(attrs={'class': 'form-control'}),
         }
 
 
@@ -84,4 +85,18 @@ class ProductoForm(forms.ModelForm):
                   'stock_minimo', 'activo', 'categoria', 'imagen']
         widgets = {
             'descripcion': forms.Textarea(attrs={'rows': 3}),
+        }
+
+class DireccionForm(forms.ModelForm):
+    """Formulario para editar o agregar dirección del usuario."""
+    class Meta:
+        model = Direccion
+        fields = ['linea1', 'linea2', 'comuna', 'ciudad', 'region', 'codigo_postal']
+        widgets = {
+            'linea1': forms.TextInput(attrs={'class': 'form-control'}),
+            'linea2': forms.TextInput(attrs={'class': 'form-control'}),
+            'comuna': forms.TextInput(attrs={'class': 'form-control'}),
+            'ciudad': forms.TextInput(attrs={'class': 'form-control'}),
+            'region': forms.Select(attrs={"class": "form-control"}),
+            'codigo_postal': forms.TextInput(attrs={'class': 'form-control'}),
         }
