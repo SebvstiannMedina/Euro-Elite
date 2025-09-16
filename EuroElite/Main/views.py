@@ -6,6 +6,7 @@ from django.contrib.auth.forms import AuthenticationForm
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import render, redirect
+from django.utils import timezone
 from .forms import RegistroForm, CitaForm, PerfilForm, DireccionForm
 from .models import Producto
 from .models import Direccion
@@ -13,7 +14,17 @@ from .models import ConfigSitio
 
 # ========== PÁGINAS PÚBLICAS ==========
 def home(request):
-    return render(request, 'Taller/main.html')
+    ahora = timezone.now()
+    # Productos que tengan promociones vigentes
+    productos_en_oferta = Producto.objects.filter(
+        promociones__activa=True,
+        promociones__inicio__lte=ahora,
+        promociones__fin__gte=ahora,
+    ).distinct()[:6]  # solo los primeros 6, por ejemplo
+
+    return render(request, 'Taller/main.html', {
+        'productos': productos_en_oferta
+    })
 
 def contacto(request):
     return render(request, 'Taller/contacto.html')

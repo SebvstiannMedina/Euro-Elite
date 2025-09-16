@@ -46,36 +46,52 @@
 
 <!-- OFERTAS DESTACADAS -->
 <section class="featured-offers" id="offers">
-    <h2 class="section-title">Ofertas Destacadas</h2>
+    <h2 class="section-title">Productos en Oferta</h2>
     <div class="offers-grid">
+        {% for p in productos %}
         <div class="offer-card">
-            <h3 class="offer-title">Discos de Freno BMW</h3>
-            <p>Discos originales Serie 3</p>
-            <div class="offer-price">$149.990</div>
-            <button class="add-to-cart" onclick="addToCart('Discos de Freno BMW',149990)">
-                <i class="fas fa-shopping-cart"></i> Añadir al Carrito
-            </button>
+            {% if p.promocion %}
+            <span class="current-price">${{ p.precio_con_descuento|floatformat:"0" }}</span>
+            <span class="original-price">${{ p.precio|floatformat:"0" }}</span>
+            {% else %}
+            <span class="current-price">${{ p.precio|floatformat:"0" }}</span>
+            {% endif %}
+
+        </div>
+        
+
+        <div class="offer-image">
+            {% if p.imagen %}
+            <img src="{{ p.imagen.url }}" alt="{{ p.nombre }}">
+            {% else %}
+            <img src="{% static 'img/no-image.png' %}" alt="Sin imagen">
+            {% endif %}
         </div>
 
-        <div class="offer-card">
-            <h3 class="offer-title">Filtro de Aire Audi</h3>
-            <p>Filtro TFSI alto rendimiento</p>
-            <div class="offer-price">$45.990</div>
-            <button class="add-to-cart" onclick="addToCart('Filtro de Aire Audi',45990)">
-                <i class="fas fa-shopping-cart"></i> Añadir al Carrito
-            </button>
+        <div class="offer-content">
+            <h3 class="offer-title">{{ p.nombre }}</h3>
+            <p class="offer-description">{{ p.descripcion|truncatewords:15 }}</p>
+
+            <div class="offer-price">
+                {% if p.promocion %}
+                <span class="current-price">${{ p.precio_con_descuento|floatformat:"0" }}</span>
+                <span class="original-price">${{ p.precio|floatformat:"0" }}</span>
+                {% else %}
+                <span class="current-price">${{ p.precio|floatformat:"0" }}</span>
+                {% endif %}
+            </div>
         </div>
+    </div>
+    {% empty %}
+    <p class="text-center">No hay productos disponibles.</p>
+    {% endfor %}
     </div>
 </section>
 
-
 {% endblock %}
-<!--El const carrito URL es para que la página de carrito cargue la URL correcta-->
 
+<!--El const carrito URL es para que la página de carrito cargue la URL correcta-->
 <script>
     const carritoURL = "{% url 'carrito_compras' %}";
 </script>
 <script src="{% static 'js/main.js' %}?v=2"></script>
-</body>
-
-</html>
