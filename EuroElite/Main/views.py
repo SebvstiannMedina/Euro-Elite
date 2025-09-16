@@ -70,6 +70,8 @@ def registro(request):
 @login_required
 def perfil(request):
     usuario = request.user  # ya es una instancia de Usuario
+    # Dirección predeterminada (o la más reciente) del usuario para mostrar en el perfil
+    addr = Direccion.objects.filter(usuario=usuario).order_by('-predeterminada', '-id').first()
     if request.method == "POST":
         form = PerfilForm(request.POST, instance=usuario)
         if form.is_valid():
@@ -78,7 +80,7 @@ def perfil(request):
     else:
         form = PerfilForm(instance=usuario)
 
-    return render(request, 'Taller/perfil.html', {'form': form, 'user': usuario})
+    return render(request, 'Taller/perfil.html', {'form': form, 'user': usuario, 'addr': addr})
 
 
 
