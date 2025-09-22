@@ -2,7 +2,6 @@
 
 <!DOCTYPE html>
 <html lang="es">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -82,12 +81,13 @@
         <div class="container d-flex flex-wrap justify-content-center gap-3">
             <input type="text" id="searchInput" placeholder="Buscar producto..." class="form-control w-auto"
                 onkeyup="searchProducts()">
+
+            <!-- 🔹 genera opciones dinámicas con slug -->
             <select id="categoryFilter" class="form-select w-auto" onchange="filterProducts()">
                 <option value="all">Todas</option>
-                <option value="BMW">BMW</option>
-                <option value="Audi">Audi</option>
-                <option value="Mercedes">Mercedes</option>
-                <option value="Herramientas">Herramientas</option>
+                {% for cat in categorias %}
+                    <option value="{{ cat.slug }}">{{ cat.nombre }}</option>
+                {% endfor %}
             </select>
         </div>
     </section>
@@ -98,11 +98,11 @@
         <h2 class="section-title">Productos en Venta</h2>
         <div class="offers-grid">
             {% for p in productos %}
-                <div class="offer-card">
-                    {% if p.promocion %}
+                <div class="product-card" data-category="{{ p.categoria.slug|default:'sin-categoria' }}">
+                    {% if p.promocion_vigente %}
                         <div class="offer-badge">
-                            {% if p.promocion.tipo == 'PORCENTAJE' %}
-                                -{{ p.promocion.valor|floatformat:0 }}%
+                            {% if p.promocion_vigente.tipo == 'PORCENTAJE' %}
+                                -{{ p.promocion_vigente.valor|floatformat:0 }}%
                             {% else %}
                                 Oferta
                             {% endif %}
@@ -118,12 +118,12 @@
                     </div>
 
                     <div class="offer-content">
-                        <h3 class="offer-title">{{ p.nombre }}</h3>
-                        <p class="offer-description">{{ p.descripcion|truncatewords:20 }}</p>
+                        <h3 class="product-title">{{ p.nombre }}</h3>
+                        <p class="product-description">{{ p.descripcion|truncatewords:20 }}</p>
 
                         <div class="offer-price">
-                            {% if p.promocion %}
-                                <span class="current-price">${{ p.precio_descuento|floatformat:"0" }}</span>
+                            {% if p.promocion_vigente %}
+                                <span class="current-price">${{ p.precio_con_descuento|floatformat:"0" }}</span>
                                 <span class="original-price">${{ p.precio|floatformat:"0" }}</span>
                             {% else %}
                                 <span class="current-price">${{ p.precio|floatformat:"0" }}</span>
@@ -133,7 +133,7 @@
                         <div class="d-flex gap-2 mt-2">
                             <!-- Botón carrito -->
                             <button class="add-to-cart"
-                                onclick="addToCart('{{ p.nombre }}', '{{ p.precio_descuento|default:p.precio }}')">
+                                onclick="addToCart('{{ p.nombre }}', '{{ p.precio_con_descuento|default:p.precio }}')">
                                 <i class="fas fa-shopping-cart"></i> Añadir al Carrito
                             </button>
 

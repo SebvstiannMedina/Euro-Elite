@@ -38,8 +38,10 @@ urlpatterns = [
     path('admin_dashboard', views.admin_dashboard, name='admin_dashboard'),   
     path('admin_pedidos', views.admin_pedidos, name='admin_pedidos'),     
     path('admin_reportes', views.admin_reportes, name='admin_reportes'), 
-    path('admin_usuarios', views.admin_usuarios, name='admin_usuarios'),        
+    path('admin_usuarios', views.admin_usuarios, name='admin_usuarios'),  
+    path('estadistica', views.estadistica, name='estadistica'),
 ]
 
 if settings.DEBUG:
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+

@@ -8,9 +8,12 @@ from django.contrib.auth.decorators import login_required
 from django.shortcuts import render, redirect
 from django.utils import timezone
 from .forms import RegistroForm, CitaForm, PerfilForm, DireccionForm
-from .models import Producto
+from .models import Producto, Categoria
 from .models import Direccion
 from .models import ConfigSitio
+from .models import Pedido
+from django.db.models import Sum
+from django.db.models.functions import TruncMonth
 
 # ========== PÁGINAS PÚBLICAS ==========
 def home(request):
@@ -38,11 +41,17 @@ def equipo(request):
     return render(request, 'Taller/equipo.html')
 
 def productos(request):
-    productos = Producto.objects.filter(activo=True)
+    productos = Producto.objects.filter(activo=True).select_related("categoria")
+    categorias = Categoria.objects.filter(activa=True)
+
     for p in productos:
         p.promocion = p.promocion_vigente
         p.precio_descuento = p.precio_con_descuento
-    return render(request, 'Taller/productos.html', {'productos': productos})
+
+    return render(request, "Taller/productos.html", {
+        "productos": productos,
+        "categorias": categorias,   # 👉 se envían las categorías al template
+    })
 
 
 # ========== LOGIN ==========
@@ -254,6 +263,7 @@ def resumen_compra(request):
 
 
 from django.contrib.auth.decorators import login_required
+
 @login_required
 def confirmacion_datos(request):
     user = request.user
@@ -266,12 +276,14 @@ def confirmacion_datos(request):
         telefono = request.POST.get('telefono', '').strip()
         direccion_txt = request.POST.get('direccion', '').strip()
 
-        # Guarda datos bsicos del usuario
+        # ✅ guarda en Usuario
         if telefono:
             user.telefono = telefono
-            user.save(update_fields=['telefono'])
+        if rut:
+            user.rut = rut
+        user.save(update_fields=['telefono', 'rut'])
 
-        # Guarda/actualiza direccin de envo predeterminada
+        # ✅ guarda en Direccion
         if not addr:
             addr = Direccion(usuario=user, tipo=Direccion.Tipo.ENVIO)
         if nombre_completo:
@@ -285,10 +297,9 @@ def confirmacion_datos(request):
         addr.predeterminada = True
         addr.save()
 
-        # Rut en sesin para el checkout
+        # ✅ rut también en sesión (para checkout)
         request.session['checkout_rut'] = rut
 
-        # Luego de guardar, continuar al siguiente paso (pago)
         return redirect('pago')
 
     return render(request, 'Taller/confirmacion_datos.html', {
@@ -299,3 +310,22 @@ def confirmacion_datos(request):
 
 def olvide_contra(request):
     return render(request, 'Taller/olvide_contra.html')
+
+def estadistica(request):
+    # Datos de prueba (puedes reemplazar por tus datos reales de la BD)
+    labels = ["Enero 2025", "Febrero 2025", "Marzo 2025"]
+    values = [220000, 330000, 200000]
+
+    # Cálculos previos
+    total = sum(values) if values else 0
+    max_val = max(values) if values else 0
+    mes_max = labels[values.index(max_val)] if values else "N/A"
+    cantidad_pedidos = len(values)
+
+    return render(request, "Taller/estadistica.html", {
+        "labels": labels,
+        "values": values,
+        "total": total,
+        "mes_max": mes_max,
+        "cantidad_pedidos": cantidad_pedidos,
+    })
