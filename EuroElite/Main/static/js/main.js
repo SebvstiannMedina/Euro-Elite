@@ -93,9 +93,17 @@ function showCartNotification(productName) {
 }
 
 function toggleCart() {
-    if (cart.length === 0) { alert('Tu carrito está vacío'); return; }
-    let cartHTML = '<h3>Carrito de Compras</h3><div style="max-height: 400px; overflow-y: auto;">';
+    // Si ya existe un modal, lo quitamos
+    const existingModal = document.getElementById("cart-modal");
+    if (existingModal) existingModal.remove();
+
+    if (cart.length === 0) {
+        alert('Tu carrito está vacío 🛒');
+        return;
+    }
+
     let total = 0;
+    let cartHTML = '<h3>Carrito de Compras</h3><div style="max-height: 400px; overflow-y: auto;">';
     cart.forEach((item, index) => {
         const itemTotal = item.price * item.quantity;
         total += itemTotal;
@@ -103,42 +111,38 @@ function toggleCart() {
             <div style="display:flex; justify-content:space-between; align-items:center; padding:10px 0; border-bottom:1px solid #eee;">
                 <div>
                     <strong>${item.name}</strong><br>
-                    <small>${item.price.toLocaleString()} x ${item.quantity} (Stock: ${item.stock})</small>
+                    <small>$${item.price.toLocaleString()} x ${item.quantity} (Stock: ${item.stock})</small>
                 </div>
                 <div>
-                    <strong>${itemTotal.toLocaleString()}</strong>
-                    <button class="remove-btn" data-index="${index}" style="
-                        margin-left: 10px; background: var(--accent-red); color: white;
+                    <strong>$${itemTotal.toLocaleString()}</strong>
+                    <button onclick="removeFromCart(${index})" style="
+                        margin-left: 10px; background: #dc3545; color: white;
                         border: none; border-radius: 4px; padding: 4px 8px; cursor: pointer;">
                         <i class="fas fa-trash"></i>
                     </button>
                 </div>
             </div>`;
     });
-    cartHTML += `
-    </div>
+    cartHTML += `</div>
     <div style="margin-top:20px; padding-top:20px; border-top:2px solid var(--primary-dark); text-align:center;">
-        <h4>Total: ${total.toLocaleString()}</h4>
+        <h4>Total: $${total.toLocaleString()}</h4>
         <div style="display:flex; justify-content:center; gap:10px; flex-wrap:wrap;">
             <button onclick="goToResumen()" style="
                 background: var(--primary-dark); color: white; border: none;
                 padding: 12px 30px; border-radius: 8px; font-weight: bold; cursor: pointer;">
                 Proceder al Pago
             </button>
-            <button onclick="window.location.href=carritoURL" style="
-                background: var(--primary-dark); color: white; border: none;
-                padding: 12px 30px; border-radius: 8px; font-weight: bold; cursor: pointer;">
-                <i class="fas fa-shopping-cart"></i> Ver Carrito
-            </button>
         </div>
     </div>`;
+
     const modal = document.createElement('div');
+    modal.id = "cart-modal";
     modal.innerHTML = `
         <div style="position: fixed; top:0; left:0; right:0; bottom:0; background: rgba(0,0,0,0.5);
             display:flex; align-items:center; justify-content:center; z-index:10000;" onclick="this.remove()">
             <div style="background:white; padding:30px; border-radius:12px; max-width:500px; width:90%;
                 max-height:80vh; overflow-y:auto; position:relative;" onclick="event.stopPropagation()">
-                <button onclick="this.closest('div').parentElement.remove()" style="
+                <button onclick="this.closest('#cart-modal').remove()" style="
                     position:absolute; top:15px; right:15px; background:none; border:none; font-size:1.5rem; cursor:pointer;">×</button>
                 ${cartHTML}
             </div>
@@ -147,12 +151,12 @@ function toggleCart() {
 }
 
 function removeFromCart(index) {
-    cart.splice(index, 1);
-    saveCart(); updateCartCount();
-    const backdrop = document.querySelector('[style*="position: fixed"][style*="background: rgba(0,0,0,0.5)"]');
-    if (backdrop) backdrop.remove();
-    if (cart.length > 0) toggleCart();
+    cart.splice(index, 1); // eliminar producto
+    saveCart();
+    updateCartCount();
+    toggleCart(); // vuelve a renderizar el modal actualizado
 }
+
 
 function checkout() {
     let products = JSON.parse(localStorage.getItem("products")) || [];
@@ -192,18 +196,7 @@ document.querySelectorAll('a[href^="#"]').forEach(anchor => {
     });
 });
 
-// =============== EFFECTO SCROLL NAVBAR ===============
-window.addEventListener('scroll', function () {
-    const navbar = document.querySelector('.navbar');
-    if (!navbar) return;
-    if (window.scrollY > 100) {
-        navbar.style.background = 'linear-gradient(135deg, rgba(6, 43, 97, 0.95), rgba(0, 51, 153, 0.95))';
-        navbar.style.backdropFilter = 'blur(10px)';
-    } else {
-        navbar.style.background = 'linear-gradient(135deg, var(--primary-dark), var(--primary-medium))';
-        navbar.style.backdropFilter = 'none';
-    }
-});
+// 🚫 Eliminado el bloque que cambiaba el navbar al hacer scroll
 
 // =============== OBSERVER ANIMACIONES ===============
 const observerOptions = { threshold: 0.1, rootMargin: '0px 0px -100px 0px' };

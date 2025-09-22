@@ -11,14 +11,14 @@
                 <div class="slide-content">
                     <h1 class="slide-title">Euro Elite</h1>
                     <p class="slide-description">Los mejores repuestos europeos para tu automóvil</p>
-                    <a href="#products" class="cta-button">Ver Productos</a>
+                    <a href="#offers" class="cta-button">Ver Ofertas</a>
                 </div>
             </div>
             <div class="carousel-slide">
                 <div class="slide-content">
                     <h1 class="slide-title">Calidad Premium</h1>
                     <p class="slide-description">Repuestos originales BMW, Audi y Mercedes-Benz</p>
-                    <a href="#offers" class="cta-button">Ver Ofertas</a>
+                    <a href="{% url 'productos' %}" class="cta-button">Ver Catálogo</a>
                 </div>
             </div>
             <div class="carousel-slide">
@@ -41,7 +41,7 @@
 <section class="cta-banner">
     <h2>¡Encuentra los Mejores Repuestos para tu Auto!</h2>
     <p>Calidad europea garantizada</p>
-    <a href="#products" class="cta-button">Explorar Catálogo</a>
+    <a href="{% url 'productos' %}" class="cta-button">Explorar Catálogo</a>
 </section>
 
 <!-- OFERTAS DESTACADAS -->
@@ -50,41 +50,39 @@
     <div class="offers-grid">
         {% for p in productos %}
         <div class="offer-card">
-            {% if p.promocion %}
-            <span class="current-price">${{ p.precio_con_descuento|floatformat:"0" }}</span>
-            <span class="original-price">${{ p.precio|floatformat:"0" }}</span>
-            {% else %}
-            <span class="current-price">${{ p.precio|floatformat:"0" }}</span>
-            {% endif %}
-
-        </div>
-        
-
-        <div class="offer-image">
-            {% if p.imagen %}
-            <img src="{{ p.imagen.url }}" alt="{{ p.nombre }}">
-            {% else %}
-            <img src="{% static 'img/no-image.png' %}" alt="Sin imagen">
-            {% endif %}
-        </div>
-
-        <div class="offer-content">
-            <h3 class="offer-title">{{ p.nombre }}</h3>
-            <p class="offer-description">{{ p.descripcion|truncatewords:15 }}</p>
-
-            <div class="offer-price">
-                {% if p.promocion %}
-                <span class="current-price">${{ p.precio_con_descuento|floatformat:"0" }}</span>
-                <span class="original-price">${{ p.precio|floatformat:"0" }}</span>
+            <!-- Imagen -->
+            <div class="offer-image">
+                {% if p.imagen %}
+                <img src="{{ p.imagen.url }}" alt="{{ p.nombre }}">
                 {% else %}
-                <span class="current-price">${{ p.precio|floatformat:"0" }}</span>
+                <img src="{% static 'img/no-image.png' %}" alt="Sin imagen">
                 {% endif %}
             </div>
+
+            <!-- Contenido -->
+            <div class="offer-content">
+                <h3 class="offer-title">{{ p.nombre }}</h3>
+                <p class="offer-description">{{ p.descripcion|truncatewords:15 }}</p>
+
+                <div class="offer-price">
+                    {% if p.promocion %}
+                        <span class="current-price">
+                            ${{ p.precio_descuento|floatformat:"0" }}
+                        </span>
+                        <span class="original-price">
+                            ${{ p.precio|floatformat:"0" }}
+                        </span>
+                    {% else %}
+                        <span class="current-price">
+                            ${{ p.precio|floatformat:"0" }}
+                        </span>
+                    {% endif %}
+                </div>
+            </div>
         </div>
-    </div>
-    {% empty %}
-    <p class="text-center">No hay productos disponibles.</p>
-    {% endfor %}
+        {% empty %}
+        <p class="text-center">No hay productos en oferta actualmente.</p>
+        {% endfor %}
     </div>
 </section>
 

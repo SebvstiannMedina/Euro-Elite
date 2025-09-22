@@ -15,12 +15,17 @@ from .models import ConfigSitio
 # ========== PÁGINAS PÚBLICAS ==========
 def home(request):
     ahora = timezone.now()
-    # Productos que tengan promociones vigentes
+    # Solo productos que tengan promociones vigentes
     productos_en_oferta = Producto.objects.filter(
         promociones__activa=True,
         promociones__inicio__lte=ahora,
         promociones__fin__gte=ahora,
-    ).distinct()[:6]  # solo los primeros 6, por ejemplo
+    ).distinct()[:6]
+
+    # Agregar atributos calculados a cada producto
+    for p in productos_en_oferta:
+        p.promocion = p.promocion_vigente
+        p.precio_descuento = p.precio_con_descuento
 
     return render(request, 'Taller/main.html', {
         'productos': productos_en_oferta
