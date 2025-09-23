@@ -32,37 +32,48 @@ function toggleMobileMenu() {
 }
 
 // =============== CARRITO ===============
-function addToCart(productName, price) {
-    let products = JSON.parse(localStorage.getItem("products")) || [];
-    const product = products.find(p => p.name === productName);
-    if (!product) { alert("Producto no encontrado"); return; }
+function getCSRFToken() {
+  const name = 'csrftoken=';
+  const cookies = document.cookie ? document.cookie.split(';') : [];
+  for (let c of cookies) {
+    c = c.trim();
+    if (c.startsWith(name)) return c.substring(name.length);
+  }
+  return '';
+}
 
-    const existingItem = cart.find(item => item.name === productName);
+async function addToCart(productName, price, productId, stock) {
+  const unitPrice = Number(String(price).replace(/[^\d.]/g, '')) || 0;
+  const maxStock = (stock !== undefined && stock !== null && stock !== '') ? Number(stock) : Infinity;
 
-    if (existingItem) {
-        if (existingItem.quantity < product.stock) {
-            existingItem.quantity += 1;
-        } else {
-            alert(`Solo hay ${product.stock} unidades disponibles de ${productName}`);
-            return;
-        }
-    } else {
-        if (product.stock > 0) {
-            cart.push({
-                name: productName,
-                price: price,
-                quantity: 1,
-                stock: product.stock
-            });
-        } else {
-            alert(`No hay stock disponible para ${productName}`);
-            return;
-        }
+  let existing = cart.find(i => i.name === productName);
+  if (existing) {
+    if (existing.quantity + 1 > maxStock && isFinite(maxStock)) {
+      alert(`Solo hay ${maxStock} unidades de ${productName}`);
+      return;
     }
+    existing.quantity += 1;
+  } else {
+    const item = { name: productName, price: unitPrice, quantity: 1 };
+    if (isFinite(maxStock)) item.stock = maxStock;
+    cart.push(item);
+  }
+  saveCart();
+  updateCartCount();
+  showCartNotification(productName);
 
-    updateCartCount();
-    saveCart();
-    showCartNotification(productName);
+  // 2) Persistencia real (API)
+  try {
+    const res = await fetch('/api/cart/add/', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'X-CSRFToken': getCSRFToken() },
+      body: JSON.stringify({ product_id: productId, quantity: 1 })
+    });
+    const data = await res.json();
+    if (data && typeof data.count === 'number') updateCartCount(data.count);
+  } catch (e) {
+    console.warn('No se pudo sincronizar carrito con servidor', e);
+  }
 }
 
 function updateCartCount() {

@@ -40,6 +40,10 @@ urlpatterns = [
     path('admin_reportes', views.admin_reportes, name='admin_reportes'), 
     path('admin_usuarios', views.admin_usuarios, name='admin_usuarios'),  
     path('estadistica', views.estadistica, name='estadistica'),
+    path('producto/<int:pk>/', views.producto_detalle, name='producto_detalle'),
+    path('api/cart/add/', views.api_cart_add, name='api_cart_add'),
+    path('api/cart/count/', views.api_cart_count, name='api_cart_count'),
+    path('api/cart/', views.api_cart_detail, name='api_cart_detail'),
 ]
 
 if settings.DEBUG:

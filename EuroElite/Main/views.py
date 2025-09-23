@@ -8,31 +8,57 @@ from django.contrib.auth.decorators import login_required
 from django.shortcuts import render, redirect
 from django.utils import timezone
 from .forms import RegistroForm, CitaForm, PerfilForm, DireccionForm
-from .models import Producto, Categoria
+from .models import Producto, Categoria, Carrito, ItemCarrito
 from .models import Direccion
 from .models import ConfigSitio
 from .models import Pedido
-from django.db.models import Sum
+from django.db.models import Sum, Q
 from django.db.models.functions import TruncMonth
+from django.shortcuts import render, redirect, get_object_or_404  
+from django.http import JsonResponse
+from django.views.decorators.http import require_POST
+from django.views.decorators.csrf import ensure_csrf_cookie
+from django.db.models import Sum
+from django.contrib.auth.signals import user_logged_in
+from django.dispatch import receiver
+
 
 # ========== PÁGINAS PÚBLICAS ==========
+@ensure_csrf_cookie
 def home(request):
     ahora = timezone.now()
-    # Solo productos que tengan promociones vigentes
-    productos_en_oferta = Producto.objects.filter(
-        promociones__activa=True,
-        promociones__inicio__lte=ahora,
-        promociones__fin__gte=ahora,
-    ).distinct()[:6]
 
-    # Agregar atributos calculados a cada producto
-    for p in productos_en_oferta:
-        p.promocion = p.promocion_vigente
-        p.precio_descuento = p.precio_con_descuento
+    productos_oferta = (
+        Producto.objects.filter(
+            activo=True,
+            promociones__activa=True,
+        )
+        .filter(Q(promociones__inicio__isnull=True) | Q(promociones__inicio__lte=ahora))
+        .filter(Q(promociones__fin__isnull=True) | Q(promociones__fin__gte=ahora))
+        .select_related('categoria')
+        .distinct()
+        .order_by('-id')[:6]
+    )
+
+    productos_normales = (
+        Producto.objects.filter(activo=True)
+        .exclude(id__in=productos_oferta.values('id'))
+        .select_related('categoria')
+        .order_by('-id')[:6]
+    )
 
     return render(request, 'Taller/main.html', {
-        'productos': productos_en_oferta
+        'productos_oferta': productos_oferta,
+        'productos_normales': productos_normales,
     })
+
+def producto_detalle(request, pk):
+    p = get_object_or_404(
+        Producto.objects.select_related('categoria'),
+        pk=pk,
+        activo=True
+    )
+    return render(request, 'Taller/producto_detalle.html', {'p': p})
 
 def contacto(request):
     return render(request, 'Taller/contacto.html')
@@ -275,14 +301,12 @@ def confirmacion_datos(request):
         telefono = request.POST.get('telefono', '').strip()
         direccion_txt = request.POST.get('direccion', '').strip()
 
-        # ✅ guarda en Usuario
         if telefono:
             user.telefono = telefono
         if rut:
             user.rut = rut
         user.save(update_fields=['telefono', 'rut'])
 
-        # ✅ guarda en Direccion
         if not addr:
             addr = Direccion(usuario=user, tipo=Direccion.Tipo.ENVIO)
         if nombre_completo:
@@ -296,7 +320,6 @@ def confirmacion_datos(request):
         addr.predeterminada = True
         addr.save()
 
-        # ✅ rut también en sesión (para checkout)
         request.session['checkout_rut'] = rut
 
         return redirect('pago')
@@ -311,7 +334,6 @@ def olvide_contra(request):
     return render(request, 'Taller/olvide_contra.html')
 
 def estadistica(request):
-    # Datos de prueba (puedes reemplazar por tus datos reales de la BD)
     labels = ["Enero 2025", "Febrero 2025", "Marzo 2025"]
     values = [220000, 330000, 200000]
 
@@ -331,3 +353,89 @@ def estadistica(request):
 
 def custom_404(request, exception):
     return render(request, 'Taller/notfound.html')
+
+def _get_or_create_cart(request):
+    # Asegura que exista una sesión
+    if not request.session.session_key:
+        request.session.create()
+
+    # Si está logueado: carrito por usuario (mergea con carrito de sesión si existe)
+    if request.user.is_authenticated:
+        cart, _ = Carrito.objects.get_or_create(usuario=request.user, activo=True)
+        ses_cart = Carrito.objects.filter(clave_sesion=request.session.session_key, activo=True).first()
+        if ses_cart and ses_cart != cart:
+            for it in ses_cart.items.select_related('producto'):
+                tgt, _ = ItemCarrito.objects.get_or_create(
+                    carrito=cart, producto=it.producto,
+                    defaults={'cantidad': 0, 'precio_unitario': it.precio_unitario}
+                )
+                tgt.cantidad += it.cantidad
+                tgt.precio_unitario = it.precio_unitario
+                tgt.save()
+            ses_cart.activo = False
+            ses_cart.save()
+        return cart
+    # Invitado: carrito por clave de sesión
+    cart, _ = Carrito.objects.get_or_create(clave_sesion=request.session.session_key, activo=True)
+    return cart
+
+
+@require_POST
+def api_cart_add(request):
+    import json
+    data = json.loads(request.body.decode('utf-8'))
+    product_id = int(data.get('product_id'))
+    quantity = max(1, int(data.get('quantity', 1)))
+
+    p = get_object_or_404(Producto, pk=product_id, activo=True)
+    cart = _get_or_create_cart(request)
+
+    item, _ = ItemCarrito.objects.get_or_create(
+        carrito=cart, producto=p,
+        defaults={'cantidad': 0, 'precio_unitario': p.precio_con_descuento}
+    )
+
+    # Respeta stock (si usas stock = 0, no suma)
+    if p.stock is not None:
+        new_qty = min(item.cantidad + quantity, p.stock)
+    else:
+        new_qty = item.cantidad + quantity
+
+    if new_qty == item.cantidad:
+        return JsonResponse({"ok": False, "error": "Sin stock"}, status=400)
+
+    item.cantidad = new_qty
+    # Congela precio al momento
+    item.precio_unitario = p.precio_con_descuento
+    item.save()
+
+    count = cart.items.aggregate(total=Sum('cantidad'))['total'] or 0
+    return JsonResponse({"ok": True, "count": count})
+
+
+def api_cart_count(request):
+    cart = _get_or_create_cart(request)
+    count = cart.items.aggregate(total=Sum('cantidad'))['total'] or 0
+    return JsonResponse({"count": count})
+
+
+def api_cart_detail(request):
+    cart = _get_or_create_cart(request)
+    items = []
+    for it in cart.items.select_related('producto'):
+        items.append({
+            "id": it.producto.id,
+            "name": it.producto.nombre,
+            "price": float(it.precio_unitario),
+            "quantity": it.cantidad,
+            "stock": it.producto.stock,
+            "image": it.producto.imagen.url if it.producto.imagen else None,
+        })
+    total = sum(i["price"] * i["quantity"] for i in items)
+    return JsonResponse({"items": items, "total": total})
+
+
+@receiver(user_logged_in)
+def _merge_on_login(sender, user, request, **kwargs):
+    # Al loguear, fuerza el merge sesión → usuario
+    _get_or_create_cart(request)

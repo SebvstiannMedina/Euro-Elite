@@ -133,9 +133,13 @@
                         <div class="d-flex gap-2 mt-2">
                             <!-- Botón carrito -->
                             <button class="add-to-cart"
-                                onclick="addToCart('{{ p.nombre }}', '{{ p.precio_con_descuento|default:p.precio }}')">
-                                <i class="fas fa-shopping-cart"></i> Añadir al Carrito
+                                onclick="addToCart('{{ p.nombre }}',
+                                                '{{ p.precio_con_descuento|default:p.precio }}',
+                                                '{{ p.id }}',
+                                                '{{ p.stock }}')">
+                            <i class="fas fa-shopping-cart"></i> Añadir al Carrito
                             </button>
+
 
                             <!-- Botón detalle -->
                             <button class="btn btn-outline-primary btn-sm"
