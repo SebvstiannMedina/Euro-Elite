@@ -128,22 +128,21 @@ def logout_view(request):
     auth_logout(request)
     return redirect('home')
 
-def notfound(request):
-    return render(request, 'Taller/notfound.html')
-
 #Vistas de agenda#
 @login_required
 def agendar_cita(request):
     if request.method == "POST":
-        form = CitaForm(request.POST)
+        form = CitaForm(request.POST, user=request.user)
         if form.is_valid():
             cita = form.save(commit=False)
             cita.usuario = request.user
             cita.save()
-            return redirect('mis_citas')  # Redirige al historial del usuario
+            return redirect("mis_citas")  # nombre de tu URL de lista de citas
     else:
-        form = CitaForm()
-    return render(request, 'Taller/agendar.html', {'form': form})
+        form = CitaForm(user=request.user)
+
+
+    return render(request, "Taller/agendar.html", {"form": form})
 
 @login_required
 def mis_citas(request):
@@ -329,3 +328,6 @@ def estadistica(request):
         "mes_max": mes_max,
         "cantidad_pedidos": cantidad_pedidos,
     })
+
+def custom_404(request, exception):
+    return render(request, 'Taller/notfound.html')

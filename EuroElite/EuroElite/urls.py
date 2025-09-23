@@ -15,7 +15,7 @@ urlpatterns = [
     path('registro', views.registro, name='registro'),
     path('login', views.login, name='login'),
     path('logout/', LogoutView.as_view(next_page='home'), name='logout'),
-    path('notfound', views.notfound, name='notfound'),
+    path('custom_404', views.custom_404, name='custom_404'),
     path('agendar', views.agendar_cita, name='agendar'),
     path('mis_citas', views.mis_citas, name='mis_citas'),
     path('nueva_contrasena', views.nueva_contrasena, name='nueva_contrasena'),
@@ -44,4 +44,6 @@ urlpatterns = [
 
 if settings.DEBUG:
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+
+handler404 = 'Main.views.custom_404'
 

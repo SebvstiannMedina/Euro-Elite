@@ -321,6 +321,10 @@ class BloqueHorario(MarcaTiempo):
     fin = models.DateTimeField(db_index=True)
     bloqueado = models.BooleanField(default=False)
 
+    def __str__(self):
+        return f"{self.inicio.strftime('%d/%m/%Y %H:%M')} - {self.fin.strftime('%H:%M')}"
+
+
 
 class Cita(MarcaTiempo):
     class Estado(models.TextChoices):
@@ -333,7 +337,7 @@ class Cita(MarcaTiempo):
     bloque = models.OneToOneField(BloqueHorario, on_delete=models.PROTECT, related_name="cita")
     estado = models.CharField(max_length=12, choices=Estado.choices, default=Estado.RESERVADA)
     a_domicilio = models.BooleanField(default=False)
-    direccion_domicilio = models.ForeignKey(Direccion, null=True, blank=True, on_delete=models.SET_NULL)
+    direccion_domicilio = models.CharField(max_length=255, null=True, blank=True)
 
 
 # =============================

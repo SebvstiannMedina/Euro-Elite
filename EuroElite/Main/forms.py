@@ -1,13 +1,14 @@
 from django import forms
 from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth import get_user_model
-from .models import Cita, BloqueHorario
-from django import forms
-from .models import Producto, Direccion
+from django.utils import timezone
+
+from .models import Cita, BloqueHorario, Servicio, Producto, Direccion
 
 Usuario = get_user_model()
 
 
+# ================= PERFIL =================
 class PerfilForm(forms.ModelForm):
     """Formulario para que el usuario edite su perfil básico."""
     class Meta:
@@ -21,7 +22,7 @@ class PerfilForm(forms.ModelForm):
         }
 
 
-# ========== FORMULARIO DE REGISTRO ==========
+# ================= REGISTRO =================
 class RegistroForm(UserCreationForm):
     username = forms.CharField(
         label="Nombre de usuario",
@@ -45,16 +46,19 @@ class RegistroForm(UserCreationForm):
         fields = ['username', 'email', 'password1', 'password2']
 
 
-# ========== FORMULARIO DE AGENDA ==========
+# ================= CITA =================
 class CitaForm(forms.ModelForm):
-    """
-    Permite al usuario reservar una cita en un bloque de horario disponible.
-    """
-
-    # Generamos la lista de bloques disponibles en el momento de mostrar el formulario
     bloque = forms.ModelChoiceField(
-        queryset=BloqueHorario.objects.filter(bloqueado=False).order_by('inicio'),
+        queryset=BloqueHorario.objects.filter(
+            bloqueado=False, inicio__gte=timezone.now()
+        ).order_by('inicio'),
         label="Bloque de horario",
+        widget=forms.Select(attrs={'class': 'form-control'})
+    )
+
+    servicio = forms.ModelChoiceField(
+        queryset=Servicio.objects.filter(activo=True),
+        label="Servicio requerido",
         widget=forms.Select(attrs={'class': 'form-control'})
     )
 
@@ -62,31 +66,46 @@ class CitaForm(forms.ModelForm):
         model = Cita
         fields = ['servicio', 'bloque', 'a_domicilio', 'direccion_domicilio']
         widgets = {
-            'servicio': forms.Select(attrs={'class': 'form-control'}),
             'a_domicilio': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
             'direccion_domicilio': forms.Select(attrs={'class': 'form-control'}),
         }
+
+    def __init__(self, *args, **kwargs):
+        user = kwargs.pop('user', None)  # recibimos el usuario desde la vista
+        super().__init__(*args, **kwargs)
+
+        # si hay usuario autenticado, solo sus direcciones
+        if user:
+            self.fields['direccion_domicilio'].queryset = Direccion.objects.filter(usuario=user)
+
+        # opcional: placeholder bonito
+        self.fields['direccion_domicilio'].empty_label = "Selecciona una dirección o agrega una nueva en tu perfil"
 
     def clean(self):
         cleaned_data = super().clean()
         bloque = cleaned_data.get("bloque")
 
-        # Validación: impedir reservar un bloque pasado
         if bloque and bloque.inicio <= timezone.now():
             raise forms.ValidationError("No puedes agendar en un bloque de tiempo pasado.")
 
         return cleaned_data
 
 
+# ================= PRODUCTO =================
 class ProductoForm(forms.ModelForm):
     class Meta:
         model = Producto
-        fields = ['nombre', 'sku', 'marca', 'descripcion', 'precio', 'costo', 'stock',
-                  'stock_minimo', 'activo', 'categoria', 'imagen']
+        fields = [
+            'nombre', 'sku', 'marca', 'descripcion',
+            'precio', 'costo', 'stock', 'stock_minimo',
+            'activo', 'categoria', 'imagen'
+        ]
         widgets = {
             'descripcion': forms.Textarea(attrs={'rows': 3}),
         }
 
+
+# ================= DIRECCION =================
 class DireccionForm(forms.ModelForm):
     """Formulario para editar o agregar dirección del usuario."""
     class Meta:

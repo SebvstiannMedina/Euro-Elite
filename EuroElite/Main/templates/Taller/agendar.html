@@ -1,174 +1,155 @@
 {% extends 'base.html' %}
 {% load static %}
 {% block title %}Agendar - Euro Elite{% endblock %}
+
 {% block content %}
+<br><br><br><br><br><br><br><br><br>
 
+<!-- Hero -->
+<section class="container mb-4">
+  <div class="hero-agendar p-4 p-md-5 rounded-4 text-white">
+    <div class="d-flex align-items-center gap-3">
+      <div class="hero-icon"><i class="fa-solid fa-calendar-check"></i></div>
+      <div>
+        <h2 class="mb-1">Agendar servicio</h2>
+        <p class="mb-0 text-white-50">Elige el servicio, selecciona un horario y confirma tu reserva.</p>
+      </div>
+    </div>
+  </div>
+</section>
 
+<!-- Contenido -->
+<main class="container mb-5">
+  <div class="row g-4">
+    <!-- Formulario -->
+    <div class="col-12 col-lg-7">
+      <div class="card shadow-sm p-4 border-0 rounded-4">
+        <form method="POST" novalidate>
+          {% csrf_token %}
 
-<br>
-<br>
-<br>
-<br>
-<br>
-<br>
-<br>
-<br>
-<br>
+          <!-- Servicio -->
+          <div class="mb-3">
+            <label class="form-label fw-semibold">
+              <i class="fa-solid fa-screwdriver-wrench me-2 text-primary"></i>Servicio requerido
+            </label>
+            {{ form.servicio }}
+            {% if form.servicio.errors %}
+              <div class="invalid-feedback d-block">{{ form.servicio.errors }}</div>
+            {% else %}
+              <div class="form-text">Ejemplo: Mantención, Revisión, Diagnóstico</div>
+            {% endif %}
+          </div>
 
+          <!-- Bloque horario -->
+          <div class="mb-3">
+            <label class="form-label fw-semibold">
+              <i class="fa-solid fa-clock me-2 text-primary"></i>Horario disponible
+            </label>
+            {{ form.bloque }}
+            {% if form.bloque.errors %}
+              <div class="invalid-feedback d-block">{{ form.bloque.errors }}</div>
+            {% else %}
+              <div class="form-text">Horarios disponibles desde hoy en adelante.</div>
+            {% endif %}
+          </div>
 
-  <!-- Hero / encabezado -->
-  <section class="container mb-3">
-    <div class="hero-agendar p-4 p-md-5 rounded-4">
-      <div class="d-flex align-items-center gap-3">
-        <div class="hero-icon"><i class="fa-solid fa-calendar-check"></i></div>
-        <div>
-          <h2 class="mb-1">Agendar servicio</h2>
-          <p class="mb-0 text-white-50">Elige el servicio, selecciona un horario y confirma tu reserva.</p>
+          <!-- A domicilio -->
+          <div class="form-check form-switch mb-3">
+            {{ form.a_domicilio }}
+            <label class="form-check-label fw-semibold" for="id_a_domicilio">
+              <i class="fa-solid fa-house me-2 text-primary"></i>¿Quieres el servicio a domicilio?
+            </label>
+          </div>
+
+          <!-- Dirección -->
+          <div class="mb-3" id="direccionWrapper" style="display:none;">
+            <label class="form-label fw-semibold" for="id_direccion_domicilio">
+              <i class="fa-solid fa-location-dot me-2 text-primary"></i>Dirección para la visita
+            </label>
+            {{ form.direccion_domicilio }}
+            {% if form.direccion_domicilio.errors %}
+              <div class="invalid-feedback d-block">{{ form.direccion_domicilio.errors }}</div>
+            {% else %}
+              <div class="form-text">Selecciona una de tus direcciones guardadas.</div>
+            {% endif %}
+          </div>
+
+          <!-- Botones -->
+          <div class="d-flex flex-wrap gap-2 mt-4">
+            <button type="submit" class="btn btn-primary px-4">
+              <i class="fa-solid fa-check me-2"></i>Confirmar reserva
+            </button>
+            <a href="{% url 'mis_citas' %}" class="btn btn-outline-primary">
+              <i class="fa-solid fa-calendar-day me-2"></i>Ver mis citas
+            </a>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- Lateral informativo -->
+    <div class="col-12 col-lg-5">
+      <div class="card border-0 shadow-sm rounded-4 mb-3">
+        <div class="card-body p-4">
+          <h5 class="mb-3"><i class="fa-solid fa-circle-info text-primary me-2"></i>¿Cómo funciona?</h5>
+          <ul class="list-unstyled timeline-steps mb-0">
+            <li><span class="dot"></span><div>Elige el servicio que necesitas.</div></li>
+            <li><span class="dot"></span><div>Selecciona un horario disponible.</div></li>
+            <li><span class="dot"></span><div>Confirma tu reserva y recibe un correo.</div></li>
+          </ul>
+        </div>
+      </div>
+      <div class="card border-0 shadow-sm rounded-4 mb-3">
+        <div class="card-body p-4">
+          <h6 class="fw-semibold mb-2"><i class="fa-solid fa-triangle-exclamation text-warning me-2"></i>Política de cancelación</h6>
+          <p class="text-muted mb-0">Puedes reprogramar o cancelar hasta 12 horas antes de tu cita sin costo.</p>
+        </div>
+      </div>
+      <div class="card border-0 shadow-sm rounded-4">
+        <div class="card-body p-4">
+          <h6 class="fw-semibold mb-2"><i class="fa-solid fa-headset text-success me-2"></i>¿Necesitas ayuda?</h6>
+          <p class="text-muted mb-2">Escríbenos a <a href="mailto:info@euroelite.cl">info@euroelite.cl</a> o llama al +56 9 1234 5678.</p>
         </div>
       </div>
     </div>
-  </section>
+  </div>
+</main>
 
-  <!-- Contenido principal -->
-  <main class="container mb-5">
-    <div class="row g-4">
-      <!-- Formulario -->
-      <div class="col-12 col-lg-7">
-        <div class="card shadow-sm p-4 border-0 rounded-4">
-          <form method="POST" novalidate>
-            {% csrf_token %}
+<!-- Estilos -->
+<style>
+  .hero-agendar {
+    background: linear-gradient(135deg, #003399, #1C75BC);
+    color: #fff;
+    box-shadow: var(--shadow);
+  }
+  .hero-icon {
+    width: 60px; height: 60px; border-radius: 50%;
+    display: grid; place-items: center;
+    background: rgba(255,255,255,0.15);
+    font-size: 1.5rem;
+  }
+  .timeline-steps li {
+    display: flex; align-items: start; gap: 10px; margin-bottom: 10px;
+  }
+  .timeline-steps .dot {
+    width: 10px; height: 10px; border-radius: 50%; background: #0d6efd; margin-top: 7px;
+  }
+  select.form-control { border-radius: 10px; }
+  .form-check-input { cursor: pointer; }
+</style>
 
-            <!-- Servicio -->
-            <div class="mb-3">
-              <label for="{{ form.servicio.id_for_label }}" class="form-label fw-semibold">
-                <i class="fa-solid fa-screwdriver-wrench me-2 text-primary"></i>Servicio requerido
-              </label>
-              {{ form.servicio }}
-              {% if form.servicio.errors %}
-                <div class="invalid-feedback d-block">{{ form.servicio.errors }}</div>
-              {% else %}
-                <div class="form-text">Selecciona el tipo de trabajo que necesitas.</div>
-              {% endif %}
-            </div>
+<!-- Script -->
+<script>
+  document.addEventListener('DOMContentLoaded', function () {
+    const domicilio = document.getElementById("id_a_domicilio");
+    const dirWrap = document.getElementById("direccionWrapper");
 
-            <!-- Bloque horario -->
-            <div class="mb-3">
-              <label for="{{ form.bloque.id_for_label }}" class="form-label fw-semibold">
-                <i class="fa-solid fa-clock me-2 text-primary"></i>Horario disponible
-              </label>
-              {{ form.bloque }}
-              {% if form.bloque.errors %}
-                <div class="invalid-feedback d-block">{{ form.bloque.errors }}</div>
-              {% else %}
-                <div class="form-text">Elige un bloque de tiempo para tu cita.</div>
-              {% endif %}
-            </div>
-
-            <!-- Atención a domicilio -->
-            <div class="mb-3">
-              <div class="form-check form-switch">
-                {{ form.a_domicilio }}
-                <label for="{{ form.a_domicilio.id_for_label }}" class="form-check-label fw-semibold">
-                  <i class="fa-solid fa-house me-2 text-primary"></i>Solicitar a domicilio
-                </label>
-              </div>
-              {% if form.a_domicilio.errors %}
-                <div class="invalid-feedback d-block">{{ form.a_domicilio.errors }}</div>
-              {% endif %}
-            </div>
-
-            <!-- Dirección (solo si a domicilio) -->
-            <div class="mb-3" id="direccionWrapper" style="display:none;">
-              <label for="{{ form.direccion_domicilio.id_for_label }}" class="form-label fw-semibold">
-                <i class="fa-solid fa-location-dot me-2 text-primary"></i>Dirección para la visita
-              </label>
-              {{ form.direccion_domicilio }}
-              {% if form.direccion_domicilio.errors %}
-                <div class="invalid-feedback d-block">{{ form.direccion_domicilio.errors }}</div>
-              {% else %}
-                <div class="form-text">Usaremos tu dirección guardada. Puedes gestionarlas en tu perfil.</div>
-              {% endif %}
-            </div>
-
-            <div class="d-flex flex-wrap gap-2 mt-4">
-              <button type="submit" class="btn btn-primary px-4">
-                <i class="fa-solid fa-check me-2"></i>Confirmar reserva
-              </button>
-              <a href="{% url 'mis_citas' %}" class="btn btn-outline-primary">
-                <i class="fa-solid fa-calendar-day me-2"></i>Ver mis citas
-              </a>
-            </div>
-          </form>
-        </div>
-      </div>
-
-      <!-- Lateral informativo -->
-      <div class="col-12 col-lg-5">
-        <div class="card border-0 shadow-sm rounded-4 mb-3">
-          <div class="card-body p-4">
-            <h5 class="mb-3"><i class="fa-solid fa-circle-info text-primary me-2"></i>¿Cómo funciona?</h5>
-            <ul class="list-unstyled timeline-steps mb-0">
-              <li><span class="dot"></span><div>Elige el servicio que necesitas.</div></li>
-              <li><span class="dot"></span><div>Selecciona un horario disponible.</div></li>
-              <li><span class="dot"></span><div>Confirma tu reserva y recibe un correo.</div></li>
-            </ul>
-          </div>
-        </div>
-        <div class="card border-0 shadow-sm rounded-4 mb-3">
-          <div class="card-body p-4">
-            <h6 class="fw-semibold mb-2"><i class="fa-solid fa-triangle-exclamation text-warning me-2"></i>Política de cancelación</h6>
-            <p class="text-muted mb-0">Puedes reprogramar o cancelar hasta 12 horas antes de tu cita sin costo.</p>
-          </div>
-        </div>
-        <div class="card border-0 shadow-sm rounded-4">
-          <div class="card-body p-4">
-            <h6 class="fw-semibold mb-2"><i class="fa-solid fa-headset text-success me-2"></i>¿Necesitas ayuda?</h6>
-            <p class="text-muted mb-2">Escríbenos a <a href="mailto:info@euroelite.cl">info@euroelite.cl</a> o llama al +56 9 1234 5678.</p>
-            
-          </div>
-        </div>
-      </div>
-    </div>
-  </main>
-
-<br>
-<br>
-<br>
-
-  <!-- Estilos específicos para agendar -->
-  <style>
-    .hero-agendar {
-      background: linear-gradient(135deg, #003399, #1C75BC);
-      color: #fff;
-      box-shadow: var(--shadow);
+    if (domicilio) {
+      dirWrap.style.display = domicilio.checked ? "" : "none";
+      domicilio.addEventListener("change", () => {
+        dirWrap.style.display = domicilio.checked ? "" : "none";
+      });
     }
-    .hero-icon {
-      width: 60px; height: 60px; border-radius: 50%;
-      display: grid; place-items: center;
-      background: rgba(255,255,255,0.15);
-      font-size: 1.5rem;
-    }
-    .timeline-steps li { display: flex; align-items: start; gap: 10px; margin-bottom: 10px; }
-    .timeline-steps .dot { width: 10px; height: 10px; border-radius: 50%; background: #0d6efd; margin-top: 7px; }
-    /* Ajustes inputs */
-    select.form-control { border-radius: 10px; }
-    .form-check-input { cursor: pointer; }
-  </style>
-
-  <!-- Comportamiento: mostrar dirección cuando es a domicilio -->
-  <script>
-    document.addEventListener('DOMContentLoaded', function () {
-      var domicilio = document.getElementById('{{ form.a_domicilio.id_for_label }}');
-      var dirWrap = document.getElementById('direccionWrapper');
-      var toggle = function(){ if (!domicilio) return; dirWrap.style.display = domicilio.checked ? '' : 'none'; };
-      if (domicilio) {
-        toggle();
-        domicilio.addEventListener('change', toggle);
-      }
-    });
-  </script>
-
-  <br><br>
+  });
+</script>
 {% endblock %}
-
-{% block extra_scripts %}{% endblock %}
