@@ -335,6 +335,9 @@ body {
 
 .offer-content {
     padding: 25px;
+    display: flex;
+    flex-direction: column;
+    flex-grow: 1;
 }
 
 .offer-title {
@@ -388,6 +391,9 @@ body {
     overflow: hidden;
     box-shadow: var(--shadow);
     transition: var(--transition);
+    display: flex;
+    flex-direction: column;
+    height: 100%;
 }
 
 .product-card:hover {
@@ -421,6 +427,15 @@ body {
     color: var(--neutral-gray);
     font-size: 0.9rem;
     margin-bottom: 15px;
+    flex-grow: 1;
+}
+
+.product-actions {
+    margin-top: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    flex-shrink: 0;
 }
 
 .product-price {
