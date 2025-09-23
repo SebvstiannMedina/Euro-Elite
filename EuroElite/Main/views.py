@@ -76,7 +76,7 @@ def productos(request):
 
     return render(request, "Taller/productos.html", {
         "productos": productos,
-        "categorias": categorias,   # 👉 se envían las categorías al template
+        "categorias": categorias,
     })
 
 
@@ -110,6 +110,8 @@ def registro(request):
             form.save()
             messages.success(request, 'Registro exitoso. Inicia sesión para continuar.')
             return redirect('login')
+        else:
+            messages.error(request, 'Por favor corrige los errores en el formulario.')
     else:
         form = RegistroForm()
 

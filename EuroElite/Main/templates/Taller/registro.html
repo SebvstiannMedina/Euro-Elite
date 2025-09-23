@@ -91,6 +91,13 @@
 
     <div class="form-container">
         <h2 class="form-title">Registro de Usuario</h2>
+        {% if messages %}
+            {% for message in messages %}
+                <div class="alert alert-{% if message.tags == 'error' %}danger{% elif message.tags == 'success' %}success{% elif message.tags == 'warning' %}warning{% else %}info{% endif %}" role="alert">
+                    {{ message }}
+                </div>
+            {% endfor %}
+        {% endif %}
 
         <!-- Mostrar errores -->
         {% if form.errors %}

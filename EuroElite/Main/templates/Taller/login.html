@@ -81,6 +81,13 @@
     <!-- FORMULARIO DE LOGIN -->
     <div class="form-container">
         <h2 class="form-title">Iniciar Sesión</h2>
+        {% if messages %}
+            {% for message in messages %}
+                <div class="alert alert-{% if message.tags == 'error' %}danger{% elif message.tags == 'success' %}success{% elif message.tags == 'warning' %}warning{% else %}info{% endif %}" role="alert">
+                    {{ message }}
+                </div>
+            {% endfor %}
+        {% endif %}
         <form method="post">
             {% csrf_token %}
 
