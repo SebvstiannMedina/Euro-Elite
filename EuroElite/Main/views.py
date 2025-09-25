@@ -1,27 +1,182 @@
-from django.shortcuts import render, redirect
 from django.conf import settings
+from django.contrib import messages
 from django.contrib.auth import login as auth_login, logout as auth_logout
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.forms import AuthenticationForm
-from django.contrib import messages
-from django.contrib.auth.decorators import login_required
-from django.shortcuts import render, redirect
-from django.utils import timezone
-from .forms import RegistroForm, CitaForm, PerfilForm, DireccionForm
-from .models import Producto, Categoria, Carrito, ItemCarrito
-from .models import Direccion
-from .models import ConfigSitio
-from .models import Pedido
-from django.db.models import Sum, Q
-from django.db.models.functions import TruncMonth
-from django.shortcuts import render, redirect, get_object_or_404  
-from django.http import JsonResponse
-from django.views.decorators.http import require_POST
-from django.views.decorators.csrf import ensure_csrf_cookie
-from django.db.models import Sum
 from django.contrib.auth.signals import user_logged_in
+from django.db import transaction
+from django.db.models import Q, Sum
+from django.db.models.functions import TruncMonth
 from django.dispatch import receiver
+from django.http import HttpResponseBadRequest, JsonResponse
+from django.shortcuts import get_object_or_404, redirect, render
+from django.urls import reverse
+from django.utils import timezone
+from django.views.decorators.csrf import ensure_csrf_cookie
+from django.views.decorators.http import require_POST
+# Local apps
+from .forms import CitaForm, DireccionForm, PerfilForm, RegistroForm
+from .models import (Carrito,Categoria,ConfigSitio,Direccion,ItemCarrito,ItemPedido,Pago,Pedido,Producto,)
 
+def _get_active_cart(user):
+    """Devuelve (o crea) el carrito activo del usuario."""
+    cart, _ = Carrito.objects.get_or_create(usuario=user, activo=True)
+    return cart
+
+
+# ---------- Endpoints de carrito (server) ----------
+@login_required
+@require_POST
+def cart_add(request):
+    prod_id = request.POST.get('producto_id')
+    try:
+        qty = int(request.POST.get('cantidad', 1))
+    except (TypeError, ValueError):
+        qty = 1
+
+    if not prod_id or qty <= 0:
+        return HttpResponseBadRequest("Datos inválidos.")
+
+    producto = get_object_or_404(Producto, id=prod_id)
+    cart = _get_active_cart(request.user)
+
+    item, created = ItemCarrito.objects.get_or_create(
+        carrito=cart, producto=producto,
+        defaults={'cantidad': qty, 'precio_unitario': producto.precio}
+    )
+    if not created:
+        item.cantidad += qty
+        item.precio_unitario = producto.precio  # asegura precio vigente
+        item.save(update_fields=['cantidad', 'precio_unitario'])
+
+    # Cantidad total de ítems
+    total_items = sum(i.cantidad for i in cart.items.all())
+    return JsonResponse({"ok": True, "items": total_items})
+
+
+@login_required
+@require_POST
+def cart_update(request):
+    item_id = request.POST.get('item_id')
+    try:
+        qty = int(request.POST.get('cantidad', 1))
+    except (TypeError, ValueError):
+        return HttpResponseBadRequest("Cantidad inválida.")
+
+    if not item_id or qty < 0:
+        return HttpResponseBadRequest("Datos inválidos.")
+
+    cart = _get_active_cart(request.user)
+    item = get_object_or_404(ItemCarrito, id=item_id, carrito=cart)
+
+    if qty == 0:
+        item.delete()
+    else:
+        item.cantidad = qty
+        item.save(update_fields=['cantidad'])
+
+    return JsonResponse({"ok": True})
+
+
+@login_required
+@require_POST
+def cart_remove(request):
+    item_id = request.POST.get('item_id')
+    if not item_id:
+        return HttpResponseBadRequest("Falta item_id.")
+
+    cart = _get_active_cart(request.user)
+    item = get_object_or_404(ItemCarrito, id=item_id, carrito=cart)
+    item.delete()
+    return JsonResponse({"ok": True})
+
+
+@login_required
+def cart_json(request):
+    """Devuelve el carrito en JSON para render del front."""
+    cart = _get_active_cart(request.user)
+    data = []
+    for it in cart.items.select_related('producto'):
+        data.append({
+            "item_id": it.id,
+            "producto_id": it.producto.id,
+            "nombre": it.producto.nombre,
+            "precio": float(it.precio_unitario),
+            "cantidad": it.cantidad,
+            "subtotal": float(it.precio_unitario * it.cantidad),
+        })
+    total = sum(d["subtotal"] for d in data)
+    total_items = sum(d["cantidad"] for d in data)
+    return JsonResponse({"items": data, "total": total, "count": total_items})
+
+
+# ---------- Checkout ----------
+@login_required
+@require_POST 
+@transaction.atomic
+def checkout_crear_pedido_y_pagar(request):
+    """
+    1) Toma el carrito activo con ítems
+    2) Crea Pedido + ItemPedido + Pago(PENDIENTE)
+    3) Desactiva el carrito
+    4) Redirige a payments:flow_crear_orden con ?pedido_id=...
+    """
+    cart = Carrito.objects.filter(usuario=request.user, activo=True).first()
+    if not cart or not cart.items.exists():
+        messages.error(request, "Tu carrito está vacío.")
+        return redirect('carrito_compras')
+
+    addr = Direccion.objects.filter(usuario=request.user).order_by('-predeterminada', '-id').first()
+
+    # Crea Pedido
+    pedido = Pedido.objects.create(
+        usuario=request.user,
+        estado=Pedido.Estado.PENDIENTE,
+        metodo_entrega=Pedido.MetodoEntrega.DESPACHO,
+        metodo_pago=Pedido.MetodoPago.PASARELA,
+        direccion_envio=addr,
+        direccion_facturacion=addr,
+        subtotal=0, descuento=0, envio=0, total=0,
+    )
+
+    subtotal = 0
+    for it in cart.items.select_related('producto'):
+        ItemPedido.objects.create(
+            pedido=pedido,
+            producto=it.producto,
+            nombre_producto=it.producto.nombre,
+            sku_producto=it.producto.sku,
+            precio_unitario=it.precio_unitario,
+            cantidad=it.cantidad,
+        )
+        subtotal += it.precio_unitario * it.cantidad
+
+        if it.producto.stock is not None:
+            it.producto.stock = max(0, it.producto.stock - it.cantidad)
+            it.producto.save(update_fields=['stock'])
+
+    # Totales
+    pedido.subtotal = subtotal
+    pedido.envio = 0
+    pedido.descuento = 0
+    pedido.total = subtotal + pedido.envio - pedido.descuento
+    pedido.save()
+
+    # Pago PENDIENTE
+    Pago.objects.create(
+        pedido=pedido,
+        metodo=Pedido.MetodoPago.PASARELA,
+        monto=pedido.total,
+        estado=Pago.Estado.PENDIENTE,
+    )
+
+    # Cerrar carrito
+    cart.activo = False
+    cart.save(update_fields=['activo'])
+
+    # Redirigir a Flow
+    pay_url = reverse("flow_crear_orden")
+    return redirect(f"{pay_url}?pedido_id={pedido.id}")
 
 # ========== PÁGINAS PÚBLICAS ==========
 @ensure_csrf_cookie
@@ -123,7 +278,6 @@ def registro(request):
 @login_required
 def perfil(request):
     usuario = request.user
-    # Buscar la dirección más reciente del usuario
     addr = Direccion.objects.filter(usuario=usuario).order_by('-predeterminada', '-id').first()
 
     if request.method == "POST":
@@ -156,7 +310,7 @@ def logout_view(request):
     auth_logout(request)
     return redirect('home')
 
-#Vistas de agenda#
+#Vistas de agenda
 @login_required
 def agendar_cita(request):
     if request.method == "POST":
@@ -165,7 +319,7 @@ def agendar_cita(request):
             cita = form.save(commit=False)
             cita.usuario = request.user
             cita.save()
-            return redirect("mis_citas")  # nombre de tu URL de lista de citas
+            return redirect("mis_citas")
     else:
         form = CitaForm(user=request.user)
 
@@ -180,11 +334,6 @@ def mis_citas(request):
 
 def nueva_contrasena(request):
     return render(request, 'Taller/nueva_contrasena.html')
-
-def mis_pedidos(request):
-    # En esta primera versión solo renderiza la plantilla.
-    # Cuando tengas el modelo listo, pasa la lista `pedidos` en el contexto.
-    return render(request, 'Taller/mis_pedidos.html')
 
 def pago(request):
     return render(request, 'Taller/pago.html')
@@ -213,7 +362,7 @@ def agregar_editar(request, pk=None):
         if form.is_valid():
             form.save()
             messages.success(request, 'Producto guardado correctamente.')
-            return redirect('agregar_editar')  # puedes redirigir a otra vista si quieres
+            return redirect('agregar_editar')
     else:
         form = ProductoForm(instance=producto)
 
@@ -255,14 +404,8 @@ def admin_reportes(request):
 def admin_usuarios(request):
     return render(request, 'Taller/admin_agendamientos.html')
 
-
-
-
-
-# Sobrescribe la vista para ordenar pedidos por fecha de compra (desc)
 def mis_pedidos(request):
     pedidos_qs = request.user.pedidos.all().order_by('-creado') if request.user.is_authenticated else []
-    # La plantilla usa `p.fecha` para agrupar por da; proveemos ese alias
     pedidos = [
         {
             'fecha': p.creado,
@@ -361,7 +504,6 @@ def _get_or_create_cart(request):
     if not request.session.session_key:
         request.session.create()
 
-    # Si está logueado: carrito por usuario (mergea con carrito de sesión si existe)
     if request.user.is_authenticated:
         cart, _ = Carrito.objects.get_or_create(usuario=request.user, activo=True)
         ses_cart = Carrito.objects.filter(clave_sesion=request.session.session_key, activo=True).first()
@@ -377,7 +519,6 @@ def _get_or_create_cart(request):
             ses_cart.activo = False
             ses_cart.save()
         return cart
-    # Invitado: carrito por clave de sesión
     cart, _ = Carrito.objects.get_or_create(clave_sesion=request.session.session_key, activo=True)
     return cart
 
@@ -397,7 +538,7 @@ def api_cart_add(request):
         defaults={'cantidad': 0, 'precio_unitario': p.precio_con_descuento}
     )
 
-    # Respeta stock (si usas stock = 0, no suma)
+    # Respeta stock
     if p.stock is not None:
         new_qty = min(item.cantidad + quantity, p.stock)
     else:
@@ -439,5 +580,4 @@ def api_cart_detail(request):
 
 @receiver(user_logged_in)
 def _merge_on_login(sender, user, request, **kwargs):
-    # Al loguear, fuerza el merge sesión → usuario
     _get_or_create_cart(request)

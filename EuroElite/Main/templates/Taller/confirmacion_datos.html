@@ -1,278 +1,148 @@
-{% extends 'base.html' %}
+{% extends "base.html" %}
 {% load static %}
-{% block title %}Confirmación de datos - Euro Elite{% endblock %}
+
+{% block title %}Confirmación de datos{% endblock %}
+
 {% block content %}
+<div class="container py-4">
 
-<br><br><br><br><br>
+  <nav aria-label="breadcrumb" class="mb-3">
+    <ol class="breadcrumb">
+      <li class="breadcrumb-item"><a href="{% url 'carrito_compras' %}">Carrito</a></li>
+      <li class="breadcrumb-item"><a href="{% url 'resumen_compra' %}">Resumen</a></li>
+      <li class="breadcrumb-item active" aria-current="page">Confirmación de datos</li>
+    </ol>
+  </nav>
 
-<div class="container my-4">
-  <div class="row justify-content-center">
-    <div class="col-12 col-md-10 col-lg-8">
-      <div class="card shadow-sm p-3">
-        <h4 class="mb-3">Confirma tus datos</h4>
-        <form method="post" id="confirmForm" novalidate>
-          {% csrf_token %}
+  <h1 class="h3 mb-4">Confirma tus datos para el envío y pago</h1>
 
-          <!-- Datos visibles en perfil: usuario y correo (solo lectura) -->
-          <div class="mb-3">
-            <label class="form-label">Nombre de usuario</label>
-            <input type="text" class="form-control" value="{{ user.username }}" disabled>
+  <div class="row g-4">
+    <div class="col-12 col-lg-8">
+
+      <!-- FORMULARIO -->
+      <form method="post" id="confirmForm" action="{% url 'checkout_pagar' %}" novalidate>
+        {% csrf_token %}
+
+        <div class="card shadow-sm">
+          <div class="card-body p-4">
+
+            <h2 class="h5 mb-3">Datos de contacto</h2>
+            <div class="row g-3">
+              <div class="col-12 col-md-6">
+                <label for="nombre" class="form-label">Nombre</label>
+                <input id="nombre" name="nombre" type="text" class="form-control" required
+                       value="{{ request.user.first_name|default_if_none:'' }}">
+                <div class="invalid-feedback">Ingresa tu nombre.</div>
+              </div>
+
+              <div class="col-12 col-md-6">
+                <label for="apellido" class="form-label">Apellido</label>
+                <input id="apellido" name="apellido" type="text" class="form-control"
+                       value="{{ request.user.last_name|default_if_none:'' }}">
+              </div>
+
+              <div class="col-12 col-md-6">
+                <label for="email" class="form-label">Email</label>
+                <input id="email" name="email" type="email" class="form-control" required
+                       value="{{ request.user.email|default_if_none:'' }}">
+                <div class="invalid-feedback">Ingresa un email válido.</div>
+              </div>
+
+              <div class="col-12 col-md-6">
+                <label for="telefono" class="form-label">Teléfono</label>
+                <input id="telefono" name="telefono" type="tel" class="form-control" required
+                       placeholder="+56 9 1234 5678">
+                <div class="invalid-feedback">Ingresa tu teléfono.</div>
+              </div>
+
+              <div class="col-12 col-md-6">
+                <label for="rut" class="form-label">RUT</label>
+                <input id="rut" name="rut" type="text" class="form-control" required
+                       placeholder="12.345.678-9">
+                <div class="invalid-feedback">Ingresa un RUT válido.</div>
+              </div>
+            </div>
+
+            <hr class="my-4">
+
+            <h2 class="h5 mb-3">Dirección de envío</h2>
+            <div class="row g-3">
+              <div class="col-12">
+                <label for="direccion" class="form-label">Dirección</label>
+                <input id="direccion" name="direccion" type="text" class="form-control" required
+                       placeholder="Calle y número">
+                <div class="invalid-feedback">Ingresa tu dirección.</div>
+              </div>
+
+              <div class="col-12 col-md-6">
+                <label for="region" class="form-label">Región</label>
+                <input id="region" name="region" type="text" class="form-control" required
+                       placeholder="Región Metropolitana">
+                <div class="invalid-feedback">Ingresa tu región.</div>
+              </div>
+
+              <div class="col-12 col-md-6">
+                <label for="comuna" class="form-label">Comuna</label>
+                <input id="comuna" name="comuna" type="text" class="form-control" required
+                       placeholder="Santiago">
+                <div class="invalid-feedback">Ingresa tu comuna.</div>
+              </div>
+
+              <div class="col-12">
+                <label for="notas" class="form-label">Notas (opcional)</label>
+                <textarea id="notas" name="notas" class="form-control" rows="3"
+                          placeholder="Instrucciones para la entrega, referencias, etc."></textarea>
+              </div>
+            </div>
+
+            <div class="d-flex justify-content-between align-items-center gap-2 mt-4 flex-wrap">
+              <a href="{% url 'resumen_compra' %}" class="btn btn-outline-secondary btn-lg">
+                ← Volver al resumen
+              </a>
+              <button type="submit" class="btn btn-primary btn-lg" style="min-width: 220px;">
+                Continuar y pagar
+              </button>
+            </div>
+
           </div>
-          {% if user.email %}
-          <div class="mb-3">
-            <label class="form-label">Correo electrónico</label>
-            <input type="email" class="form-control" value="{{ user.email }}" disabled>
-          </div>
-          {% endif %}
+        </div>
+      </form>
+      <!-- /FORMULARIO -->
 
-          <div class="mb-3">
-            <label for="rut" class="form-label">RUT</label>
-            <input type="text" id="rut" name="rut" class="form-control" value="{{ rut|default:'' }}" placeholder="12.345.678-9">
-            <div class="invalid-feedback"></div>
-          </div>
+    </div>
 
-          <div class="mb-3">
-            <label for="nombre_completo" class="form-label">Nombre completo</label>
-            <input type="text" id="nombre_completo" name="nombre_completo" class="form-control" value="{{ addr.nombre_completo|default:user.get_full_name }}" placeholder="Nombre y apellido">
-            <div class="invalid-feedback"></div>
+    <!-- RESUMEN  -->
+    <div class="col-12 col-lg-4">
+      <div class="card shadow-sm">
+        <div class="card-body">
+          <h2 class="h6 text-uppercase mb-3">Resumen del pedido</h2>
+          <div class="d-flex justify-content-between">
+            <span>Subtotal</span><strong>{{ subtotal|default:"-" }}</strong>
           </div>
-
-          <div class="mb-3" id="phoneGroup">
-            <label for="telefono" class="form-label">Número de celular</label>
-            <input type="text" id="telefono" name="telefono" class="form-control" value="{{ user.telefono|default:'' }}" placeholder="+56 9 1234 5678">
-            <div class="invalid-feedback"></div>
+          <div class="d-flex justify-content-between">
+            <span>Envío</span><strong>{{ envio|default:"-" }}</strong>
           </div>
-
-          <div class="mb-3">
-            <label for="direccion" class="form-label">Dirección</label>
-            <input type="text" id="direccion" name="direccion" class="form-control" value="{{ addr.linea1|default:'' }}" placeholder="Calle 123, depto 45">
-            <div class="invalid-feedback"></div>
+          <hr>
+          <div class="d-flex justify-content-between fs-5">
+            <span>Total</span><strong>{{ total|default:"-" }}</strong>
           </div>
-
-          <div class="d-flex justify-content-between align-items-center gap-2 mt-2 flex-wrap">
-            <button type="submit" class="btn btn-primary btn-lg" style="min-width:180px;">Continuar</button>
-            <a href="{% url 'resumen_compra' %}" class="btn btn-outline-secondary btn-lg">
-              Volver
-            </a>
-          </div>
-        </form>
+          <p class="text-muted small mt-2">El total final se confirmará al crear el pedido.</p>
+        </div>
       </div>
     </div>
   </div>
 </div>
 
-<style>
-  @media (max-width: 575.98px) {
-    .btn.btn-primary.btn-lg, .btn.btn-outline-secondary.btn-lg { width: 100%; }
-  }
-  .card { border: 0; border-radius: 12px; }
-  .form-label { font-weight: 600; }
-  .form-control { border-radius: 10px; }
-  h4 { font-weight: 700; }
-</style>
-{% endblock %}
-
-{% block extra_scripts %}
 <script>
-  document.addEventListener('DOMContentLoaded', () => {
+  (function () {
     const form = document.getElementById('confirmForm');
-    const rutInput = document.getElementById('rut');
-    const nombreInput = document.getElementById('nombre_completo');
-    const telefonoInput = document.getElementById('telefono');
-    const direccionInput = document.getElementById('direccion');
-    const phoneGroup = document.getElementById('phoneGroup');
-
-    // Helper: elemento de error asociado
-    const getErrorEl = (input) => {
-      if (!input) return null;
-      if (input.nextElementSibling && input.nextElementSibling.classList.contains('invalid-feedback')) return input.nextElementSibling;
-      if (input.parentElement && input.parentElement.nextElementSibling && input.parentElement.nextElementSibling.classList.contains('invalid-feedback')) return input.parentElement.nextElementSibling;
-      return null;
-    };
-
-    const showError = (input, msg) => {
-      const el = getErrorEl(input);
-      if (msg) {
-        if (el) { el.textContent = msg; el.style.display = 'block'; }
-        input.classList.add('is-invalid');
-      } else {
-        if (el) { el.textContent = ''; el.style.display = ''; }
-        input.classList.remove('is-invalid');
-      }
-    };
-
-    // ===== RUT helpers =====
-    const cleanRut = (v) => (v || '').toString().replace(/[\.\-]/g, '').replace(/[^0-9kK]/g, '').toUpperCase();
-    const formatRut = (v) => {
-      const s = cleanRut(v);
-      if (!s) return '';
-      if (s.length === 1) return s; // aún sin DV
-      const body = s.slice(0, -1);
-      const dv = s.slice(-1);
-      const bodyFmt = body.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
-      return `${bodyFmt}-${dv}`;
-    };
-    const rutDV = (bodyDigits) => {
-      let sum = 0, mul = 2;
-      for (let i = bodyDigits.length - 1; i >= 0; i--) {
-        sum += parseInt(bodyDigits[i], 10) * mul;
-        mul = mul === 7 ? 2 : mul + 1;
-      }
-      const res = 11 - (sum % 11);
-      if (res === 11) return '0';
-      if (res === 10) return 'K';
-      return String(res);
-    };
-    const isRutValid = (v) => {
-      const s = cleanRut(v);
-      if (s.length < 2) return false;
-      const body = s.slice(0, -1);
-      const dv = s.slice(-1).toUpperCase();
-      if (body.length < 7 || body.length > 8) return false;
-      return rutDV(body) === dv;
-    };
-    const rutValidationMessage = (v) => {
-      const s = cleanRut(v);
-      if (!s) return null; // no requerido
-      if (s.length < 2) return 'Debes incluir dígito verificador (ej: 12.345.678-9).';
-      const body = s.slice(0, -1);
-      if (body.length < 7 || body.length > 8) return 'El RUT debe tener 7 u 8 dígitos antes del dígito verificador.';
-      if (!isRutValid(s)) return 'El dígito verificador no corresponde (RUT no existe).';
-      return null;
-    };
-
-    // ===== Teléfono Chile helpers =====
-    const cleanPhoneBody = (v) => {
-      let d = (v || '').toString().replace(/\D/g, '');
-      if (d.startsWith('56')) d = d.slice(2);
-      if (d.startsWith('9')) d = d.slice(1);
-      if (d.length > 8) d = d.slice(-8);
-      return d;
-    };
-    const formatPhoneInput = (body8) => {
-      const d = cleanPhoneBody(body8);
-      if (!d) return '';
-      return d.length > 4 ? `${d.slice(0, 4)} ${d.slice(4)}` : d;
-    };
-    const phoneValidationMessage = (body8, required) => {
-      const d = cleanPhoneBody(body8);
-      if (required && !d) return 'Este campo es obligatorio';
-      if (d && d.length !== 8) return 'Debe contener 8 dígitos (ej: 1234 5678)';
-      return null;
-    };
-
-    // ===== Valores iniciales normalizados para comparar cambios =====
-    const initial = {
-      rut: rutInput ? cleanRut(rutInput.value) : '',
-      nombre: nombreInput ? (nombreInput.value || '').trim() : '',
-      phone: telefonoInput ? cleanPhoneBody(telefonoInput.value) : '',
-      direccion: direccionInput ? (direccionInput.value || '').trim() : ''
-    };
-
-    // ===== Validadores de campos =====
-    const validateRut = () => {
-      if (!rutInput) return true;
-      rutInput.value = formatRut(rutInput.value);
-      const newClean = cleanRut(rutInput.value);
-      if (newClean === initial.rut) { showError(rutInput, null); return true; }
-      const msg = rutValidationMessage(newClean);
-      showError(rutInput, msg);
-      return !msg;
-    };
-
-    const validateNombre = () => {
-      if (!nombreInput) return true;
-      const val = (nombreInput.value || '').trim();
-      if (val === initial.nombre) { showError(nombreInput, null); return true; }
-      const msg = val ? null : 'Este campo es obligatorio';
-      showError(nombreInput, msg);
-      return !msg;
-    };
-
-    const validateTelefono = () => {
-      if (!telefonoInput) return true;
-      const body = cleanPhoneBody(telefonoInput.value);
-      if (body === initial.phone) { showError(telefonoInput, null); return true; }
-      const msg = phoneValidationMessage(body, true);
-      showError(telefonoInput, msg);
-      if (!msg) telefonoInput.value = formatPhoneInput(body);
-      return !msg;
-    };
-
-    const validateDireccion = () => {
-      if (!direccionInput) return true;
-      const val = (direccionInput.value || '').trim();
-      if (val === initial.direccion) { showError(direccionInput, null); return true; }
-      const msg = val ? null : 'Este campo es obligatorio';
-      showError(direccionInput, msg);
-      return !msg;
-    };
-
-    // ===== Eventos en vivo =====
-    if (rutInput) {
-      const handleRut = () => {
-        rutInput.value = formatRut(rutInput.value);
-        const msg = rutValidationMessage(rutInput.value);
-        showError(rutInput, msg);
-      };
-      rutInput.addEventListener('input', handleRut);
-      rutInput.addEventListener('blur', handleRut);
-      // Formatear valor inicial
-      rutInput.value = formatRut(rutInput.value);
-    }
-
-    if (telefonoInput) {
-      const maxPhoneDigits = 8;
-      const willExceed = (incomingDigits) => {
-        const selStart = telefonoInput.selectionStart ?? telefonoInput.value.length;
-        const selEnd = telefonoInput.selectionEnd ?? telefonoInput.value.length;
-        const current = cleanPhoneBody(telefonoInput.value).length;
-        const selected = cleanPhoneBody(telefonoInput.value.substring(selStart, selEnd)).length;
-        return current - selected + incomingDigits > maxPhoneDigits;
-      };
-      const preventIfExceeds = (incomingDigits, e) => {
-        if (incomingDigits && willExceed(incomingDigits)) {
-          e.preventDefault();
-          return true;
-        }
-        return false;
-      };
-      const handlePhone = () => {
-        const body = cleanPhoneBody(telefonoInput.value);
-        telefonoInput.value = formatPhoneInput(body);
-        const msg = phoneValidationMessage(body, true);
-        showError(telefonoInput, msg);
-      };
-      telefonoInput.addEventListener('beforeinput', (e) => {
-        if (e.inputType && e.inputType.startsWith('insert')) {
-          const incoming = cleanPhoneBody(e.data || '');
-          if (preventIfExceeds(incoming.length, e)) return;
-        }
-      });
-      telefonoInput.addEventListener('paste', (e) => {
-        const text = (e.clipboardData || window.clipboardData)?.getData?.('text') || '';
-        const incoming = cleanPhoneBody(text);
-        preventIfExceeds(incoming.length, e);
-      });
-      telefonoInput.addEventListener('keypress', (e) => {
-        if (/\d/.test(e.key)) {
-          preventIfExceeds(1, e);
-        }
-      });
-      telefonoInput.addEventListener('input', handlePhone);
-      telefonoInput.addEventListener('blur', handlePhone);
-      // Formatear valor inicial
-      handlePhone();
-    }
-
-    // Validación al enviar
-    form?.addEventListener('submit', (e) => {
-      const ok = [validateNombre(), validateTelefono(), validateDireccion(), validateRut()].every(Boolean);
-      if (!ok) {
+    form.addEventListener('submit', function (e) {
+      if (!form.checkValidity()) {
         e.preventDefault();
         e.stopPropagation();
       }
-    });
-  });
+      form.classList.add('was-validated');
+    }, false);
+  })();
 </script>
 {% endblock %}

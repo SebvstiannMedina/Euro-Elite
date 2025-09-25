@@ -1,7 +1,6 @@
 // =============== VARIABLES GLOBALES ===============
 let currentSlide = 0;
 const totalSlides = 3;
-let cart = JSON.parse(localStorage.getItem("cart")) || [];
 let isUserMenuOpen = false;
 
 // =============== CAROUSEL ===============
@@ -31,7 +30,9 @@ function toggleMobileMenu() {
     }
 }
 
-// =============== CARRITO ===============
+// =============== CARRITO (versión servidor) ===============
+let cart = [];
+
 function getCSRFToken() {
   const name = 'csrftoken=';
   const cookies = document.cookie ? document.cookie.split(';') : [];
@@ -42,148 +43,188 @@ function getCSRFToken() {
   return '';
 }
 
+async function fetchCartJSON() {
+  const res = await fetch('/carrito/json', { credentials: 'same-origin' });
+  if (!res.ok) throw new Error('No se pudo obtener el carrito');
+  return res.json();
+}
+
+async function postForm(url, payload) {
+  const fd = new FormData();
+  Object.entries(payload || {}).forEach(([k, v]) => fd.append(k, v));
+  const res = await fetch(url, {
+    method: 'POST',
+    headers: { 'X-CSRFToken': getCSRFToken() },
+    body: fd,
+    credentials: 'same-origin'
+  });
+  if (!res.ok) throw new Error(`Error en ${url}`);
+  return res.json();
+}
+
+function goToResumen() {
+  window.location.href = '/resumen_compra';
+}
+
+// === Acciones de carrito (server) =========================================================================
+
 async function addToCart(productName, price, productId, stock) {
-  const unitPrice = Number(String(price).replace(/[^\d.]/g, '')) || 0;
-  const maxStock = (stock !== undefined && stock !== null && stock !== '') ? Number(stock) : Infinity;
-
-  let existing = cart.find(i => i.name === productName);
-  if (existing) {
-    if (existing.quantity + 1 > maxStock && isFinite(maxStock)) {
-      alert(`Solo hay ${maxStock} unidades de ${productName}`);
-      return;
-    }
-    existing.quantity += 1;
-  } else {
-    const item = { name: productName, price: unitPrice, quantity: 1 };
-    if (isFinite(maxStock)) item.stock = maxStock;
-    cart.push(item);
-  }
-  saveCart();
-  updateCartCount();
-  showCartNotification(productName);
-
-  // 2) Persistencia real (API)
   try {
-    const res = await fetch('/api/cart/add/', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'X-CSRFToken': getCSRFToken() },
-      body: JSON.stringify({ product_id: productId, quantity: 1 })
-    });
-    const data = await res.json();
-    if (data && typeof data.count === 'number') updateCartCount(data.count);
+    await postForm('/carrito/agregar', { producto_id: productId, cantidad: 1 });
+    showCartNotification(productName);
+    await refreshCartBadge();
   } catch (e) {
-    console.warn('No se pudo sincronizar carrito con servidor', e);
+    console.warn('No se pudo agregar al carrito', e);
+    alert('No se pudo agregar al carrito. Intenta nuevamente.');
   }
 }
 
-function updateCartCount() {
+async function updateCartItem(itemId, cantidad) {
+  try {
+    await postForm('/carrito/actualizar', { item_id: itemId, cantidad });
+    await refreshCartBadge();
+    const existingModal = document.getElementById('cart-modal');
+    if (existingModal) await toggleCart(true);
+  } catch (e) {
+    console.warn('No se pudo actualizar el item', e);
+  }
+}
+
+async function removeCartItem(itemId) {
+  try {
+    await postForm('/carrito/eliminar', { item_id: itemId });
+    await refreshCartBadge();
+    const existingModal = document.getElementById('cart-modal');
+    if (existingModal) await toggleCart(true);
+  } catch (e) {
+    console.warn('No se pudo eliminar el item', e);
+  }
+}
+
+
+async function refreshCartBadge() {
+  try {
+    const data = await fetchCartJSON();
+    // totalItems = suma de cantidades
+    const totalItems = data.items.reduce((sum, it) => sum + Number(it.cantidad || 0), 0);
     const cartCount = document.getElementById('cart-count');
-    if (!cartCount) return;
-    const totalItems = cart.reduce((sum, item) => sum + item.quantity, 0);
-    cartCount.textContent = totalItems;
+    if (cartCount) cartCount.textContent = totalItems;
+
     const cartIcon = document.querySelector('.cart-icon');
     if (cartIcon) {
-        cartIcon.style.transform = 'scale(1.2)';
-        setTimeout(() => { cartIcon.style.transform = 'scale(1)'; }, 200);
+      cartIcon.style.transform = 'scale(1.2)';
+      setTimeout(() => { cartIcon.style.transform = 'scale(1)'; }, 200);
     }
+  } catch (e) {
+  }
 }
 
 function showCartNotification(productName) {
-    const notification = document.createElement('div');
-    notification.innerHTML = `
-        <div style="
-            position: fixed; top: 100px; right: 20px;
-            background: #28a745; color: white;
-            padding: 15px 20px; border-radius: 8px;
-            box-shadow: var(--shadow-hover); z-index: 9999;
-            animation: slideInRight 0.3s ease;">
-            <i class="fas fa-check-circle"></i> ${productName} añadido al carrito
-        </div>`;
-    document.body.appendChild(notification);
-    setTimeout(() => { notification.remove(); }, 3000);
+  const notification = document.createElement('div');
+  notification.innerHTML = `
+    <div style="
+      position: fixed; top: 100px; right: 20px;
+      background: #28a745; color: white;
+      padding: 15px 20px; border-radius: 8px;
+      box-shadow: var(--shadow-hover); z-index: 9999;
+      animation: slideInRight 0.3s ease;">
+      <i class="fas fa-check-circle"></i> ${productName} añadido al carrito
+    </div>`;
+  document.body.appendChild(notification);
+  setTimeout(() => { notification.remove(); }, 3000);
 }
 
-function toggleCart() {
-    // Si ya existe un modal, lo quitamos
-    const existingModal = document.getElementById("cart-modal");
+async function toggleCart(forceOpen = false) {
+  const existingModal = document.getElementById('cart-modal');
+  if (existingModal && !forceOpen) {
+    existingModal.remove();
+    return;
+  }
+
+  // Trae el carrito del servidor
+  let data;
+  try {
+    data = await fetchCartJSON();
+  } catch (e) {
+    alert('No se pudo cargar el carrito');
+    return;
+  }
+
+  const items = data.items || [];
+  if (items.length === 0) {
+    alert('Tu carrito está vacío 🛒');
     if (existingModal) existingModal.remove();
+    return;
+  }
 
-    if (cart.length === 0) {
-        alert('Tu carrito está vacío 🛒');
-        return;
-    }
+  // cache local solo para optimizar render
+  cart = items.map(it => ({
+    item_id: it.item_id,
+    name: it.nombre,
+    price: Number(it.precio),
+    quantity: Number(it.cantidad),
+    producto_id: it.producto_id
+  }));
 
-    let total = 0;
-    let cartHTML = '<h3>Carrito de Compras</h3><div style="max-height: 400px; overflow-y: auto;">';
-    cart.forEach((item, index) => {
-        const itemTotal = item.price * item.quantity;
-        total += itemTotal;
-        cartHTML += `
-            <div style="display:flex; justify-content:space-between; align-items:center; padding:10px 0; border-bottom:1px solid #eee;">
-                <div>
-                    <strong>${item.name}</strong><br>
-                    <small>$${item.price.toLocaleString()} x ${item.quantity} (Stock: ${item.stock})</small>
-                </div>
-                <div>
-                    <strong>$${itemTotal.toLocaleString()}</strong>
-                    <button onclick="removeFromCart(${index})" style="
-                        margin-left: 10px; background: #dc3545; color: white;
-                        border: none; border-radius: 4px; padding: 4px 8px; cursor: pointer;">
-                        <i class="fas fa-trash"></i>
-                    </button>
-                </div>
-            </div>`;
-    });
-    cartHTML += `</div>
-    <div style="margin-top:20px; padding-top:20px; border-top:2px solid var(--primary-dark); text-align:center;">
-        <h4>Total: $${total.toLocaleString()}</h4>
-        <div style="display:flex; justify-content:center; gap:10px; flex-wrap:wrap;">
-            <button onclick="goToResumen()" style="
-                background: var(--primary-dark); color: white; border: none;
-                padding: 12px 30px; border-radius: 8px; font-weight: bold; cursor: pointer;">
-                Proceder al Pago
-            </button>
+  let total = 0;
+  let cartHTML = '<h3>Carrito de Compras</h3><div style="max-height: 400px; overflow-y: auto;">';
+  cart.forEach((item) => {
+    const itemTotal = item.price * item.quantity;
+    total += itemTotal;
+    cartHTML += `
+      <div style="display:flex; justify-content:space-between; align-items:center; padding:10px 0; border-bottom:1px solid #eee;">
+        <div>
+          <strong>${item.name}</strong><br>
+          <small>$${item.price.toLocaleString()} x ${item.quantity}</small>
         </div>
+        <div style="display:flex; align-items:center; gap:8px;">
+          <button style="padding:4px 8px;" onclick="updateCartItem(${item.item_id}, ${Math.max(0, item.quantity - 1)})">−</button>
+          <span>${item.quantity}</span>
+          <button style="padding:4px 8px;" onclick="updateCartItem(${item.item_id}, ${item.quantity + 1})">+</button>
+          <strong style="margin-left:10px;">$${itemTotal.toLocaleString()}</strong>
+          <button onclick="removeCartItem(${item.item_id})" style="
+            margin-left: 10px; background: #dc3545; color: white;
+            border: none; border-radius: 4px; padding: 4px 8px; cursor: pointer;">
+            <i class="fas fa-trash"></i>
+          </button>
+        </div>
+      </div>`;
+  });
+  cartHTML += `</div>
+    <div style="margin-top:20px; padding-top:20px; border-top:2px solid var(--primary-dark); text-align:center;">
+      <h4>Total: $${(data.total || total).toLocaleString()}</h4>
+      <div style="display:flex; justify-content:center; gap:10px; flex-wrap:wrap;">
+        <button onclick="goToResumen()" style="
+          background: var(--primary-dark); color: white; border: none;
+          padding: 12px 30px; border-radius: 8px; font-weight: bold; cursor: pointer;">
+          Proceder al Pago
+        </button>
+      </div>
     </div>`;
 
-    const modal = document.createElement('div');
-    modal.id = "cart-modal";
-    modal.innerHTML = `
-        <div style="position: fixed; top:0; left:0; right:0; bottom:0; background: rgba(0,0,0,0.5);
-            display:flex; align-items:center; justify-content:center; z-index:10000;" onclick="this.remove()">
-            <div style="background:white; padding:30px; border-radius:12px; max-width:500px; width:90%;
-                max-height:80vh; overflow-y:auto; position:relative;" onclick="event.stopPropagation()">
-                <button onclick="this.closest('#cart-modal').remove()" style="
-                    position:absolute; top:15px; right:15px; background:none; border:none; font-size:1.5rem; cursor:pointer;">×</button>
-                ${cartHTML}
-            </div>
-        </div>`;
-    document.body.appendChild(modal);
+  const modal = document.createElement('div');
+  modal.id = "cart-modal";
+  modal.innerHTML = `
+    <div style="position: fixed; top:0; left:0; right:0; bottom:0; background: rgba(0,0,0,0.5);
+      display:flex; align-items:center; justify-content:center; z-index:10000;" onclick="this.remove()">
+      <div style="background:white; padding:30px; border-radius:12px; max-width:500px; width:90%;
+        max-height:80vh; overflow-y:auto; position:relative;" onclick="event.stopPropagation()">
+        <button onclick="this.closest('#cart-modal').remove()" style="
+          position:absolute; top:15px; right:15px; background:none; border:none; font-size:1.5rem; cursor:pointer;">×</button>
+        ${cartHTML}
+      </div>
+    </div>`;
+  if (existingModal) existingModal.replaceWith(modal); else document.body.appendChild(modal);
 }
 
-function removeFromCart(index) {
-    cart.splice(index, 1); // eliminar producto
-    saveCart();
-    updateCartCount();
-    toggleCart(); // vuelve a renderizar el modal actualizado
-    location.reload();
+function removeFromCart(indexOrItemId) {
+  const itemId = (cart[indexOrItemId] && cart[indexOrItemId].item_id) || indexOrItemId;
+  return removeCartItem(itemId);
 }
 
+function saveCart() {}
 
-function checkout() {
-    let products = JSON.parse(localStorage.getItem("products")) || [];
-    cart.forEach(item => {
-        const prod = products.find(p => p.name === item.name);
-        if (prod) { prod.stock -= item.quantity; if (prod.stock < 0) prod.stock = 0; }
-    });
-    localStorage.setItem("products", JSON.stringify(products));
-    alert('Compra realizada con éxito 🎉');
-    cart = []; saveCart(); updateCartCount();
-    const backdrop = document.querySelector('[style*="position: fixed"][style*="background: rgba(0,0,0,0.5)"]');
-    if (backdrop) backdrop.remove();
-}
-
-function saveCart() { localStorage.setItem("cart", JSON.stringify(cart)); }
+async function updateCartCount() { await refreshCartBadge(); }
 
 // =============== USUARIO MENU ===============
 function toggleUserMenu() {
@@ -208,7 +249,6 @@ document.querySelectorAll('a[href^="#"]').forEach(anchor => {
     });
 });
 
-// 🚫 Eliminado el bloque que cambiaba el navbar al hacer scroll
 
 // =============== OBSERVER ANIMACIONES ===============
 const observerOptions = { threshold: 0.1, rootMargin: '0px 0px -100px 0px' };
@@ -315,7 +355,6 @@ function goToProductos() {
     }
 }
 
-// ✅ Delegación de eventos para los botones ❌
 document.addEventListener("click", function (e) {
     if (e.target.classList.contains("remove-btn")) {
         const index = e.target.getAttribute("data-index");
