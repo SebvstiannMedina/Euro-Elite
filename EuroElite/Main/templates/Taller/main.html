@@ -105,7 +105,7 @@
 </section>
 
 <!-- PRODUCTOS DESTACADOS (NORMALES) -->
-<section class="featured-products" id="featured">
+<section class="featured-products" id="featured" style="margin-bottom: 10rem; background-color: #F8F9FB;">
   <h2 class="section-title">Productos Destacados</h2>
   <div class="offers-grid">
     {% for p in productos_normales %}
@@ -154,4 +154,5 @@
 <script>
     const carritoURL = "{% url 'carrito_compras' %}";
 </script>
+
 <script src="{% static 'js/main.js' %}?v=2"></script>

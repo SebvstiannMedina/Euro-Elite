@@ -166,6 +166,7 @@ function removeFromCart(index) {
     saveCart();
     updateCartCount();
     toggleCart(); // vuelve a renderizar el modal actualizado
+    location.reload();
 }
 
 
@@ -291,7 +292,7 @@ function renderCartPage() {
         <h3>Total: $${total.toLocaleString()}</h3>
         <div class="cart-actions">
             <button onclick="goToResumen();">Proceder al Pago</button>
-            <button onclick="window.location.href='{% url 'productos' %}'">Seguir Comprando</button>
+            <button onclick="goToProductos();">Seguir Comprando</button>
         </div>
     `;
 }
@@ -302,6 +303,15 @@ function goToResumen() {
         window.location.href = url;
     } catch (e) {
         window.location.href = '/resumen_compra';
+    }
+}
+
+function goToProductos() {
+    try {
+        const url = window.productosURL || '/productos';
+        window.location.href = url;
+    } catch (e) {
+        window.location.href = '/productos';
     }
 }
 
