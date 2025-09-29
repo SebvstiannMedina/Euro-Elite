@@ -2,6 +2,8 @@
 {% load static %}
 {% block title %}Inicio - Euro Elite{% endblock %}
 {% block content %}
+{% load humanize %}
+{% load i18n %}
 
 <!-- CAROUSEL -->
 <section class="hero-section" id="home">
@@ -54,7 +56,7 @@
         {% if p.promocion_vigente %}
           <div class="offer-badge">
             {% if p.promocion_vigente.tipo == 'PORCENTAJE' %}
-              -{{ p.promocion_vigente.valor|floatformat:0 }}%
+              -{{ p.promocion_vigente.valor|floatformat:0|intcomma }}%
             {% else %}
               Oferta
             {% endif %}
@@ -75,10 +77,10 @@
           
           <div class="offer-price">
             {% if p.promocion_vigente %}
-              <span class="current-price">${{ p.precio_con_descuento|floatformat:"0" }}</span>
-              <span class="original-price">${{ p.precio|floatformat:"0" }}</span>
+              <span class="current-price">${{ p.precio_con_descuento|floatformat:"0"|intcomma }}</span>
+              <span class="original-price">${{ p.precio|floatformat:"0"|intcomma }}</span>
             {% else %}
-              <span class="current-price">${{ p.precio|floatformat:"0" }}</span>
+              <span class="current-price">${{ p.precio|floatformat:"0"|intcomma}}</span>
             {% endif %}
           </div>
           
@@ -123,7 +125,7 @@
           <p class="product-description">{{ p.descripcion|truncatewords:20 }}</p>
           
           <div class="offer-price">
-            <span class="current-price">${{ p.precio|floatformat:"0" }}</span>
+            <span class="current-price">${{ p.precio|floatformat:"0"|intcomma }}</span>
           </div>
           
           <div class="product-actions">

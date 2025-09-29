@@ -46,6 +46,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'Main',
     'payments',
+    'django.contrib.humanize',
 ]
 
 # Usuario personalizado
@@ -116,6 +117,7 @@ AUTH_PASSWORD_VALIDATORS = [
 # https://docs.djangoproject.com/en/5.2/topics/i18n/
 
 LANGUAGE_CODE = 'es-cl'
+USE_L10N = True
 
 TIME_ZONE = 'America/Santiago'
 

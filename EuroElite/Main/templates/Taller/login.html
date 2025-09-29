@@ -1,7 +1,7 @@
 {% load static %}
 
 <!DOCTYPE html>
-<html lang="en">
+<html lang="es">
 
 <head>
     <meta charset="UTF-8">
@@ -73,14 +73,14 @@
             </div>
         </div>
     </nav>
-    <br>
-    <br>
-    <br>
-    <br>
+
+    <br><br><br><br>
 
     <!-- FORMULARIO DE LOGIN -->
     <div class="form-container">
         <h2 class="form-title">Iniciar Sesión</h2>
+
+        <!-- Mensajes -->
         {% if messages %}
             {% for message in messages %}
                 <div class="alert alert-{% if message.tags == 'error' %}danger{% elif message.tags == 'success' %}success{% elif message.tags == 'warning' %}warning{% else %}info{% endif %}" role="alert">
@@ -88,17 +88,20 @@
                 </div>
             {% endfor %}
         {% endif %}
+
+        <!-- Formulario -->
         <form method="post">
             {% csrf_token %}
+            {{ form.non_field_errors }}
 
             <div class="form-group">
-                <input type="text" name="username" id="username" required placeholder=" " />
-                <label for="username">Nombre de usuario</label>
+                {{ form.email }}
+                {{ form.email.errors }}
             </div>
 
             <div class="form-group">
-                <input type="password" name="password" id="password" required placeholder=" " />
-                <label for="password">Contraseña</label>
+                {{ form.password }}
+                {{ form.password.errors }}
             </div>
 
             <button type="submit">Entrar</button>
@@ -107,7 +110,6 @@
             <p><a href="#">¿Olvidaste tu contraseña?</a></p>
         </form>
     </div>
-
 
     <!-- FOOTER -->
     <footer class="footer" style="margin-bottom: 0rem;">
@@ -121,7 +123,6 @@
                     <a href="#"><i class="fab fa-instagram"></i></a>
                 </div>
             </div>
-
             <div class="footer-section">
                 <h3>Productos</h3>
                 <ul>
@@ -132,7 +133,6 @@
                     <li><a href="#">Herramientas</a></li>
                 </ul>
             </div>
-
             <div class="footer-section">
                 <h3>Servicios</h3>
                 <ul>
@@ -142,7 +142,6 @@
                     <li><a href="{% url 'agendar' %}">Garantía</a></li>
                 </ul>
             </div>
-
             <div class="footer-section">
                 <h3>Contacto</h3>
                 <ul>
@@ -152,7 +151,6 @@
                     <li><i class="fas fa-clock"></i> Lun-Vie: 9:00-18:00</li>
                 </ul>
             </div>
-
             <div class="footer-section">
                 <h3>Legal</h3>
                 <ul>
@@ -168,12 +166,11 @@
             </p>
         </div>
     </footer>
-    <!--El const carrito URL es para que la página de carrito cargue la URL correcta-->
 
+    <!-- Script carrito -->
     <script>
         const carritoURL = "{% url 'carrito_compras' %}";
     </script>
     <script src="{% static 'js/main.js' %}?v=2"></script>
 </body>
-
 </html>

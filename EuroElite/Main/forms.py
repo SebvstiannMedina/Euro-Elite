@@ -1,6 +1,6 @@
 from django import forms
 from django.contrib.auth.forms import UserCreationForm
-from django.contrib.auth import get_user_model
+from django.contrib.auth import get_user_model, authenticate
 from django.utils import timezone
 
 from .models import Cita, BloqueHorario, Servicio, Producto, Direccion
@@ -119,3 +119,37 @@ class DireccionForm(forms.ModelForm):
             'region': forms.Select(attrs={"class": "form-control"}),
             'codigo_postal': forms.TextInput(attrs={'class': 'form-control'}),
         }
+
+# ================= Login Con correo =================
+
+class EmailLoginForm(forms.Form):
+    email = forms.EmailField(
+        label="Correo electrónico",
+        widget=forms.EmailInput(attrs={'placeholder': 'Ingresa tu correo', 'class': 'form-control'})
+    )
+
+    password = forms.CharField(
+        label="Contraseña",
+        widget=forms.PasswordInput(attrs={'placeholder': 'Ingresa tu contraseña', 'class': 'form-control'})
+    )
+
+    def clean(self):
+        cleaned_data = super().clean()
+        email = cleaned_data.get("email")
+        password = cleaned_data.get("password")
+
+        if email and password:
+            try:
+                user = Usuario.objects.get(email=email)
+            except Usuario.DoesNotExist:
+                raise forms.ValidationError("Correo o contraseña incorrectos.")
+            
+            user = authenticate(username=user.username, password=password)
+            if user is None:
+                raise forms.ValidationError("Correo o contraseña incorrectos.")
+            
+            self.user_cache = user
+        return cleaned_data
+    
+    def get_user(self):
+        return getattr(self, "user_cache", None)

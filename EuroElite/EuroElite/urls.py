@@ -17,7 +17,7 @@ urlpatterns = [
     path('productos', main_views.productos, name='productos'),
     path('perfil', main_views.perfil, name='perfil'),
     path('registro', main_views.registro, name='registro'),
-    path('login', main_views.login, name='login'),
+    path('login', main_views.login_view, name='login'),
     path('logout/', LogoutView.as_view(next_page='home'), name='logout'),
     path('agendar', main_views.agendar_cita, name='agendar'),
     path('mis_citas', main_views.mis_citas, name='mis_citas'),

@@ -14,8 +14,9 @@ from django.urls import reverse
 from django.utils import timezone
 from django.views.decorators.csrf import ensure_csrf_cookie
 from django.views.decorators.http import require_POST
+from django.contrib.auth import login, logout
 # Local apps
-from .forms import CitaForm, DireccionForm, PerfilForm, RegistroForm
+from .forms import CitaForm, DireccionForm, PerfilForm, RegistroForm, EmailLoginForm
 from .models import (Carrito,Categoria,ConfigSitio,Direccion,ItemCarrito,ItemPedido,Pago,Pedido,Producto,)
 
 def _get_active_cart(user):
@@ -236,22 +237,24 @@ def productos(request):
 
 
 # ========== LOGIN ==========
-def login(request):
+def login_view(request):
     if request.user.is_authenticated:
-        return redirect('perfil')  # Redirige si ya está logueado
-
+        return redirect('home')  # Redirige a home una vez logueado
+    
     if request.method == 'POST':
-        form = AuthenticationForm(request, data=request.POST)
+        form = EmailLoginForm(request.POST)
         if form.is_valid():
             user = form.get_user()
-            auth_login(request, user)
+            login(request, user)
+            messages.success(request, f"Bienvenido: {user.username}")
             return redirect('home')
         else:
-            messages.error(request, 'Usuario o contraseña incorrectos')
+            messages.error(request, 'Correo o contraseña incorrectos.')
     else:
-        form = AuthenticationForm()
-
+        form = EmailLoginForm()
     return render(request, 'Taller/login.html', {'form': form})
+
+
 
 
 # ========== REGISTRO ==========

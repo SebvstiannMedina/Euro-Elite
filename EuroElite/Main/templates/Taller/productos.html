@@ -1,7 +1,9 @@
-{% load static  %}
-
+{% load static %}
+{% load humanize %}
+{% load i18n %}
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -12,11 +14,13 @@
     <link rel="stylesheet" href="{% static 'css/style.css' %}?v=2">
     <!-- Slick CSS -->
     <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/slick-carousel@1.8.1/slick/slick.css" />
-    <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/slick-carousel@1.8.1/slick/slick-theme.css" />
+    <link rel="stylesheet" type="text/css"
+        href="https://cdn.jsdelivr.net/npm/slick-carousel@1.8.1/slick/slick-theme.css" />
     <!-- Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <!-- Google Fonts -->
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap"
+        rel="stylesheet">
     <link rel="icon" href="{% static 'img/LogoApp.png' %}" type="image/x-icon">
 </head>
 
@@ -86,7 +90,7 @@
             <select id="categoryFilter" class="form-select w-auto" onchange="filterProducts()">
                 <option value="all">Todas</option>
                 {% for cat in categorias %}
-                    <option value="{{ cat.slug }}">{{ cat.nombre }}</option>
+                <option value="{{ cat.slug }}">{{ cat.nombre }}</option>
                 {% endfor %}
             </select>
         </div>
@@ -98,64 +102,59 @@
         <h2 class="section-title">Productos en Venta</h2>
         <div class="offers-grid">
             {% for p in productos %}
-                <div class="product-card" data-category="{{ p.categoria.slug|default:'sin-categoria' }}">
-                    {% if p.promocion_vigente %}
-                        <div class="offer-badge">
-                            {% if p.promocion_vigente.tipo == 'PORCENTAJE' %}
-                                -{{ p.promocion_vigente.valor|floatformat:0 }}%
-                            {% else %}
-                                Oferta
-                            {% endif %}
-                        </div>
+            <div class="product-card" data-category="{{ p.categoria.slug|default:'sin-categoria' }}">
+                {% if p.promocion_vigente %}
+                <div class="offer-badge">
+                    {% if p.promocion_vigente.tipo == 'PORCENTAJE' %}
+                    -{{ p.promocion_vigente.valor|floatformat:0 }}%
+                    {% else %}
+                    Oferta
                     {% endif %}
+                </div>
+                {% endif %}
 
-                    <div class="offer-image">
-                        {% if p.imagen %}
-                            <img src="{{ p.imagen.url }}" alt="{{ p.nombre }}">
+                <div class="offer-image">
+                    {% if p.imagen %}
+                    <img src="{{ p.imagen.url }}" alt="{{ p.nombre }}">
+                    {% else %}
+                    <img src="{% static 'img/no-image.png' %}" alt="Sin imagen">
+                    {% endif %}
+                </div>
+
+                <div class="offer-content">
+                    <h3 class="product-title">{{ p.nombre }}</h3>
+                    <p class="product-description">{{ p.descripcion|truncatewords:20 }}</p>
+
+                    <div class="offer-price">
+                        {% if p.promocion_vigente %}
+                        <span class="current-price">${{ p.precio_con_descuento|floatformat:"0"|intcomma }}</span>
+                        <span class="original-price">${{ p.precio|floatformat:"0"|intcomma }}</span>
                         {% else %}
-                            <img src="{% static 'img/no-image.png' %}" alt="Sin imagen">
+                        <span class="current-price">${{ p.precio|floatformat:"0"|intcomma }}</span>
                         {% endif %}
                     </div>
 
-                    <div class="offer-content">
-                        <h3 class="product-title">{{ p.nombre }}</h3>
-                        <p class="product-description">{{ p.descripcion|truncatewords:20 }}</p>
-
-                        <div class="offer-price">
-                            {% if p.promocion_vigente %}
-                                <span class="current-price">${{ p.precio_con_descuento|floatformat:"0" }}</span>
-                                <span class="original-price">${{ p.precio|floatformat:"0" }}</span>
-                            {% else %}
-                                <span class="current-price">${{ p.precio|floatformat:"0" }}</span>
-                            {% endif %}
-                        </div>
-
-                        <div class="d-flex gap-2 mt-2">
-                            <!-- Botón carrito -->
-                            <button class="add-to-cart"
-                                onclick="addToCart('{{ p.nombre }}',
-                                                '{{ p.precio_con_descuento|default:p.precio }}',
-                                                '{{ p.id }}',
-                                                '{{ p.stock }}')">
+                    <div class="d-flex gap-2 mt-2">
+                        <!-- Botón carrito -->
+                        <button class="add-to-cart" onclick="addToCart('{{ p.nombre }}',
+                                            '{{ p.precio_con_descuento|default:p.precio }}',
+                                            '{{ p.id }}',
+                                            '{{ p.stock }}')">
                             <i class="fas fa-shopping-cart"></i> Añadir al Carrito
-                            </button>
+                        </button>
 
-
-                            <!-- Botón detalle -->
-                            <button class="btn btn-outline-primary btn-sm"
-                                    data-bs-toggle="modal"
-                                    data-bs-target="#detalleModal"
-                                    data-nombre="{{ p.nombre }}"
-                                    data-descripcion="{{ p.descripcion }}"
-                                    data-precio="{{ p.precio|floatformat:'0' }}"
-                                    data-stock="{{ p.stock }}">
-                                Ver detalle
-                            </button>
-                        </div>
+                        <!-- Botón detalle -->
+                        <button class="btn btn-outline-primary btn-sm" data-bs-toggle="modal"
+                            data-bs-target="#detalleModal" data-nombre="{{ p.nombre }}"
+                            data-descripcion="{{ p.descripcion }}" data-precio="{{ p.precio|floatformat:'0'|intcomma }}"
+                            data-stock="{{ p.stock }}">
+                            Ver detalle
+                        </button>
                     </div>
                 </div>
+            </div>
             {% empty %}
-                <p class="text-center">No hay productos disponibles.</p>
+            <p class="text-center">No hay productos disponibles.</p>
             {% endfor %}
         </div>
     </section>
@@ -163,22 +162,22 @@
 
     <!-- Modal detalle producto -->
     <div class="modal fade" id="detalleModal" tabindex="-1" aria-hidden="true">
-      <div class="modal-dialog modal-lg modal-dialog-centered">
-        <div class="modal-content">
-          <div class="modal-header">
-            <h5 class="modal-title" id="detalleTitulo"></h5>
-            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
-          </div>
-          <div class="modal-body">
-            <p id="detalleDescripcion"></p>
-            <p><strong>Precio:</strong> <span id="detallePrecio"></span></p>
-            <p><strong>Stock disponible:</strong> <span id="detalleStock"></span></p>
-          </div>
-          <div class="modal-footer">
-            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
-          </div>
+        <div class="modal-dialog modal-lg modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="detalleTitulo"></h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+                </div>
+                <div class="modal-body">
+                    <p id="detalleDescripcion"></p>
+                    <p><strong>Precio:</strong> <span id="detallePrecio"></span></p>
+                    <p><strong>Stock disponible:</strong> <span id="detalleStock"></span></p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+                </div>
+            </div>
         </div>
-      </div>
     </div>
 
     <!-- FOOTER -->
@@ -246,25 +245,26 @@
 
     <!-- Script modal -->
     <script>
-    document.addEventListener('DOMContentLoaded', function () {
-        const detalleModal = document.getElementById('detalleModal');
-        detalleModal.addEventListener('show.bs.modal', function (event) {
-            const button = event.relatedTarget;
-            const nombre = button.getAttribute('data-nombre');
-            const descripcion = button.getAttribute('data-descripcion');
-            const precio = button.getAttribute('data-precio');
-            const stock = button.getAttribute('data-stock');
+        document.addEventListener('DOMContentLoaded', function () {
+            const detalleModal = document.getElementById('detalleModal');
+            detalleModal.addEventListener('show.bs.modal', function (event) {
+                const button = event.relatedTarget;
+                const nombre = button.getAttribute('data-nombre');
+                const descripcion = button.getAttribute('data-descripcion');
+                const precio = button.getAttribute('data-precio');
+                const stock = button.getAttribute('data-stock');
 
-            detalleModal.querySelector('#detalleTitulo').textContent = nombre;
-            detalleModal.querySelector('#detalleDescripcion').textContent = descripcion || "Sin descripción disponible.";
-            detalleModal.querySelector('#detallePrecio').textContent = "$" + precio;
-            detalleModal.querySelector('#detalleStock').textContent = stock;
+                detalleModal.querySelector('#detalleTitulo').textContent = nombre;
+                detalleModal.querySelector('#detalleDescripcion').textContent = descripcion || "Sin descripción disponible.";
+                detalleModal.querySelector('#detallePrecio').textContent = "$" + precio;
+                detalleModal.querySelector('#detalleStock').textContent = stock;
+            });
         });
-    });
     </script>
 
     <!-- Scripts propios -->
     <script src="{% static 'js/filtro.js' %}"></script>
     <script src="{% static 'js/main.js' %}?v=2"></script>
 </body>
+
 </html>
