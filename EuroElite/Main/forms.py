@@ -98,7 +98,8 @@ class ProductoForm(forms.ModelForm):
         fields = [
             'nombre', 'sku', 'marca', 'descripcion',
             'precio', 'costo', 'stock', 'stock_minimo',
-            'activo', 'categoria', 'imagen'
+            'activo', 'categoria', 'imagen',
+            
         ]
         widgets = {
             'descripcion': forms.Textarea(attrs={'rows': 3}),
