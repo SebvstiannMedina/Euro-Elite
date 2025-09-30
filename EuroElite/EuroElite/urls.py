@@ -3,7 +3,7 @@ from django.urls import path
 from django.contrib.auth.views import LogoutView
 from django.conf import settings
 from django.conf.urls.static import static
-
+from django.contrib.auth import views as auth_views
 from Main import views as main_views
 from payments import views as pay_views
 
@@ -12,7 +12,7 @@ urlpatterns = [
 
     # Sitio
     path('', main_views.home, name='home'),
-    path('contacto', main_views.contacto, name='contacto'),
+    path('nosotros', main_views.nosotros, name='nosotros'),
     path('equipo', main_views.equipo, name='equipo'),
     path('productos', main_views.productos, name='productos'),
     path('perfil', main_views.perfil, name='perfil'),
@@ -21,7 +21,6 @@ urlpatterns = [
     path('logout/', LogoutView.as_view(next_page='home'), name='logout'),
     path('agendar', main_views.agendar_cita, name='agendar'),
     path('mis_citas', main_views.mis_citas, name='mis_citas'),
-    path('nueva_contrasena', main_views.nueva_contrasena, name='nueva_contrasena'),
     path('mis_pedidos', main_views.mis_pedidos, name='mis_pedidos'),
     path('resumen_compra', main_views.resumen_compra, name='resumen_compra'),
     path('confirmacion_datos', main_views.confirmacion_datos, name='confirmacion_datos'),
@@ -53,6 +52,36 @@ urlpatterns = [
     path("pagos/flow/crear/", pay_views.flow_crear_orden, name="flow_crear_orden"),
     path("pagos/flow/confirmacion/", pay_views.flow_confirmacion, name="flow_confirmacion"),
     path("pagos/flow/retorno/", pay_views.flow_retorno, name="flow_retorno"),
+
+    #esto es para que al usuario le pida el correo para recuperar la contraseña
+    path('recuperar_contrasena/', 
+         auth_views.PasswordResetView.as_view(
+             template_name='Taller/recuperar_contrasena.html'
+         ), 
+         name='password_reset'),
+
+    # esto es para que se vea confirmado el envio del correo electronico    
+    path('recuperar_contra_listo/', 
+         auth_views.PasswordResetDoneView.as_view(
+             template_name='taller/recuperar_contra_listo.html'
+         ), 
+         name='password_reset_done'),
+
+     # Página con el formulario para poner la nueva contraseña
+    path('nueva_contrasena/<uidb64>/<token>/', 
+         auth_views.PasswordResetConfirmView.as_view(
+             template_name='taller/nueva_contrasena.html'  # 👉 tienes que crear este
+         ), 
+         name='password_reset_confirm'),
+
+    #Pagina que permite al usuario saber que ha cambiado la contraseña
+
+    path('contra_cambiada_exitosa/completado/', 
+         auth_views.PasswordResetCompleteView.as_view(
+             template_name='taller/contra_cambiada_exitosa.html'  
+         ), 
+         name='password_reset_complete'),
+
     path('custom_404', main_views.custom_404, name='custom_404'),
 ]
 

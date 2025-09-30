@@ -216,8 +216,8 @@ def producto_detalle(request, pk):
     )
     return render(request, 'Taller/producto_detalle.html', {'p': p})
 
-def contacto(request):
-    return render(request, 'Taller/contacto.html')
+def nosotros(request):
+    return render(request, 'Taller/nosotros.html')
 
 def equipo(request):
     return render(request, 'Taller/equipo.html')
@@ -584,3 +584,13 @@ def api_cart_detail(request):
 @receiver(user_logged_in)
 def _merge_on_login(sender, user, request, **kwargs):
     _get_or_create_cart(request)
+
+
+def recuperar_contrasena(request):
+    return render(request, 'Taller/recuperar_contrasena.html')
+
+def recuperar_contra_listo(request):
+    return render(request, 'Taller/recuperar_contra_listo.html')
+
+def contra_cambiada_exitosa(request):
+    return render(request, 'Taller/contra_cambiada_exitosa.html')

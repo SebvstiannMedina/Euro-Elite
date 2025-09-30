@@ -1,149 +1,123 @@
 {% extends 'base.html' %}
 {% load static %}
-{% block title %}Inicio - Euro Elite{% endblock %}
+{% block title %}Nueva Contraseña - Euro Elite{% endblock %}
 {% block content %}
 
-  <br><br><br><br><br><br>
+<br><br><br><br>
 
-  <main class="container my-4 profile-wrapper">
-    <div class="row">
-      <!-- Sidebar -->
-      <aside class="col-12 col-md-3 mb-3">
-        <div class="card shadow-sm">
-          <div class="card-body">
-            <h5 class="mb-1">Hola, <span id="greetingName">Alberto</span></h5>
-            <p class="text-muted" style="font-size: .9rem;">Accede a toda la informaci&oacute;n de tu perfil</p>
-            <div class="list-group list-group-flush mt-3">
-              <a href="{% url 'perfil' %}" class="list-group-item list-group-item-action">
-                <i class="fas fa-id-card me-2"></i> Mis datos
-              </a>
-              <a href="{% url 'nueva_contrasena' %}" class="list-group-item list-group-item-action active">
-                <i class="fas fa-lock me-2"></i> Contrase&ntilde;a
-              </a>
-              <a href="{% url 'mis_citas' %}" class="list-group-item list-group-item-action">
-                <i class="fas fa-calendar-alt me-2"></i> Mis citas
-              </a>
-              <a href="{% url 'mis_pedidos' %}" class="list-group-item list-group-item-action">
-                <i class="fas fa-shopping-bag me-2"></i> Mis compras
-              </a>
+<div class="container my-4 profile-wrapper">
+  <div class="row">
+    <!-- Sidebar -->
+    <aside class="col-12 col-md-3 mb-3">
+      <div class="card shadow-sm">
+        <div class="card-body">
+          <h5 class="mb-1">Hola, <span>{{ user.username }}</span></h5>
+          <p class="text-muted" style="font-size: .9rem;">Accede a toda la información de tu perfil</p>
+          <div class="list-group list-group-flush mt-3">
+            <a href="{% url 'perfil' %}" class="list-group-item list-group-item-action">
+              <i class="fas fa-id-card me-2"></i> Mis datos
+            </a>
+            <a href="#" class="list-group-item list-group-item-action active">
+              <i class="fas fa-lock me-2"></i> Contraseña
+            </a>
+            <a href="{% url 'mis_citas' %}" class="list-group-item list-group-item-action">
+              <i class="fas fa-calendar-alt me-2"></i> Mis citas
+            </a>
+            <a href="{% url 'mis_pedidos' %}" class="list-group-item list-group-item-action">
+              <i class="fas fa-shopping-bag me-2"></i> Mis compras
+            </a>
+          </div>
+        </div>
+      </div>
+    </aside>
+
+    <!-- Main content -->
+    <section class="col-12 col-md-9">
+      <h3 class="mb-3">Contraseña</h3>
+      <div class="card shadow-sm p-4">
+        <h6 class="mb-4">Ingresa tu nueva contraseña</h6>
+
+        <form method="post">
+          {% csrf_token %}
+
+          <!-- Campo nueva contraseña -->
+          <div class="mb-3">
+            <label for="id_new_password1" class="form-label">Contraseña nueva<span class="text-danger">*</span></label>
+            <div class="input-group">
+              <input type="password" name="new_password1" id="id_new_password1"
+                     class="form-control"
+                     placeholder="Ingresa tu nueva contraseña"
+                     required minlength="8">
+              <button class="btn btn-outline-secondary toggle-visibility" type="button" data-target="id_new_password1">
+                <i class="fa-regular fa-eye-slash"></i>
+              </button>
             </div>
+            <div class="form-text mt-2">
+              Utiliza al menos 8 caracteres, incluye una letra mayúscula, un número y un carácter especial.
+            </div>
+            {% if form.new_password1.errors %}
+              <div class="text-danger small">{{ form.new_password1.errors }}</div>
+            {% endif %}
           </div>
-        </div>
-      </aside>
 
-      <!-- Main content -->
-      <section class="col-12 col-md-9">
-        <div class="d-flex align-items-center justify-content-between mb-2">
-          <h3 class="mb-0">Contrase&ntilde;a</h3>
-        </div>
-        <div class="card shadow-sm pw-card">
-          <div class="card-body">
-            <h6 class="pw-section-title mb-4">Ingresa tu nueva contrase&ntilde;a</h6>
-
-            <form id="passwordForm" method="post" action="" novalidate>
-              {% csrf_token %}
-              <div class="pw-form">
-                <div class="mb-3">
-                  <label for="newPassword" class="form-label">Contrase&ntilde;a nueva<span class="text-danger">*</span></label>
-                  <div class="input-group">
-                    <input type="password" class="form-control" id="newPassword" name="new_password" placeholder="Ingresa tu nueva contrase&ntilde;a" required minlength="8" pattern="(?=.*[A-Z])(?=.*\d)(?=.*[@$%\^&\*\-\+_!#\?\{\}\[\]\(\)\.,;:]).{8,}" aria-describedby="passwordHelp">
-                    <button class="btn btn-outline-secondary toggle-visibility" type="button" data-target="newPassword" aria-label="Mostrar u ocultar contrase&ntilde;a">
-                      <i class="fa-regular fa-eye-slash"></i>
-                    </button>
-                  </div>
-                  <div id="passwordHelp" class="form-text mt-2">
-                    Utiliza al menos 8 caracteres. Incluye una letra may&uacute;scula, un n&uacute;mero y uno de estos caracteres especiales [@$%^&*].
-                  </div>
-                  <div class="invalid-feedback">La contrase&ntilde;a no cumple los requisitos.</div>
-                </div>
-
-                <div class="mb-4">
-                  <label for="confirmPassword" class="form-label">Confirma tu nueva contrase&ntilde;a<span class="text-danger">*</span></label>
-                  <div class="input-group">
-                    <input type="password" class="form-control" id="confirmPassword" name="confirm_password" placeholder="Ingresa tu nueva contrase&ntilde;a" required>
-                    <button class="btn btn-outline-secondary toggle-visibility" type="button" data-target="confirmPassword" aria-label="Mostrar u ocultar contrase&ntilde;a">
-                      <i class="fa-regular fa-eye-slash"></i>
-                    </button>
-                  </div>
-                  <div class="invalid-feedback">Las contrase&ntilde;as no coinciden.</div>
-                </div>
-
-              <div class="d-flex justify-content-end mt-4">
-                <button id="submitBtn" type="submit" class="btn btn-primary px-4" disabled>
-                  Cambiar contrase&ntilde;a
-                </button>
-              </div>
-              </div>
-            </form>
+          <!-- Campo confirmar contraseña -->
+          <div class="mb-3">
+            <label for="id_new_password2" class="form-label">Confirma tu nueva contraseña<span class="text-danger">*</span></label>
+            <div class="input-group">
+              <input type="password" name="new_password2" id="id_new_password2"
+                     class="form-control"
+                     placeholder="Confirma tu nueva contraseña"
+                     required>
+              <button class="btn btn-outline-secondary toggle-visibility" type="button" data-target="id_new_password2">
+                <i class="fa-regular fa-eye-slash"></i>
+              </button>
+            </div>
+            {% if form.new_password2.errors %}
+              <div class="text-danger small">{{ form.new_password2.errors }}</div>
+            {% endif %}
           </div>
-        </div>
-      </section>
-    </div>
-  </main>
 
+          <!-- Botón enviar -->
+          <div class="d-flex justify-content-end mt-4">
+            <button type="submit" class="btn btn-primary px-4">
+              Cambiar contraseña
+            </button>
+          </div>
+        </form>
+      </div>
+    </section>
+  </div>
+</div>
 
-    <br>
-    <br>
-    <br>
-    <br>
+<br><br><br><br>
 
-      <style>
-        .profile-wrapper .card {
-          border: 0;
-          border-radius: 12px;
-          box-shadow: var(--shadow);
-          background: #fff;
-        }
-        .profile-wrapper .list-group-item { border: 0; }
-      </style>
+<style>
+  .profile-wrapper .card {
+    border: 0;
+    border-radius: 12px;
+    box-shadow: var(--shadow);
+    background: #fff;
+  }
+  .profile-wrapper .list-group-item {
+    border: 0;
+  }
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+  document.querySelectorAll('.toggle-visibility').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      const targetId = btn.getAttribute('data-target');
+      const input = document.getElementById(targetId);
+      const isPw = input.getAttribute('type') === 'password';
+      input.setAttribute('type', isPw ? 'text' : 'password');
+      btn.innerHTML = isPw
+        ? '<i class="fa-regular fa-eye"></i>'
+        : '<i class="fa-regular fa-eye-slash"></i>';
+      input.focus();
+    });
+  });
+});
+</script>
 
 {% endblock %}
-
-  <script>
-    document.addEventListener('DOMContentLoaded', function () {
-      const form = document.getElementById('passwordForm');
-      const newPw = document.getElementById('newPassword');
-      const confirmPw = document.getElementById('confirmPassword');
-      const submitBtn = document.getElementById('submitBtn');
-
-      const meetsPolicy = (pw) => /^(?=.*[A-Z])(?=.*\d)(?=.*[@$%\^&\*\-\+_!#\?\{\}\[\]\(\)\.,;:]).{8,}$/.test(pw);
-
-      function validate() {
-        const policyOk = meetsPolicy(newPw.value);
-        const matchOk = confirmPw.value.length > 0 && confirmPw.value === newPw.value;
-        newPw.classList.toggle('is-invalid', newPw.value.length > 0 && !policyOk);
-        confirmPw.classList.toggle('is-invalid', confirmPw.value.length > 0 && !matchOk);
-        submitBtn.disabled = !(policyOk && matchOk);
-      }
-
-      newPw.addEventListener('input', validate);
-      confirmPw.addEventListener('input', validate);
-
-      document.querySelectorAll('.toggle-visibility').forEach((btn) => {
-        btn.addEventListener('click', () => {
-          const targetId = btn.getAttribute('data-target');
-          const input = document.getElementById(targetId);
-          const isPw = input.getAttribute('type') === 'password';
-          input.setAttribute('type', isPw ? 'text' : 'password');
-          btn.innerHTML = isPw ? '<i class="fa-regular fa-eye"></i>' : '<i class="fa-regular fa-eye-slash"></i>';
-          input.focus();
-        });
-      });
-
-      form.addEventListener('submit', (e) => {
-        if (submitBtn.disabled) {
-          e.preventDefault();
-          validate();
-        }
-      });
-    });
-  </script>
-  <!--El const carrito URL es para que la página de carrito cargue la URL correcta-->
-
-    <script>
-        const carritoURL = "{% url 'carrito_compras' %}";
-    </script>
-  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js" crossorigin="anonymous"></script>
-  <script src="{% static 'js/main.js' %}?v=2"></script>
-</body>
-</html>

@@ -47,7 +47,7 @@
                 <li><a href="{% url 'home' %}">INICIO</a></li>
                 <li><a href="{% url 'productos' %}">PRODUCTOS</a></li>
                 <li><a href="{% url 'agendar' %}">SERVICIOS</a></li>
-                <li><a href="{% url 'contacto' %}">CONTACTO</a></li>
+                <li><a href="{% url 'nosotros' %}">NOSOTROS</a></li>
                 <li><a href="{% url 'equipo' %}">EQUIPO</a></li>
             </ul>
 
@@ -152,6 +152,8 @@
         const carritoURL = "{% url 'carrito_compras' %}";
     </script>
     <script src="{% static 'js/main.js' %}?v=3 "></script>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js" integrity="sha384-FKyoEForCGlyvwx9Hj09JcYn3nv7wiPVlz7YYwJrWVcXK/BmnVDxM+D2scQbITxI" crossorigin="anonymous"></script>
     {% block extra_scripts %}{% endblock %}
 </body>
 

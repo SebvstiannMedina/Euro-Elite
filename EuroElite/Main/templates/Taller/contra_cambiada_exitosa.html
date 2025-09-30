@@ -1,0 +1,24 @@
+{% extends 'base.html' %}
+{% block title %}Contraseña Actualizada - Euro Elite{% endblock %}
+{% block content %}
+
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<div class="container mt-5 text-center">
+    <div class="alert alert-success shadow-sm rounded-4">
+        <h4>¡Contraseña cambiada con éxito! 🔑</h4>
+        <p>Ya puedes iniciar sesión con tu nueva contraseña.</p>
+        <a href="{% url 'login' %}" class="btn btn-primary rounded-pill mt-3">Ir al login</a>
+    </div>
+</div>
+<br>
+<br>
+<br>
+<br>
+<br>
+{% endblock %}

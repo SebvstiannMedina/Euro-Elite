@@ -1,0 +1,27 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}Correo Enviado - Euro Elite{% endblock %}
+{% block content %}
+{% load humanize %}
+{% load i18n %}
+
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<div class="container mt-5 text-center">
+    <div class="alert alert-info shadow-sm rounded-4">
+        <h4>Correo enviado ✅</h4>
+        <p>Si existe una cuenta con ese correo, recibirás un mensaje con instrucciones para recuperar tu contraseña.</p>
+        <a href="{% url 'login' %}" class="btn btn-outline-primary rounded-pill mt-3">Volver al inicio de sesión</a>
+    </div>
+</div>
+<br>
+<br>
+<br>
+<br>
+<br>
+{% endblock %}

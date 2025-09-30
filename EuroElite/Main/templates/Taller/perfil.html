@@ -17,7 +17,7 @@
             <a href="{% url 'perfil' %}" class="list-group-item list-group-item-action active">
               <i class="fas fa-id-card me-2"></i> Mis datos
             </a>
-            <a href="{% url 'nueva_contrasena' %}" class="list-group-item list-group-item-action">
+            <a href="{% url 'password_reset' %}" class="list-group-item list-group-item-action">
               <i class="fas fa-lock me-2"></i> Contraseña
             </a>
             <a href="{% url 'mis_citas' %}" class="list-group-item list-group-item-action">
@@ -40,28 +40,28 @@
           <div class="row gy-3">
             <!-- Usuario -->
             <div class="col-12 col-md-6">
-              <label class="form-label fw-semibold text-muted">Nombre de usuario</label>
+              <label for="{{ form.username.id_for_label }}" class="form-label fw-semibold text-muted">Nombre de usuario</label>
               {{ form.username }}
               {% if form.username.errors %}
                 <div class="text-danger small">{{ form.username.errors }}</div>
               {% endif %}
             </div>
             <div class="col-12 col-md-6">
-              <label class="form-label fw-semibold text-muted">Correo electrónico</label>
+              <label for="{{ form.email.id_for_label }}" class="form-label fw-semibold text-muted">Correo electrónico</label>
               {{ form.email }}
               {% if form.email.errors %}
                 <div class="text-danger small">{{ form.email.errors }}</div>
               {% endif %}
             </div>
             <div class="col-12 col-md-6">
-              <label class="form-label fw-semibold text-muted">RUT</label>
+              <label for="{{ form.rut.id_for_label }}" class="form-label fw-semibold text-muted">RUT</label>
               {{ form.rut }}
               {% if form.rut.errors %}
                 <div class="text-danger small">{{ form.rut.errors }}</div>
               {% endif %}
             </div>
             <div class="col-12 col-md-6">
-              <label class="form-label fw-semibold text-muted">Teléfono</label>
+              <label for="{{ form.telefono.id_for_label }}" class="form-label fw-semibold text-muted">Teléfono</label>
               {{ form.telefono }}
               {% if form.telefono.errors %}
                 <div class="text-danger small">{{ form.telefono.errors }}</div>
@@ -72,42 +72,42 @@
             <hr class="mt-4 mb-2">
             <h5 class="mb-3">Dirección</h5>
             <div class="col-12 col-md-6">
-              <label class="form-label fw-semibold text-muted">Calle / Dirección</label>
+              <label for="{{ direccion_form.linea1.id_for_label }}" class="form-label fw-semibold text-muted">Calle / Dirección</label>
               {{ direccion_form.linea1 }}
               {% if direccion_form.linea1.errors %}
                 <div class="text-danger small">{{ direccion_form.linea1.errors }}</div>
               {% endif %}
             </div>
             <div class="col-12 col-md-6">
-              <label class="form-label fw-semibold text-muted">Departamento / Oficina</label>
+              <label for="{{ direccion_form.linea2.id_for_label }}" class="form-label fw-semibold text-muted">Departamento / Oficina</label>
               {{ direccion_form.linea2 }}
               {% if direccion_form.linea2.errors %}
                 <div class="text-danger small">{{ direccion_form.linea2.errors }}</div>
               {% endif %}
             </div>
             <div class="col-12 col-md-6">
-              <label class="form-label fw-semibold text-muted">Comuna</label>
+              <label for="{{ direccion_form.comuna.id_for_label }}" class="form-label fw-semibold text-muted">Comuna</label>
               {{ direccion_form.comuna }}
               {% if direccion_form.comuna.errors %}
                 <div class="text-danger small">{{ direccion_form.comuna.errors }}</div>
               {% endif %}
             </div>
             <div class="col-12 col-md-6">
-              <label class="form-label fw-semibold text-muted">Ciudad</label>
+              <label for="{{ direccion_form.ciudad.id_for_label }}" class="form-label fw-semibold text-muted">Ciudad</label>
               {{ direccion_form.ciudad }}
               {% if direccion_form.ciudad.errors %}
                 <div class="text-danger small">{{ direccion_form.ciudad.errors }}</div>
               {% endif %}
             </div>
             <div class="col-12 col-md-6">
-              <label class="form-label fw-semibold text-muted">Región</label>
+              <label for="{{ direccion_form.region.id_for_label }}" class="form-label fw-semibold text-muted">Región</label>
               {{ direccion_form.region }}
               {% if direccion_form.region.errors %}
                 <div class="text-danger small">{{ direccion_form.region.errors }}</div>
               {% endif %}
             </div>
             <div class="col-12 col-md-6">
-              <label class="form-label fw-semibold text-muted">Código Postal</label>
+              <label for="{{ direccion_form.codigo_postal.id_for_label }}" class="form-label fw-semibold text-muted">Código Postal</label>
               {{ direccion_form.codigo_postal }}
               {% if direccion_form.codigo_postal.errors %}
                 <div class="text-danger small">{{ direccion_form.codigo_postal.errors }}</div>
