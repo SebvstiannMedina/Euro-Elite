@@ -332,6 +332,7 @@ class Cita(MarcaTiempo):
         RESERVADA = "RESERVADA", "Reservada"
         COMPLETADA = "COMPLETADA", "Completada"
         CANCELADA = "CANCELADA", "Cancelada"
+        EN_PROCESO = "EN_PROCESO", "En proceso"
 
     usuario = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.PROTECT, related_name="citas")
     servicio = models.ForeignKey(Servicio, on_delete=models.PROTECT, related_name="citas")
