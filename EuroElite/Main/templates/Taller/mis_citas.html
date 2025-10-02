@@ -61,12 +61,13 @@
                     <div class="small fw-semibold mb-1 
                       {% if c.estado == 'COMPLETADA' %}text-success
                       {% elif c.estado == 'CANCELADA' %}text-danger
+                      {% elif c.estado == 'EN_PROCESO' or c.get_estado_display == 'En proceso' %}text-warning
                       {% else %}text-primary{% endif %}">
                       {{ c.get_estado_display }}
                     </div>
                     <div class="order-title">Cita el {{ c.bloque.inicio|date:"j \\de F" }}</div>
                     <div class="order-subtitle">{{ c.servicio.nombre }}</div>
-                    <div class="order-subtitle">{{ c.bloque.inicio|date:"H:i" }} - {{ c.bloque.fin|date:"H:i" }}</div>
+                    <div class="order-subtitle">{{ c.bloque.inicio|date:"H:i" }}</div>
                     {% if c.a_domicilio %}
                       <div class="order-subtitle">
                         <i class="fas fa-truck"></i> A domicilio ({{ c.direccion_domicilio|default:"Sin dirección" }})

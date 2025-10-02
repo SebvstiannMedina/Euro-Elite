@@ -13,9 +13,10 @@ class PerfilForm(forms.ModelForm):
     """Formulario para que el usuario edite su perfil básico."""
     class Meta:
         model = Usuario
-        fields = ['username', 'email', 'telefono', 'rut']
+        fields = ['first_name', 'last_name', 'email', 'telefono', 'rut']
         widgets = {
-            'username': forms.TextInput(attrs={'class': 'form-control'}),
+            'first_name': forms.TextInput(attrs={'class': 'form-control'}),
+            'last_name': forms.TextInput(attrs={'class': 'form-control'}),
             'email': forms.EmailInput(attrs={'class': 'form-control'}),
             'telefono': forms.TextInput(attrs={'class': 'form-control'}),
             'rut': forms.TextInput(attrs={'class': 'form-control'}),
@@ -157,3 +158,4 @@ class EmailLoginForm(forms.Form):
     
     def get_user(self):
         return getattr(self, "user_cache", None)
+
