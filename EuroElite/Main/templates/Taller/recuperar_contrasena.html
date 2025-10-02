@@ -1,46 +1,208 @@
-{% extends 'base.html' %}
+﻿{% extends 'base.html' %}
 {% load static %}
 {% block title %}Recuperar Contraseña - Euro Elite{% endblock %}
-{% block content %}
-{% load humanize %}
-{% load i18n %}
 
-<br>
-<br>
-<br>
-<br>
-<br>
-<br>
-<br>
-<div class="container mt-5">
-    <div class="row justify-content-center">
-        <div class="col-md-6 col-lg-5">
-            <div class="card shadow-lg rounded-4">
-                <div class="card-body p-4">
-                    <h3 class="text-center mb-4">Recuperar Contraseña</h3>
-                    <p class="text-muted text-center">
-                        Ingresa tu correo electrónico y te enviaremos un enlace para restablecer tu contraseña.
-                    </p>
-                    <form method="post">
-                        {% csrf_token %}
-                        {{ form.as_p }}
-                        <div class="d-grid">
-                            <button type="submit" class="btn btn-primary rounded-pill">
-                                Enviar enlace de recuperación
-                            </button>
+{% block content %}
+<style>
+    .auth-section {
+        background-color: #fff;
+        min-height: calc(100vh - 120px);
+        padding: 140px 0 120px;
+        display: flex;
+        align-items: center;
+    }
+
+    .auth-card {
+        border: 1px solid rgba(6, 43, 97, 0.08);
+        border-radius: 20px;
+        background: #fff;
+        box-shadow: var(--shadow);
+        transition: var(--transition);
+    }
+
+    .auth-card:hover {
+        box-shadow: var(--shadow-hover);
+        transform: translateY(-4px);
+    }
+
+    .auth-badge {
+        width: 60px;
+        height: 60px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 16px;
+        background: linear-gradient(135deg, var(--primary-dark), var(--primary-medium));
+        color: var(--white);
+        font-size: 1.4rem;
+        box-shadow: var(--shadow);
+        margin-bottom: 1.5rem;
+    }
+
+    .auth-card h3 {
+        font-weight: 700;
+        color: var(--primary-dark);
+    }
+
+    .auth-card p.lead {
+        color: #5b6c87;
+    }
+
+    .auth-card label {
+        font-weight: 600;
+        color: var(--primary-dark);
+        font-size: 0.9rem;
+    }
+
+    .auth-card .form-control {
+        border-radius: 14px;
+        border: 1px solid rgba(6, 43, 97, 0.15);
+        padding: 0.95rem 1.1rem;
+        background-color: #fff;
+        transition: var(--transition);
+    }
+
+    .auth-card .form-control:focus {
+        border-color: var(--primary-light);
+        box-shadow: 0 0 0 0.2rem rgba(28, 117, 188, 0.12);
+    }
+
+    .auth-card .btn-primary {
+        border: none;
+        border-radius: 16px;
+        background: linear-gradient(135deg, var(--primary-dark), var(--primary-medium));
+        padding: 0.85rem 1rem;
+        font-weight: 600;
+        letter-spacing: 0.4px;
+        transition: var(--transition);
+    }
+
+    .auth-card .btn-primary:hover {
+        background: linear-gradient(135deg, var(--primary-medium), var(--primary-light));
+        transform: translateY(-2px);
+        box-shadow: var(--shadow-hover);
+    }
+
+    .auth-link {
+        color: var(--primary-dark);
+        font-weight: 600;
+        text-decoration: none;
+        transition: var(--transition);
+    }
+
+    .auth-link:hover {
+        color: var(--primary-light);
+    }
+
+    .auth-list-item {
+        display: flex;
+        align-items: center;
+        gap: 0.6rem;
+        font-size: 0.9rem;
+        color: #6f7f96;
+    }
+
+    @media (max-width: 992px) {
+        .auth-section {
+            padding: 130px 0 100px;
+        }
+    }
+
+    @media (max-width: 768px) {
+        .auth-section {
+            padding: 120px 0 80px;
+        }
+
+        .auth-card {
+            border-radius: 18px;
+        }
+    }
+</style>
+
+<section class="auth-section">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-12 col-md-10 col-lg-6">
+                <div class="card auth-card">
+                    <div class="card-body p-4 p-md-5">
+                        <div class="text-center">
+                            <span class="auth-badge">
+                                <i class="fa-solid fa-key"></i>
+                            </span>
+                            <h3 class="mb-3">Recuperar Contraseña</h3>
+                            <p class="lead mb-4">Ingresa tu correo electrónico y recibe un enlace seguro para restablecer tu contraseña.</p>
                         </div>
-                    </form>
-                    <div class="mt-3 text-center">
-                        <a href="{% url 'login' %}">Volver al inicio de sesión</a>
+
+                        {% if messages %}
+                            <div class="mb-3">
+                                {% for message in messages %}
+                                    <div class="alert alert-{{ message.tags|default:'info' }} mb-2" role="alert">
+                                        {{ message }}
+                                    </div>
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+
+                        {% if form.non_field_errors %}
+                            <div class="alert alert-danger small mb-3" role="alert">
+                                {{ form.non_field_errors }}
+                            </div>
+                        {% endif %}
+
+                        <form method="post" class="needs-validation" novalidate>
+                            {% csrf_token %}
+                            <div class="mb-4">
+                                <label for="{{ form.email.id_for_label }}" class="form-label">Correo electrónico</label>
+                                <input type="email"
+                                       name="{{ form.email.html_name }}"
+                                       id="{{ form.email.id_for_label }}"
+                                       value="{{ form.email.value|default_if_none:'' }}"
+                                       class="form-control form-control-lg"
+                                       placeholder="tu@correo.cl"
+                                       autocomplete="email"
+                                       required>
+                                {% if form.email.errors %}
+                                    <div class="invalid-feedback d-block">
+                                        {{ form.email.errors|striptags }}
+                                    </div>
+                                {% endif %}
+                                {% if form.email.help_text %}
+                                    <div class="form-text">{{ form.email.help_text }}</div>
+                                {% endif %}
+                            </div>
+
+                            <div class="d-grid">
+                                <button type="submit" class="btn btn-primary btn-lg">
+                                    Enviar enlace de recuperación
+                                </button>
+                            </div>
+                        </form>
+
+                        <div class="mt-4">
+                            <ul class="list-unstyled mb-4">
+                                <li class="auth-list-item mb-2">
+                                    <i class="fa-solid fa-shield-check text-primary"></i>
+                                    Tu contraseña permanece protegida; solo tú recibirás el enlace.
+                                </li>
+                                <li class="auth-list-item mb-2">
+                                    <i class="fa-solid fa-envelope-open-text text-primary"></i>
+                                    Revisa tu bandeja de entrada y correo no deseado si no ves el mensaje.
+                                </li>
+                                <li class="auth-list-item">
+                                    <i class="fa-solid fa-circle-check text-primary"></i>
+                                    El enlace tiene una duración limitada para mayor seguridad.
+                                </li>
+                            </ul>
+                            <div class="text-center">
+                                <a href="{% url 'login' %}" class="auth-link">
+                                    <i class="fa-solid fa-arrow-left-long me-2"></i>Volver al inicio de sesión
+                                </a>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
     </div>
-</div>
-<br>
-<br>
-<br>
-<br>
-<br>
+</section>
 {% endblock %}
