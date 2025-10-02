@@ -1,6 +1,47 @@
 {% extends 'base.html' %}
-{% load static %}
-{% block title %}Inicio - Euro Elite{% endblock %}
+{% block title %}Configuración - Euro Elite{% endblock %}
 {% block content %}
+
+<br><br><br><br><br><br>
+
+<div class="container my-4">
+  <h3 class="mb-4">Configuración del Sistema</h3>
+
+  <div class="card shadow-sm p-4">
+    <form method="post" enctype="multipart/form-data">
+      {% csrf_token %}
+      
+      <div class="mb-3">
+        <label class="form-label">Nombre de la empresa</label>
+        <input type="text" name="nombre_empresa" class="form-control" value="{{ config.nombre_empresa }}">
+      </div>
+
+      <div class="mb-3">
+        <label class="form-label">Correo de contacto</label>
+        <input type="email" name="correo_contacto" class="form-control" value="{{ config.correo_contacto }}">
+      </div>
+
+      <div class="mb-3">
+        <label class="form-label">Teléfono</label>
+        <input type="text" name="telefono" class="form-control" value="{{ config.telefono }}">
+      </div>
+
+      <div class="mb-3">
+        <label class="form-label">Logo</label><br>
+        {% if config.logo %}
+          <img src="{{ config.logo.url }}" alt="Logo" class="img-thumbnail mb-2" style="max-height:80px;">
+        {% endif %}
+        <input type="file" name="logo" class="form-control">
+      </div>
+
+      <div class="mb-3">
+        <label class="form-label">Mensaje de bienvenida</label>
+        <textarea name="mensaje_bienvenida" class="form-control" rows="3">{{ config.mensaje_bienvenida }}</textarea>
+      </div>
+
+      <button type="submit" class="btn btn-primary">Guardar cambios</button>
+    </form>
+  </div>
+</div>
 
 {% endblock %}

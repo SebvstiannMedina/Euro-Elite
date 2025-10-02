@@ -420,11 +420,25 @@ def ofertas(request):
 def retiro_despacho(request):
     return render(request, 'Taller/retiro_despacho.html')
 
+from django.contrib.admin.views.decorators import staff_member_required
+
+
+@staff_member_required
 def admin_agendamientos(request):
-    return render(request, 'Taller/admin_agendamientos.html')
+    citas = Cita.objects.all().order_by('-bloque__inicio')
+
+    return render(request, 'Taller/admin_agendamientos.html', {'citas': citas})
+
+def anular_cita(request, cita_id):
+    cita = get_object_or_404(Cita, id=cita_id)
+    if cita.estado == "RESERVADA":
+        cita.estado = "CANCELADA"
+        cita.save()
+        messages.success(request, "La cita fue cancelada correctamente.")
+    return redirect("mis_citas")
 
 def admin_configuracion(request):
-    return render(request, 'Taller/admin_agendamientos.html')
+    return render(request, 'Taller/admin_configuracion.html')
 
 def admin_dashboard(request):
     return render(request, 'Taller/admin_agendamientos.html')
@@ -435,8 +449,37 @@ def admin_pedidos(request):
 def admin_reportes(request):
     return render(request, 'Taller/admin_agendamientos.html')
 
+from django.contrib.auth import get_user_model
+from django.contrib import messages
+from django.shortcuts import render, get_object_or_404, redirect
+from django.contrib.admin.views.decorators import staff_member_required
+
+Usuario = get_user_model()  # tu modelo custom de usuario
+
+# Listar usuarios
+@staff_member_required
 def admin_usuarios(request):
-    return render(request, 'Taller/admin_agendamientos.html')
+    usuarios = Usuario.objects.all().order_by('-date_joined')
+    return render(request, 'Taller/admin_usuarios.html', {"usuarios": usuarios})
+
+# Detalle de un usuario
+@staff_member_required
+def detalle_usuario(request, usuario_id):
+    usuario = get_object_or_404(Usuario, id=usuario_id)
+    return render(request, 'Taller/detalle_usuario.html', {"usuario": usuario})
+
+# Eliminar un usuario
+@staff_member_required
+def eliminar_usuario(request, usuario_id):
+    usuario = get_object_or_404(Usuario, id=usuario_id)
+    if usuario.is_superuser:
+        messages.error(request, "No puedes eliminar a un superusuario.")
+    else:
+        usuario.delete()
+        messages.success(request, "Usuario eliminado correctamente.")
+    return redirect("admin_usuarios")
+
+
 
 def mis_pedidos(request):
     pedidos_qs = request.user.pedidos.all().order_by('-creado') if request.user.is_authenticated else []

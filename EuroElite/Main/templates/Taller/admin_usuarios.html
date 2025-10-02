@@ -1,6 +1,79 @@
 {% extends 'base.html' %}
 {% load static %}
-{% block title %}Inicio - Euro Elite{% endblock %}
+{% block title %}Administrar Usuarios - Euro Elite{% endblock %}
 {% block content %}
+
+<br><br><br><br><br><br>
+
+<div class="container my-4">
+  <h3 class="mb-4">Administrar Usuarios</h3>
+
+  {% if messages %}
+    <div class="mb-3">
+      {% for message in messages %}
+        <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+          {{ message }}
+          <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+      {% endfor %}
+    </div>
+  {% endif %}
+
+  <div class="card shadow-sm p-3">
+    {% if usuarios %}
+      <div class="table-responsive">
+        <table class="table table-hover align-middle">
+          <thead class="table-light">
+            <tr>
+              <th>#</th>
+              <th>Usuario</th>
+              <th>Email</th>
+              <th>Fecha de registro</th>
+              <th>Rol</th>
+              <th class="text-end">Acciones</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for u in usuarios %}
+            <tr>
+              <td>{{ forloop.counter }}</td>
+              <td>{{ u.username }}</td>
+              <td>{{ u.email }}</td>
+              <td>{{ u.date_joined|date:"d/m/Y H:i" }}</td>
+              <td>
+                {% if u.is_superuser %}
+                  <span class="badge bg-danger">Administrador</span>
+                {% elif u.is_staff %}
+                  <span class="badge bg-primary">Staff</span>
+                {% else %}
+                  <span class="badge bg-secondary">Cliente</span>
+                {% endif %}
+              </td>
+              <td class="text-end">
+                <a href="{% url 'detalle_usuario' u.id %}" class="btn btn-sm btn-outline-info me-1">
+                  <i class="fas fa-eye"></i>
+                </a>
+                <a href="{% url 'eliminar_usuario' u.id %}" class="btn btn-sm btn-outline-danger"
+                   onclick="return confirm('¿Seguro que deseas eliminar este usuario?');">
+                  <i class="fas fa-trash"></i>
+                </a>
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    {% else %}
+      <p class="text-center text-muted">No hay usuarios registrados.</p>
+    {% endif %}
+  </div>
+</div>
+
+<style>
+  .table th, .table td {
+    vertical-align: middle;
+  }
+  .badge { font-size: 0.8rem; }
+</style>
 
 {% endblock %}

@@ -40,6 +40,9 @@ urlpatterns = [
     path('admin_pedidos', main_views.admin_pedidos, name='admin_pedidos'),
     path('admin_reportes', main_views.admin_reportes, name='admin_reportes'),
     path('admin_usuarios', main_views.admin_usuarios, name='admin_usuarios'),
+    path('admin_usuarios/<int:usuario_id>/', main_views.detalle_usuario, name='detalle_usuario'),
+    path('admin_usuarios/<int:usuario_id>/eliminar/', main_views.eliminar_usuario, name='eliminar_usuario'),
+
     path('estadistica', main_views.estadistica, name='estadistica'),
     path('producto/<int:pk>/', main_views.producto_detalle, name='producto_detalle'),
     # Carrito (server-first)
