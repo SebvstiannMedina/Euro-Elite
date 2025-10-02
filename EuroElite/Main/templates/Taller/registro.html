@@ -54,6 +54,10 @@
         font-size: 0.9rem;
     }
 
+    .legal-consent-text {
+        color: #000;
+    }
+
     .auth-card .form-control {
         border-radius: 14px;
         border: 1px solid rgba(6, 43, 97, 0.15);
@@ -281,7 +285,12 @@
                                 {% endif %}
                             </div>
 
-                            <p class="form-agreement mb-4">Al crear una cuenta aceptas nuestros <a href="{% url 'terminos' %}" class="auth-link">T&eacute;rminos y condiciones</a> y la <a href="{% url 'privacidad' %}" class="auth-link">Pol&iacute;tica de privacidad</a>.</p>
+                            <div class="form-check mb-4">
+                                <input class="form-check-input" type="checkbox" name="accept_legal_terms" id="accept_legal_terms" required>
+                                <label class="form-check-label" for="accept_legal_terms">
+                                    <span class="legal-consent-text">Acepto los</span> <a href="{% url 'terminos' %}" class="auth-link">T&eacute;rminos y condiciones</a> <span class="legal-consent-text">y la</span> <a href="{% url 'privacidad' %}" class="auth-link">Pol&iacute;tica de privacidad</a>.
+                                </label>
+                            </div>
 
                             <div class="d-grid">
                                 <button type="submit" class="btn btn-primary btn-lg">
