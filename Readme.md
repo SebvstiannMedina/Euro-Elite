@@ -17,3 +17,10 @@ python manage.py createsuperuser
 Usuario: Patricio
 Email: mirandaservicespa@gmail.com
 Contraseña: MirandaService
+
+
+
+
+
+activar el entorno virtual:
+.\venv\Scripts\Activate.ps1
