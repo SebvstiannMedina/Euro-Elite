@@ -1,4 +1,4 @@
-﻿{% extends 'base.html' %}
+{% extends 'base.html' %}
 {% load static %}
 {% block title %}Registro - Euro Elite{% endblock %}
 
@@ -187,23 +187,39 @@
                             {% endfor %}
 
                             <div class="mb-4">
-                                <label for="{{ form.username.id_for_label }}" class="form-label">Nombre de usuario</label>
+                                <label for="first_name" class="form-label">Nombre</label>
                                 <input type="text"
-                                       name="{{ form.username.html_name }}"
-                                       id="{{ form.username.id_for_label }}"
-                                       value="{{ form.username.value|default_if_none:'' }}"
+                                       name="first_name"
+                                       id="first_name"
+                                       value="{{ request.POST.first_name|default_if_none:'' }}"
                                        class="form-control form-control-lg"
-                                       placeholder="tu_usuario"
-                                       autocomplete="username"
+                                       placeholder="Tu nombre"
+                                       autocomplete="given-name"
                                        required>
-                                {% if form.username.errors %}
-                                    <div class="invalid-feedback d-block">
-                                        {{ form.username.errors|striptags }}
-                                    </div>
-                                {% endif %}
-                                {% if form.username.help_text %}
-                                    <div class="form-text">{{ form.username.help_text|safe }}</div>
-                                {% endif %}
+                            </div>
+
+                            <div class="mb-4">
+                                <label for="last_name" class="form-label">Apellido</label>
+                                <input type="text"
+                                       name="last_name"
+                                       id="last_name"
+                                       value="{{ request.POST.last_name|default_if_none:'' }}"
+                                       class="form-control form-control-lg"
+                                       placeholder="Tu apellido"
+                                       autocomplete="family-name"
+                                       required>
+                            </div>
+
+                            <div class="mb-4">
+                                <label for="telefono" class="form-label">Tel&eacute;fono</label>
+                                <input type="tel"
+                                       name="telefono"
+                                       id="telefono"
+                                       value="{{ request.POST.telefono|default_if_none:'' }}"
+                                       class="form-control form-control-lg"
+                                       placeholder="Tu tel&eacute;fono"
+                                       autocomplete="tel"
+                                       required>
                             </div>
 
                             {% if form.email %}

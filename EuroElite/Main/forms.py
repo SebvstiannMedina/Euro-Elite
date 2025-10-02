@@ -46,7 +46,6 @@ class RegistroForm(UserCreationForm):
         model = Usuario
         fields = ['username', 'email', 'password1', 'password2']
 
-
 # ================= CITA =================
 class CitaForm(forms.ModelForm):
     bloque = forms.ModelChoiceField(
