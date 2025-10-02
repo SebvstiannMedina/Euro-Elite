@@ -15,6 +15,14 @@ from django.utils import timezone
 from django.views.decorators.csrf import ensure_csrf_cookie
 from django.views.decorators.http import require_POST
 from django.contrib.auth import login, logout
+from django.shortcuts import render, redirect, get_object_or_404
+from django.contrib.auth.decorators import login_required
+from django.contrib import messages
+from django.utils import timezone
+
+from .forms import CitaForm
+from .models import Cita
+
 # Local apps
 from .forms import CitaForm, DireccionForm, PerfilForm, RegistroForm, EmailLoginForm
 from .models import (Carrito,Categoria,ConfigSitio,Direccion,ItemCarrito,ItemPedido,Pago,Pedido,Producto,)
@@ -313,26 +321,49 @@ def logout_view(request):
     auth_logout(request)
     return redirect('home')
 
+
 #Vistas de agenda
 @login_required
-def agendar_cita(request):
+def agendar(request):
     if request.method == "POST":
-        form = CitaForm(request.POST, user=request.user)
+        form = CitaForm(request.POST)
         if form.is_valid():
             cita = form.save(commit=False)
             cita.usuario = request.user
+            cita.estado = Cita.Estado.RESERVADA
             cita.save()
+
+            # Marcar bloque como ocupado
+            cita.bloque.bloqueado = True
+            cita.bloque.save()
+
+            messages.success(request, "Tu cita fue reservada correctamente ✅")
             return redirect("mis_citas")
     else:
-        form = CitaForm(user=request.user)
+        form = CitaForm()
 
-
-    return render(request, "Taller/agendar.html", {"form": form})
+    return render(request, "taller/agendar.html", {"form": form})
 
 @login_required
 def mis_citas(request):
-    citas = request.user.citas.select_related('bloque').order_by('-bloque__inicio')
-    return render(request, 'Taller/mis_citas.html', {'citas': citas})
+    citas = Cita.objects.filter(usuario=request.user).select_related("servicio", "bloque").order_by("-bloque__inicio")
+    return render(request, "taller/mis_citas.html", {"citas": citas})
+
+
+@login_required
+def anular_cita(request, cita_id):
+    cita = get_object_or_404(Cita, id=cita_id, usuario=request.user)
+
+    if cita.estado == Cita.Estado.RESERVADA:
+        cita.estado = Cita.Estado.CANCELADA
+        cita.bloque.bloqueado = False
+        cita.bloque.save()
+        cita.save()
+        messages.success(request, "La cita fue cancelada correctamente ❌")
+    else:
+        messages.warning(request, "Solo puedes cancelar citas que estén reservadas.")
+
+    return redirect("mis_citas")
 
 
 def nueva_contrasena(request):

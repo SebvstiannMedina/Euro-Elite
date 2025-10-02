@@ -1,49 +1,51 @@
 {% extends 'base.html' %}
 {% load static %}
-{% block title %}Inicio - Euro Elite{% endblock %}
-{% block content %}
 {% load humanize %}
 {% load i18n %}
+{% load custom_filters %}
+
+{% block title %}Euro Elite{% endblock %}
+{% block content %}
 
 <!-- CAROUSEL -->
 <section class="hero-section" id="home">
-    <div class="carousel-container">
-        <div class="carousel-track" id="carousel-track">
-            <div class="carousel-slide">
-                <div class="slide-content">
-                    <h1 class="slide-title">Euro Elite</h1>
-                    <p class="slide-description">Los mejores repuestos europeos para tu automóvil</p>
-                    <a href="#offers" class="cta-button">Ver Ofertas</a>
-                </div>
-            </div>
-            <div class="carousel-slide">
-                <div class="slide-content">
-                    <h1 class="slide-title">Calidad Premium</h1>
-                    <p class="slide-description">Repuestos originales BMW, Audi y Mercedes-Benz</p>
-                    <a href="{% url 'productos' %}" class="cta-button">Ver Catálogo</a>
-                </div>
-            </div>
-            <div class="carousel-slide">
-                <div class="slide-content">
-                    <h1 class="slide-title">Servicio Experto</h1>
-                    <p class="slide-description">Asesoría profesional para tu vehículo</p>
-                    <a href="#services" class="cta-button">Conocer Más</a>
-                </div>
-            </div>
+  <div class="carousel-container">
+    <div class="carousel-track" id="carousel-track">
+      <div class="carousel-slide">
+        <div class="slide-content">
+          <h1 class="slide-title">Euro Elite</h1>
+          <p class="slide-description">Los mejores repuestos europeos para tu automóvil</p>
+          <a href="#offers" class="cta-button">Ver Ofertas</a>
         </div>
-        <div class="carousel-nav">
-            <div class="nav-dot active" onclick="goToSlide(0)"></div>
-            <div class="nav-dot" onclick="goToSlide(1)"></div>
-            <div class="nav-dot" onclick="goToSlide(2)"></div>
+      </div>
+      <div class="carousel-slide">
+        <div class="slide-content">
+          <h1 class="slide-title">Calidad Premium</h1>
+          <p class="slide-description">Repuestos originales BMW, Audi y Mercedes-Benz</p>
+          <a href="{% url 'productos' %}" class="cta-button">Ver Catálogo</a>
         </div>
+      </div>
+      <div class="carousel-slide">
+        <div class="slide-content">
+          <h1 class="slide-title">Servicio Experto</h1>
+          <p class="slide-description">Asesoría profesional para tu vehículo</p>
+          <a href="#services" class="cta-button">Conocer Más</a>
+        </div>
+      </div>
     </div>
+    <div class="carousel-nav">
+      <div class="nav-dot active" onclick="goToSlide(0)"></div>
+      <div class="nav-dot" onclick="goToSlide(1)"></div>
+      <div class="nav-dot" onclick="goToSlide(2)"></div>
+    </div>
+  </div>
 </section>
 
 <!-- CTA BANNER -->
 <section class="cta-banner">
-    <h2>¡Encuentra los Mejores Repuestos para tu Auto!</h2>
-    <p>Calidad europea garantizada</p>
-    <a href="{% url 'productos' %}" class="cta-button">Explorar Catálogo</a>
+  <h2>¡Encuentra los Mejores Repuestos para tu Auto!</h2>
+  <p>Calidad europea garantizada</p>
+  <a href="{% url 'productos' %}" class="cta-button">Explorar Catálogo</a>
 </section>
 
 
@@ -52,56 +54,58 @@
   <h2 class="section-title">Productos en Oferta</h2>
   <div class="offers-grid">
     {% for p in productos_oferta %}
-      <div class="product-card" data-category="{{ p.categoria.slug|default:'sin-categoria' }}">
-        {% if p.promocion_vigente %}
-          <div class="offer-badge">
-            {% if p.promocion_vigente.tipo == 'PORCENTAJE' %}
-              -{{ p.promocion_vigente.valor|floatformat:0|intcomma }}%
-            {% else %}
-              Oferta
-            {% endif %}
-          </div>
+    <div class="product-card" data-category="{{ p.categoria.slug|default:'sin-categoria' }}">
+      {% if p.promocion_vigente %}
+      <div class="offer-badge">
+        {% if p.promocion_vigente.tipo == 'PORCENTAJE' %}
+        -{{ p.promocion_vigente.valor|floatformat:0 }}%
+        {% else %}
+        Oferta
         {% endif %}
-        
-        <div class="offer-image">
-          {% if p.imagen %}
-            <img src="{{ p.imagen.url }}" alt="{{ p.nombre }}">
+      </div>
+      {% endif %}
+
+      <div class="offer-image">
+        {% if p.imagen %}
+        <img src="{{ p.imagen.url }}" alt="{{ p.nombre }}">
+        {% else %}
+        <img src="{% static 'img/no-image.png' %}" alt="Sin imagen">
+        {% endif %}
+      </div>
+
+      <div class="offer-content">
+        <h3 class="product-title">{{ p.nombre }}</h3>
+        <p class="product-description">{{ p.descripcion|truncatewords:20 }}</p>
+
+        <div class="offer-price">
+          {% if p.promocion_vigente %}
+          <span class="current-price">${{ p.precio_con_descuento|miles_chilenos }}</span>
+          <span class="original-price">${{ p.precio|miles_chilenos }}</span>
           {% else %}
-            <img src="{% static 'img/no-image.png' %}" alt="Sin imagen">
+          <span class="current-price">${{ p.precio|miles_chilenos }}</span>
           {% endif %}
         </div>
-        
-        <div class="offer-content">
-          <h3 class="product-title">{{ p.nombre }}</h3>
-          <p class="product-description">{{ p.descripcion|truncatewords:20 }}</p>
-          
-          <div class="offer-price">
-            {% if p.promocion_vigente %}
-              <span class="current-price">${{ p.precio_con_descuento|floatformat:"0"|intcomma }}</span>
-              <span class="original-price">${{ p.precio|floatformat:"0"|intcomma }}</span>
-            {% else %}
-              <span class="current-price">${{ p.precio|floatformat:"0"|intcomma}}</span>
-            {% endif %}
-          </div>
-          
-          <div class="product-actions">
-            <button class="add-to-cart btn btn-primary"
-                    onclick="addToCart('{{ p.nombre|escapejs }}',
-                                    '{{ p.precio_con_descuento|default:p.precio }}',
-                                    '{{ p.id }}',
-                                    '{{ p.stock }}')">
-              <i class="fas fa-shopping-cart"></i> Añadir al Carrito
-            </button>
-            <a href="{% url 'producto_detalle' p.id %}" class="btn btn-outline-primary">
-              Ver detalle
-            </a>
-          </div>
+
+        <div class="product-actions">
+          <button class="add-to-cart btn btn-primary" onclick="addToCart('{{ p.nombre|escapejs }}',
+                            '{% if p.promocion_vigente %}{{ p.precio_con_descuento }}{% else %}{{ p.precio }}{% endif %}',
+                            '{{ p.id }}',
+                            '{{ p.stock }}')">
+            <i class="fas fa-shopping-cart"></i> Añadir al Carrito
+          </button>
+          <button class="btn btn-outline-primary" onclick="showProductDetail('{{ p.nombre|escapejs }}',
+                                                '{{ p.descripcion|default_if_none:""|escapejs }}',
+                                                {{ p.precio }},
+                                                '{% if p.imagen %}{{ p.imagen.url }}{% else %}{% static "
+            img/no-image.png" %}{% endif %}')">Ver detalle
+          </button>
         </div>
       </div>
+    </div>
     {% empty %}
-      <div class="col-12">
-        <p class="text-center">No hay productos en oferta actualmente.</p>
-      </div>
+    <div class="col-12">
+      <p class="text-center">No hay productos en oferta actualmente.</p>
+    </div>
     {% endfor %}
   </div>
 </section>
@@ -111,41 +115,43 @@
   <h2 class="section-title">Productos Destacados</h2>
   <div class="offers-grid">
     {% for p in productos_normales %}
-      <div class="product-card" data-category="{{ p.categoria.slug|default:'sin-categoria' }}">
-        <div class="offer-image">
-          {% if p.imagen %}
-            <img src="{{ p.imagen.url }}" alt="{{ p.nombre }}">
-          {% else %}
-            <img src="{% static 'img/no-image.png' %}" alt="Sin imagen">
-          {% endif %}
+    <div class="product-card" data-category="{{ p.categoria.slug|default:'sin-categoria' }}">
+      <div class="offer-image">
+        {% if p.imagen %}
+        <img src="{{ p.imagen.url }}" alt="{{ p.nombre }}">
+        {% else %}
+        <img src="{% static 'img/no-image.png' %}" alt="Sin imagen">
+        {% endif %}
+      </div>
+
+      <div class="offer-content">
+        <h3 class="product-title">{{ p.nombre }}</h3>
+        <p class="product-description">{{ p.descripcion|truncatewords:20 }}</p>
+
+        <div class="offer-price">
+          <span class="current-price">${{ p.precio|miles_chilenos }}</span>
         </div>
-        
-        <div class="offer-content">
-          <h3 class="product-title">{{ p.nombre }}</h3>
-          <p class="product-description">{{ p.descripcion|truncatewords:20 }}</p>
-          
-          <div class="offer-price">
-            <span class="current-price">${{ p.precio|floatformat:"0"|intcomma }}</span>
-          </div>
-          
-          <div class="product-actions">
-            <button class="btn btn-primary"
-                    onclick="addToCart('{{ p.nombre|escapejs }}',
+
+        <div class="product-actions">
+          <button class="btn btn-primary" onclick="addToCart('{{ p.nombre|escapejs }}',
                                     '{{ p.precio }}',
                                     '{{ p.id }}',
                                     '{{ p.stock }}')">
-              <i class="fas fa-shopping-cart"></i> Añadir al Carrito
-            </button>
-            <button class="btn btn-outline-primary"
-                    onclick="showProductDetail('{{ p.nombre|escapejs }}','{{ p.descripcion|default_if_none:""|escapejs }}',{{ p.precio|floatformat:"0" }},'{% if p.imagen %}{{ p.imagen.url }}{% else %}{% static "img/no-image.png" %}{% endif %}')">Ver detalle
-            </button>
-          </div>
+            <i class="fas fa-shopping-cart"></i> Añadir al Carrito
+          </button>
+          <button class="btn btn-outline-primary" onclick="showProductDetail('{{ p.nombre|escapejs }}',
+                                                '{{ p.descripcion|default_if_none:""|escapejs }}',
+                                                {{ p.precio }},
+                                                '{% if p.imagen %}{{ p.imagen.url }}{% else %}{% static "
+            img/no-image.png" %}{% endif %}')">Ver detalle
+          </button>
         </div>
       </div>
+    </div>
     {% empty %}
-      <div class="col-12">
-        <p class="text-center">No hay productos destacados en este momento.</p>
-      </div>
+    <div class="col-12">
+      <p class="text-center">No hay productos destacados en este momento.</p>
+    </div>
     {% endfor %}
   </div>
 </section>
@@ -154,7 +160,7 @@
 
 <!--El const carrito URL es para que la página de carrito cargue la URL correcta-->
 <script>
-    const carritoURL = "{% url 'carrito_compras' %}";
+  const carritoURL = "{% url 'carrito_compras' %}";
 </script>
 
 <script src="{% static 'js/main.js' %}?v=2"></script>

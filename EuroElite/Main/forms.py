@@ -67,26 +67,29 @@ class CitaForm(forms.ModelForm):
         fields = ['servicio', 'bloque', 'a_domicilio', 'direccion_domicilio']
         widgets = {
             'a_domicilio': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
-            'direccion_domicilio': forms.Select(attrs={'class': 'form-control'}),
+            'direccion_domicilio': forms.TextInput(attrs={
+                'class': 'form-control',
+                'placeholder': 'Ej: Av. Libertador 1234, Santiago'
+            }),
         }
-
-    def __init__(self, *args, **kwargs):
-        user = kwargs.pop('user', None)  # recibimos el usuario desde la vista
-        super().__init__(*args, **kwargs)
-
-        # si hay usuario autenticado, solo sus direcciones
-        if user:
-            self.fields['direccion_domicilio'].queryset = Direccion.objects.filter(usuario=user)
-
-        # opcional: placeholder bonito
-        self.fields['direccion_domicilio'].empty_label = "Selecciona una dirección o agrega una nueva en tu perfil"
 
     def clean(self):
         cleaned_data = super().clean()
         bloque = cleaned_data.get("bloque")
 
+  
         if bloque and bloque.inicio <= timezone.now():
             raise forms.ValidationError("No puedes agendar en un bloque de tiempo pasado.")
+
+
+        if bloque and hasattr(bloque, "cita"):
+            raise forms.ValidationError("Este bloque ya está reservado.")
+
+
+        a_domicilio = cleaned_data.get("a_domicilio")
+        direccion = cleaned_data.get("direccion_domicilio")
+        if a_domicilio and not direccion:
+            self.add_error("direccion_domicilio", "Debes ingresar una dirección para el servicio a domicilio.")
 
         return cleaned_data
 

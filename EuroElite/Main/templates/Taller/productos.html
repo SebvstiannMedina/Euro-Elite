@@ -1,270 +1,99 @@
+{% extends 'base.html' %}
 {% load static %}
 {% load humanize %}
 {% load i18n %}
-<!DOCTYPE html>
-<html lang="es">
+{% load custom_filters %}
 
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Productos / Euro Elite</title>
-    <!-- Bootstrap CSS -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet">
-    <!-- CSS propio -->
-    <link rel="stylesheet" href="{% static 'css/style.css' %}?v=2">
-    <!-- Slick CSS -->
-    <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/slick-carousel@1.8.1/slick/slick.css" />
-    <link rel="stylesheet" type="text/css"
-        href="https://cdn.jsdelivr.net/npm/slick-carousel@1.8.1/slick/slick-theme.css" />
-    <!-- Font Awesome -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <!-- Google Fonts -->
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap"
-        rel="stylesheet">
-    <link rel="icon" href="{% static 'img/LogoApp.png' %}" type="image/x-icon">
-</head>
+{% block title %}Productos - Euro Elite{% endblock %}
 
-<body data-auth="{% if user.is_authenticated %}true{% else %}false{% endif %}">
+{% block content %}
 
-    <!-- NAVBAR -->
-    <nav class="navbar">
-        <div class="navbar-container">
-            <!-- Logo -->
-            <div class="navbar-logo">
-                <img src="{% static 'img/LogoApp.png' %}" alt="Logo" class="navbar-logo">
-            </div>
+<!-- FILTROS -->
+<section class="py-4 bg-light">
+  <div class="container d-flex flex-wrap justify-content-center gap-3">
+    <input type="text" id="searchInput" placeholder="Buscar producto..." 
+           class="form-control w-auto" onkeyup="searchProducts()">
 
-            <!-- Botón móvil -->
-            <button class="navbar-toggle" onclick="toggleMobileMenu()" aria-label="Abrir menú">
-                <i class="fas fa-bars"></i>
+    <select id="categoryFilter" class="form-select w-auto" onchange="filterProducts()">
+      <option value="all">Todas</option>
+      {% for cat in categorias %}
+        <option value="{{ cat.slug }}">{{ cat.nombre }}</option>
+      {% endfor %}
+    </select>
+  </div>
+</section>
+
+<!-- PRODUCTOS -->
+<section class="featured-offers" id="offers" style="margin-bottom: 8rem;">
+  <h2 class="section-title">Productos en Venta</h2>
+  <div class="offers-grid">
+    {% for p in productos %}
+      <div class="product-card" data-category="{{ p.categoria.slug|default:'sin-categoria' }}">
+        
+        {% if p.promocion_vigente %}
+          <div class="offer-badge">
+            {% if p.promocion_vigente.tipo == 'PORCENTAJE' %}
+              -{{ p.promocion_vigente.valor|floatformat:0 }}%
+            {% else %}
+              Oferta
+            {% endif %}
+          </div>
+        {% endif %}
+
+        <div class="offer-image">
+          {% if p.imagen %}
+            <img src="{{ p.imagen.url }}" alt="{{ p.nombre }}">
+          {% else %}
+            <img src="{% static 'img/no-image.png' %}" alt="Sin imagen">
+          {% endif %}
+        </div>
+
+        <div class="offer-content">
+          <h3 class="product-title">{{ p.nombre }}</h3>
+          <p class="product-description">{{ p.descripcion|truncatewords:20 }}</p>
+
+          <div class="offer-price">
+            {% if p.promocion_vigente %}
+              <span class="current-price">${{ p.precio_con_descuento|miles_chilenos }}</span>
+              <span class="original-price">${{ p.precio|miles_chilenos }}</span>
+            {% else %}
+              <span class="current-price">${{ p.precio|miles_chilenos }}</span>
+            {% endif %}
+          </div>
+
+          <div class="product-actions">
+            <!-- Botón carrito -->
+            <button class="btn btn-primary"
+                    onclick="addToCart('{{ p.nombre|escapejs }}',
+                                        '{{ p.precio_con_descuento|default:p.precio }}',
+                                        '{{ p.id }}',
+                                        '{{ p.stock }}')">
+              <i class="fas fa-shopping-cart"></i> Añadir al Carrito
             </button>
 
-            <!-- Menú principal -->
-            <ul class="navbar-menu" id="navbar-menu" style="margin-left: 10rem;margin-right: 10rem;">
-                <li><a href="{% url 'home' %}">INICIO</a></li>
-                <li><a href="{% url 'productos' %}">PRODUCTOS</a></li>
-                <li><a href="{% url 'agendar' %}">SERVICIOS</a></li>
-                <li><a href="{% url 'nosotros' %}">NOSOTROS</a></li>
-                <li><a href="{% url 'equipo' %}">EQUIPO</a></li>
-            </ul>
-
-            <!-- Acciones usuario y carrito -->
-            <div class="navbar-actions">
-                <!-- Carrito -->
-                <div class="cart-icon" onclick="toggleCart()" role="button" aria-label="Ver carrito">
-                    <i class="fas fa-shopping-cart"></i>
-                    <span class="cart-count" id="cart-count">0</span>
-                </div>
-
-                <!-- Usuario -->
-                <div class="user-icon" onclick="toggleUserMenu()" role="button" aria-haspopup="true"
-                    aria-expanded="false">
-                    <i class="fas fa-user"></i>
-                    <div class="user-dropdown" id="user-dropdown">
-                        {% if user.is_authenticated %}
-                        <span>Hola, {{ user.username }}</span>
-                        <a href="{% url 'perfil' %}">Mi Perfil</a>
-                        <form action="{% url 'logout' %}" method="post" style="display:inline;">
-                            {% csrf_token %}
-                            <button type="submit" class="dropdown-item">Cerrar Sesión</button>
-                        </form>
-                        {% else %}
-                        <a href="{% url 'login' %}">Iniciar Sesión</a>
-                        <a href="{% url 'registro' %}">Registrarse</a>
-                        {% endif %}
-                    </div>
-                </div>
-            </div>
+            <!-- Botón detalle -->
+            <button class="btn btn-outline-primary"
+                    onclick="showProductDetail('{{ p.nombre|escapejs }}',
+                                                '{{ p.descripcion|default_if_none:""|escapejs }}',
+                                                {{ p.precio }},
+                                                '{% if p.imagen %}{{ p.imagen.url }}{% else %}{% static "img/no-image.png" %}{% endif %}')">
+              Ver detalle
+            </button>
+          </div>
         </div>
-    </nav>
+      </div>
+    {% empty %}
+      <p class="text-center">No hay productos disponibles.</p>
+    {% endfor %}
+  </div>
+</section>
 
-    <br><br><br><br><br><br><br><br><br><br>
+{% endblock %}
 
-    <!-- Filtros -->
-    <section class="py-4 bg-light">
-        <div class="container d-flex flex-wrap justify-content-center gap-3">
-            <input type="text" id="searchInput" placeholder="Buscar producto..." class="form-control w-auto"
-                onkeyup="searchProducts()">
+<!--El const carrito URL es para que la página de carrito cargue la URL correcta-->
+<script>
+  const carritoURL = "{% url 'carrito_compras' %}";
+</script>
 
-            <!-- 🔹 genera opciones dinámicas con slug -->
-            <select id="categoryFilter" class="form-select w-auto" onchange="filterProducts()">
-                <option value="all">Todas</option>
-                {% for cat in categorias %}
-                <option value="{{ cat.slug }}">{{ cat.nombre }}</option>
-                {% endfor %}
-            </select>
-        </div>
-    </section>
-
-    <!-- Productos -->
-    {% block content %}
-    <section class="featured-offers" id="offers">
-        <h2 class="section-title">Productos en Venta</h2>
-        <div class="offers-grid">
-            {% for p in productos %}
-            <div class="product-card" data-category="{{ p.categoria.slug|default:'sin-categoria' }}">
-                {% if p.promocion_vigente %}
-                <div class="offer-badge">
-                    {% if p.promocion_vigente.tipo == 'PORCENTAJE' %}
-                    -{{ p.promocion_vigente.valor|floatformat:0 }}%
-                    {% else %}
-                    Oferta
-                    {% endif %}
-                </div>
-                {% endif %}
-
-                <div class="offer-image">
-                    {% if p.imagen %}
-                    <img src="{{ p.imagen.url }}" alt="{{ p.nombre }}">
-                    {% else %}
-                    <img src="{% static 'img/no-image.png' %}" alt="Sin imagen">
-                    {% endif %}
-                </div>
-
-                <div class="offer-content">
-                    <h3 class="product-title">{{ p.nombre }}</h3>
-                    <p class="product-description">{{ p.descripcion|truncatewords:20 }}</p>
-
-                    <div class="offer-price">
-                        {% if p.promocion_vigente %}
-                        <span class="current-price">${{ p.precio_con_descuento|floatformat:"0"|intcomma }}</span>
-                        <span class="original-price">${{ p.precio|floatformat:"0"|intcomma }}</span>
-                        {% else %}
-                        <span class="current-price">${{ p.precio|floatformat:"0"|intcomma }}</span>
-                        {% endif %}
-                    </div>
-
-                    <div class="d-flex gap-2 mt-2">
-                        <!-- Botón carrito -->
-                        <button class="add-to-cart" onclick="addToCart('{{ p.nombre }}',
-                                            '{{ p.precio_con_descuento|default:p.precio }}',
-                                            '{{ p.id }}',
-                                            '{{ p.stock }}')">
-                            <i class="fas fa-shopping-cart"></i> Añadir al Carrito
-                        </button>
-
-                        <!-- Botón detalle -->
-                        <button class="btn btn-outline-primary btn-sm" data-bs-toggle="modal"
-                            data-bs-target="#detalleModal" data-nombre="{{ p.nombre }}"
-                            data-descripcion="{{ p.descripcion }}" data-precio="{{ p.precio|floatformat:'0'|intcomma }}"
-                            data-stock="{{ p.stock }}">
-                            Ver detalle
-                        </button>
-                    </div>
-                </div>
-            </div>
-            {% empty %}
-            <p class="text-center">No hay productos disponibles.</p>
-            {% endfor %}
-        </div>
-    </section>
-    {% endblock %}
-
-    <!-- Modal detalle producto -->
-    <div class="modal fade" id="detalleModal" tabindex="-1" aria-hidden="true">
-        <div class="modal-dialog modal-lg modal-dialog-centered">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="detalleTitulo"></h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
-                </div>
-                <div class="modal-body">
-                    <p id="detalleDescripcion"></p>
-                    <p><strong>Precio:</strong> <span id="detallePrecio"></span></p>
-                    <p><strong>Stock disponible:</strong> <span id="detalleStock"></span></p>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- FOOTER -->
-    <footer class="footer" style="margin-bottom: 0rem;">
-        <div class="footer-container">
-            <div class="footer-section">
-                <h3>Euro Elite</h3>
-                <p>Tu tienda especializada en repuestos europeos de alta calidad. Más de 10 años de experiencia en el
-                    mercado automotriz.</p>
-                <div class="social-icons">
-                    <a href="#"><i class="fab fa-facebook-f"></i></a>
-                    <a href="#"><i class="fab fa-instagram"></i></a>
-                </div>
-            </div>
-            <div class="footer-section">
-                <h3>Productos</h3>
-                <ul>
-                    <li><a href="#">Repuestos BMW</a></li>
-                    <li><a href="#">Repuestos Audi</a></li>
-                    <li><a href="#">Repuestos Mercedes-Benz</a></li>
-                    <li><a href="#">Accesorios</a></li>
-                    <li><a href="#">Herramientas</a></li>
-                </ul>
-            </div>
-            <div class="footer-section">
-                <h3>Servicios</h3>
-                <ul>
-                    <li><a href="{% url 'agendar' %}">Instalación</a></li>
-                    <li><a href="{% url 'agendar' %}">Mantención</a></li>
-                    <li><a href="{% url 'agendar' %}">Diagnóstico</a></li>
-                    <li><a href="{% url 'agendar' %}">Garantía</a></li>
-                </ul>
-            </div>
-            <div class="footer-section">
-                <h3>Contacto</h3>
-                <ul>
-                    <li><i class="fas fa-map-marker-alt"></i> Cooperativa 1144, Recoleta, Santiago</li>
-                    <li><i class="fas fa-phone"></i> +56 9 1234 5678</li>
-                    <li><i class="fas fa-envelope"></i> info@euroelite.cl</li>
-                    <li><i class="fas fa-clock"></i> Lun-Vie: 9:00-18:00</li>
-                </ul>
-            </div>
-            <div class="footer-section">
-                <h3>Legal</h3>
-                <ul>
-                    <li><a href="{% url 'terminos' %}">Términos y Condiciones</a></li>
-                    <li><a href="{% url 'privacidad' %}">Política de Privacidad</a></li>
-                    <li><a href="{% url 'privacidad' %}">Política de Devoluciones</a></li>
-                </ul>
-            </div>
-        </div>
-        <div class="footer-bottom" style="text-align: center;">
-            <p>&copy; 2025 Euro Elite. Todos los derechos reservados. | Diseñado con ❤️ para los amantes del automóvil
-            </p>
-        </div>
-    </footer>
-
-    <!--El const carrito URL es para que la página de carrito cargue la URL correcta-->
-    <script>
-        const carritoURL = "{% url 'carrito_compras' %}";
-    </script>
-
-    <!-- Bootstrap JS -->
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"></script>
-
-    <!-- Script modal -->
-    <script>
-        document.addEventListener('DOMContentLoaded', function () {
-            const detalleModal = document.getElementById('detalleModal');
-            detalleModal.addEventListener('show.bs.modal', function (event) {
-                const button = event.relatedTarget;
-                const nombre = button.getAttribute('data-nombre');
-                const descripcion = button.getAttribute('data-descripcion');
-                const precio = button.getAttribute('data-precio');
-                const stock = button.getAttribute('data-stock');
-
-                detalleModal.querySelector('#detalleTitulo').textContent = nombre;
-                detalleModal.querySelector('#detalleDescripcion').textContent = descripcion || "Sin descripción disponible.";
-                detalleModal.querySelector('#detallePrecio').textContent = "$" + precio;
-                detalleModal.querySelector('#detalleStock').textContent = stock;
-            });
-        });
-    </script>
-
-    <!-- Scripts propios -->
-    <script src="{% static 'js/filtro.js' %}"></script>
-    <script src="{% static 'js/main.js' %}?v=2"></script>
-</body>
-
-</html>
+<script src="{% static 'js/filtro.js' %}"></script>
+<script src="{% static 'js/main.js' %}?v=2"></script>
