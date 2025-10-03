@@ -3,7 +3,7 @@ from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth import get_user_model, authenticate
 from django.utils import timezone
 
-from .models import Cita, BloqueHorario, Servicio, Producto, Direccion
+from .models import Cita, BloqueHorario, Servicio, Producto, Direccion, Promocion
 
 Usuario = get_user_model()
 
@@ -96,17 +96,40 @@ class CitaForm(forms.ModelForm):
 
 # ================= PRODUCTO =================
 class ProductoForm(forms.ModelForm):
+    promocion = forms.ModelChoiceField(
+        queryset=Promocion.objects.filter(activa=True),
+        required=False,
+        label="Promoción",
+        help_text="Selecciona una promoción o deja vacío si no aplica."
+    )
+
     class Meta:
         model = Producto
         fields = [
             'nombre', 'sku', 'marca', 'descripcion',
             'precio', 'costo', 'stock', 'stock_minimo',
-            'activo', 'categoria', 'imagen',
-            
+            'activo', 'categoria', 'imagen'
         ]
         widgets = {
             'descripcion': forms.Textarea(attrs={'rows': 3}),
         }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # inicializa con la primera promo asignada si existe
+        if self.instance.pk:
+            promo = self.instance.promociones.first()
+            self.fields['promocion'].initial = promo
+
+    def save(self, commit=True):
+        producto = super().save(commit=commit)
+        if commit:
+            promo = self.cleaned_data.get('promocion')
+            if promo:
+                producto.promociones.set([promo])  # asignar la promo elegida
+            else:
+                producto.promociones.clear()  # limpiar si no se seleccionó nada
+        return producto
 
 
 # ================= DIRECCION =================
