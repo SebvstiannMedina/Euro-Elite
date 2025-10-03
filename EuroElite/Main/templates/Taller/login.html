@@ -175,7 +175,7 @@
                             </div>
                         {% endif %}
 
-                        <form method="post" class="needs-validation" novalidate>
+                        <form method="post" id="loginForm" novalidate>
                             {% csrf_token %}
                             <div class="mb-4">
                                 <label for="{{ form.email.id_for_label }}" class="form-label">Correo electr&#243;nico</label>
@@ -187,6 +187,7 @@
                                        placeholder="tu@correo.cl"
                                        autocomplete="email"
                                        required>
+                                <div class="text-danger small d-none" data-feedback="email"></div>
                                 {% if form.email.errors %}
                                     <div class="invalid-feedback d-block">
                                         {{ form.email.errors|striptags }}
@@ -206,6 +207,7 @@
                                        placeholder="********"
                                        autocomplete="current-password"
                                        required>
+                                <div class="text-danger small d-none" data-feedback="password"></div>
                                 {% if form.password.errors %}
                                     <div class="invalid-feedback d-block">
                                         {{ form.password.errors|striptags }}
@@ -219,6 +221,7 @@
                             {% if form.remember_me %}
                                 <div class="form-check mb-4">
                                     {{ form.remember_me }}
+                                    <div class="text-danger small d-none" data-feedback="remember_me"></div>
                                     <label class="form-check-label" for="{{ form.remember_me.id_for_label }}">Recordarme</label>
                                 </div>
                             {% endif %}
@@ -256,6 +259,149 @@
             </div>
         </div>
     </div>
+<script>
+  // Inline validation for login form
+  document.addEventListener('DOMContentLoaded', function () {
+    const form = document.getElementById('loginForm');
+    if (!form) {
+      return;
+    }
+
+    const showInlineError = (field, message) => {
+      const { input, feedback } = field;
+      if (!feedback) {
+        return !message;
+      }
+      if (message) {
+        feedback.textContent = message;
+        feedback.classList.remove('d-none');
+        input.classList.add('is-invalid');
+        input.setAttribute('aria-invalid', 'true');
+        return false;
+      }
+      feedback.textContent = '';
+      feedback.classList.add('d-none');
+      input.classList.remove('is-invalid');
+      input.removeAttribute('aria-invalid');
+      return true;
+    };
+
+    const getField = (name) => {
+      const input = form.querySelector(`[name="${name}"]`);
+      const feedback = form.querySelector(`[data-feedback="${name}"]`);
+      if (!input) {
+        return null;
+      }
+      return { name, input, feedback };
+    };
+
+    const normalizeEmail = (value) => value.trim().replace(/\s+/g, '').toLowerCase();
+
+    const fields = [
+      {
+        ...getField('email'),
+        prepare(field) {
+          field.input.setAttribute('inputmode', 'email');
+          field.input.setAttribute('spellcheck', 'false');
+          field.input.setAttribute('autocorrect', 'off');
+          field.input.setAttribute('autocapitalize', 'none');
+          if (!field.input.getAttribute('autocomplete')) {
+            field.input.setAttribute('autocomplete', 'email');
+          }
+        },
+        onInput(field) {
+          const cleaned = field.input.value.replace(/\s+/g, '');
+          if (field.input.value !== cleaned) {
+            field.input.value = cleaned;
+          }
+          showInlineError(field, '');
+        },
+        onBlur(field) {
+          field.input.value = normalizeEmail(field.input.value);
+        },
+        validate(field) {
+          const value = normalizeEmail(field.input.value);
+          field.input.value = value;
+          if (!value) {
+            return 'Ingresa tu correo.';
+          }
+          if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(value)) {
+            return 'Ingresa un correo válido.';
+          }
+          return '';
+        }
+      },
+      {
+        ...getField('password'),
+        onInput(field) {
+          showInlineError(field, '');
+        },
+        validate(field) {
+          const value = field.input.value || '';
+          if (!value) {
+            return 'Ingresa tu contraseña.';
+          }
+          if (value.length < 6) {
+            return 'Debe tener al menos 6 caracteres.';
+          }
+          return '';
+        }
+      },
+      getField('remember_me') && {
+        ...getField('remember_me'),
+        onChange(field) {
+          showInlineError(field, '');
+        },
+        validate(field) {
+          // optional checkbox, so always valid
+          return '';
+        }
+      }
+    ].filter(Boolean);
+
+    const validateField = (field) => {
+      if (!field || !field.input || field.input.disabled) {
+        return true;
+      }
+      const message = field.validate ? field.validate(field) : '';
+      return showInlineError(field, message);
+    };
+
+    fields.forEach((field) => {
+      if (!field.input) {
+        return;
+      }
+      field.prepare?.(field);
+      if (field.input.type === 'checkbox') {
+        field.input.addEventListener('change', () => field.onChange?.(field));
+      } else {
+        field.input.addEventListener('input', () => field.onInput?.(field));
+        field.input.addEventListener('blur', () => {
+          field.onBlur?.(field);
+          validateField(field);
+        });
+      }
+    });
+
+    form.addEventListener('submit', (event) => {
+      let isValid = true;
+      fields.forEach((field) => {
+        const ok = validateField(field);
+        if (!ok) {
+          isValid = false;
+        }
+      });
+      if (!isValid) {
+        event.preventDefault();
+        event.stopPropagation();
+        const firstInvalid = fields.find((field) => field.input && field.input.classList.contains('is-invalid'));
+        if (firstInvalid?.input) {
+          firstInvalid.input.focus({ preventScroll: true });
+        }
+      }
+    });
+  });
+</script>
 </section>
 {% endblock %}
 
