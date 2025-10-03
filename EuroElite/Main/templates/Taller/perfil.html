@@ -35,13 +35,14 @@
     <section class="col-12 col-md-9">
       <h3>Mis datos</h3>
       <div class="card shadow-sm p-3">
-        <form method="post">
+        <form method="post" id="perfilForm" novalidate>
           {% csrf_token %}
           <div class="row gy-3">
             <!-- Datos personales -->
             <div class="col-12 col-md-6">
               <label for="{{ form.first_name.id_for_label }}" class="form-label fw-semibold text-muted">Nombre</label>
               {{ form.first_name }}
+              <div class="text-danger small d-none" data-feedback="first_name"></div>
               {% if form.first_name.errors %}
                 <div class="text-danger small">{{ form.first_name.errors }}</div>
               {% endif %}
@@ -49,6 +50,7 @@
             <div class="col-12 col-md-6">
               <label for="{{ form.last_name.id_for_label }}" class="form-label fw-semibold text-muted">Apellido</label>
               {{ form.last_name }}
+              <div class="text-danger small d-none" data-feedback="last_name"></div>
               {% if form.last_name.errors %}
                 <div class="text-danger small">{{ form.last_name.errors }}</div>
               {% endif %}
@@ -56,6 +58,7 @@
             <div class="col-12 col-md-6">
               <label for="{{ form.email.id_for_label }}" class="form-label fw-semibold text-muted">Correo electrónico</label>
               {{ form.email }}
+              <div class="text-danger small d-none" data-feedback="email"></div>
               {% if form.email.errors %}
                 <div class="text-danger small">{{ form.email.errors }}</div>
               {% endif %}
@@ -63,6 +66,8 @@
             <div class="col-12 col-md-6">
               <label for="{{ form.rut.id_for_label }}" class="form-label fw-semibold text-muted">RUT</label>
               {{ form.rut }}
+              <div id="rut-feedback" class="text-danger small d-none" data-feedback="rut"></div>
+
               {% if form.rut.errors %}
                 <div class="text-danger small">{{ form.rut.errors }}</div>
               {% endif %}
@@ -70,6 +75,7 @@
             <div class="col-12 col-md-6">
               <label for="{{ form.telefono.id_for_label }}" class="form-label fw-semibold text-muted">Teléfono</label>
               {{ form.telefono }}
+              <div class="text-danger small d-none" data-feedback="telefono"></div>
               {% if form.telefono.errors %}
                 <div class="text-danger small">{{ form.telefono.errors }}</div>
               {% endif %}
@@ -133,6 +139,292 @@
   </div>
 </div>
 
+<script>
+  // Inline validation for profile form
+  document.addEventListener('DOMContentLoaded', function () {
+    const form = document.getElementById('perfilForm');
+    if (!form) {
+      return;
+    }
+
+    const showInlineError = (field, message) => {
+      const { input, feedback } = field;
+      if (!feedback) {
+        return !message;
+      }
+      if (message) {
+        feedback.textContent = message;
+        feedback.classList.remove('d-none');
+        input.classList.add('is-invalid');
+        input.setAttribute('aria-invalid', 'true');
+        return false;
+      }
+      feedback.textContent = '';
+      feedback.classList.add('d-none');
+      input.classList.remove('is-invalid');
+      input.removeAttribute('aria-invalid');
+      return true;
+    };
+
+    const getField = (name) => {
+      const input = form.querySelector(`[name="${name}"]`);
+      const feedback = form.querySelector(`[data-feedback="${name}"]`);
+      if (!input) {
+        return null;
+      }
+      return { name, input, feedback };
+    };
+
+    const cleanRut = (value) => value.replace(/[^0-9kK]/g, '').toUpperCase();
+
+    const formatRut = (value) => {
+      const cleaned = cleanRut(value);
+      if (cleaned.length <= 1) {
+        return cleaned;
+      }
+      const body = cleaned.slice(0, -1);
+      const dv = cleaned.slice(-1);
+      const reversed = body.split('').reverse();
+      const chunks = [];
+      for (let i = 0; i < reversed.length; i += 3) {
+        chunks.push(reversed.slice(i, i + 3).reverse().join(''));
+      }
+      return chunks.reverse().join('.') + '-' + dv;
+    };
+
+    const computeDV = (body) => {
+      let sum = 0;
+      let multiplier = 2;
+      for (let i = body.length - 1; i >= 0; i -= 1) {
+        sum += parseInt(body[i], 10) * multiplier;
+        multiplier = multiplier === 7 ? 2 : multiplier + 1;
+      }
+      const remainder = 11 - (sum % 11);
+      if (remainder === 11) {
+        return '0';
+      }
+      if (remainder === 10) {
+        return 'K';
+      }
+      return String(remainder);
+    };
+
+    const isValidRut = (value) => {
+      const cleaned = cleanRut(value);
+      if (cleaned.length < 2) {
+        return false;
+      }
+      const body = cleaned.slice(0, -1);
+      const dv = cleaned.slice(-1);
+      if (!/^[0-9]+$/.test(body)) {
+        return false;
+      }
+      return computeDV(body) === dv;
+    };
+
+    const normalizeEmail = (value) => value.trim().replace(/\s+/g, '').toLowerCase();
+
+    const normalizePhone = (value) => {
+      const trimmed = (value || '').replace(/\s+/g, '');
+      if (!trimmed) {
+        return '';
+      }
+      let cleaned = trimmed.replace(/[^0-9+]/g, '');
+      if (cleaned.startsWith('+')) {
+        cleaned = '+' + cleaned.slice(1).replace(/[^0-9]/g, '');
+      } else {
+        cleaned = cleaned.replace(/[^0-9]/g, '');
+      }
+      const limit = cleaned.startsWith('+') ? 16 : 15;
+      return cleaned.slice(0, limit);
+    };
+
+    const fields = [
+      {
+        ...getField('first_name'),
+        validate(field) {
+          const value = field.input.value.trim();
+          if (field.input.required && !value) {
+            return 'Ingresa tu nombre.';
+          }
+          return '';
+        }
+      },
+      {
+        ...getField('last_name'),
+        validate(field) {
+          const value = field.input.value.trim();
+          if (field.input.required && !value) {
+            return 'Ingresa tu apellido.';
+          }
+          return '';
+        }
+      },
+      {
+        ...getField('email'),
+        prepare(field) {
+          field.input.setAttribute('inputmode', 'email');
+          field.input.setAttribute('spellcheck', 'false');
+          field.input.setAttribute('autocorrect', 'off');
+          field.input.setAttribute('autocapitalize', 'none');
+          if (!field.input.getAttribute('autocomplete')) {
+            field.input.setAttribute('autocomplete', 'email');
+          }
+        },
+        onFocus(field) {
+          showInlineError(field, '');
+        },
+        onInput(field) {
+          const cleaned = field.input.value.replace(/\s+/g, '');
+          if (field.input.value !== cleaned) {
+            field.input.value = cleaned;
+          }
+          showInlineError(field, '');
+        },
+        onBlur(field) {
+          const normalized = normalizeEmail(field.input.value);
+          field.input.value = normalized;
+        },
+        validate(field) {
+          const value = normalizeEmail(field.input.value);
+          field.input.value = value;
+          if (field.input.required && !value) {
+            return 'Ingresa tu correo.';
+          }
+          if (value && !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(value)) {
+            return 'Ingresa un correo valido.';
+          }
+          return '';
+        }
+      },
+      {
+        ...getField('telefono'),
+        prepare(field) {
+          field.input.setAttribute('inputmode', 'tel');
+          field.input.setAttribute('maxlength', '16');
+          field.input.setAttribute('pattern', '\+?[0-9]{8,15}');
+          field.input.setAttribute('placeholder', '+56912345678');
+          if (!field.input.getAttribute('autocomplete')) {
+            field.input.setAttribute('autocomplete', 'tel');
+          }
+        },
+        onFocus(field) {
+          showInlineError(field, '');
+        },
+        onInput(field) {
+          const cleaned = normalizePhone(field.input.value);
+          if (field.input.value !== cleaned) {
+            field.input.value = cleaned;
+          }
+          showInlineError(field, '');
+        },
+        onBlur(field) {
+          field.input.value = normalizePhone(field.input.value);
+        },
+        validate(field) {
+          const value = normalizePhone(field.input.value);
+          field.input.value = value;
+          if (field.input.required && !value) {
+            return 'Ingresa tu teléfono.';
+          }
+          if (value && !/^\+?[0-9]{8,15}$/.test(value)) {
+            return 'Ingresa un teléfono válido.';
+          }
+          return '';
+        }
+      },
+      {
+        ...getField('rut'),
+        prepare(field) {
+          field.input.setAttribute('inputmode', 'text');
+          field.input.setAttribute('maxlength', '12');
+          field.input.setAttribute('pattern', '\d{1,2}\.\d{3}\.\d{3}-[\dkK]');
+          field.input.setAttribute('placeholder', '12.345.678-5');
+          field.input.setAttribute('autocomplete', 'off');
+        },
+        onFocus(field) {
+          const cleaned = cleanRut(field.input.value).slice(0, 9);
+          field.input.value = cleaned;
+          showInlineError(field, '');
+        },
+        onInput(field) {
+          const cleaned = cleanRut(field.input.value).slice(0, 9);
+          if (field.input.value !== cleaned) {
+            field.input.value = cleaned;
+          }
+          showInlineError(field, '');
+        },
+        onBlur(field) {
+          const cleaned = cleanRut(field.input.value);
+          if (cleaned.length === 8 || cleaned.length === 9) {
+            field.input.value = formatRut(cleaned);
+          } else {
+            field.input.value = cleaned;
+          }
+        },
+        validate(field) {
+          const cleaned = cleanRut(field.input.value);
+          if (!cleaned) {
+            field.input.value = '';
+            return '';
+          }
+          if (cleaned.length < 8 || cleaned.length > 9) {
+            field.input.value = cleaned;
+            return 'El RUT debe tener 8 o 9 caracteres (incluye dígito verificador).';
+          }
+          const formatted = formatRut(cleaned);
+          field.input.value = formatted;
+          if (!/^[0-9]{1,2}\.[0-9]{3}\.[0-9]{3}-[0-9K]$/i.test(formatted)) {
+            return 'Formato inválido. Usa 12.345.678-5';
+          }
+          if (!isValidRut(formatted)) {
+            return 'El dígito verificador no coincide.';
+          }
+          return '';
+        }
+      }
+    ].filter(Boolean);
+
+    const validateField = (field) => {
+      if (!field || !field.input || field.input.disabled) {
+        return true;
+      }
+      const message = field.validate ? field.validate(field) : '';
+      return showInlineError(field, message);
+    };
+
+    fields.forEach((field) => {
+      if (!field.input) {
+        return;
+      }
+      field.prepare?.(field);
+      field.input.addEventListener('focus', () => field.onFocus?.(field));
+      field.input.addEventListener('input', () => field.onInput?.(field));
+      field.input.addEventListener('blur', () => {
+        field.onBlur?.(field);
+        validateField(field);
+      });
+    });
+
+    form.addEventListener('submit', (event) => {
+      let isValid = true;
+      fields.forEach((field) => {
+        const ok = validateField(field);
+        if (!ok) {
+          isValid = false;
+        }
+      });
+      if (!isValid) {
+        event.preventDefault();
+        event.stopPropagation();
+        const firstInvalid = fields.find((field) => field.input && field.input.classList.contains('is-invalid'));
+        if (firstInvalid?.input) {
+          firstInvalid.input.focus({ preventScroll: true });
+        }
+      }
+    });
+  });
+</script>
 <style>
   .profile-wrapper .card {
     border: 0;

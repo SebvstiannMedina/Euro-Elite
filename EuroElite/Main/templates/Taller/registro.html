@@ -184,7 +184,7 @@
                             </div>
                         {% endif %}
 
-                        <form method="post" class="needs-validation" novalidate>
+                        <form method="post" id="registroForm" novalidate>
                             {% csrf_token %}
                             {% for hidden in form.hidden_fields %}
                                 {{ hidden }}
@@ -200,6 +200,7 @@
                                        placeholder="Tu nombre"
                                        autocomplete="given-name"
                                        required>
+                                <div class="text-danger small d-none" data-feedback="first_name"></div>
                             </div>
 
                             <div class="mb-4">
@@ -212,6 +213,7 @@
                                        placeholder="Tu apellido"
                                        autocomplete="family-name"
                                        required>
+                                <div class="text-danger small d-none" data-feedback="last_name"></div>
                             </div>
 
                             <div class="mb-4">
@@ -224,6 +226,7 @@
                                        placeholder="Tu tel&eacute;fono"
                                        autocomplete="tel"
                                        required>
+                                <div class="text-danger small d-none" data-feedback="telefono"></div>
                             </div>
 
                             {% if form.email %}
@@ -236,6 +239,7 @@
                                            class="form-control form-control-lg"
                                            placeholder="tu@correo.cl"
                                            autocomplete="email">
+                                    <div class="text-danger small d-none" data-feedback="email"></div>
                                     {% if form.email.errors %}
                                         <div class="invalid-feedback d-block">
                                             {{ form.email.errors|striptags }}
@@ -256,6 +260,7 @@
                                        placeholder="********"
                                        autocomplete="new-password"
                                        required>
+                                <div class="text-danger small d-none" data-feedback="password1"></div>
                                 {% if form.password1.errors %}
                                     <div class="invalid-feedback d-block">
                                         {{ form.password1.errors|striptags }}
@@ -275,6 +280,7 @@
                                        placeholder="********"
                                        autocomplete="new-password"
                                        required>
+                                <div class="text-danger small d-none" data-feedback="password2"></div>
                                 {% if form.password2.errors %}
                                     <div class="invalid-feedback d-block">
                                         {{ form.password2.errors|striptags }}
@@ -287,6 +293,7 @@
 
                             <div class="form-check mb-4">
                                 <input class="form-check-input" type="checkbox" name="accept_legal_terms" id="accept_legal_terms" required>
+                                <div class="text-danger small d-none" data-feedback="accept_legal_terms"></div>
                                 <label class="form-check-label" for="accept_legal_terms">
                                     <span class="legal-consent-text">Acepto los</span> <a href="{% url 'terminos' %}" class="auth-link">T&eacute;rminos y condiciones</a> <span class="legal-consent-text">y la</span> <a href="{% url 'privacidad' %}" class="auth-link">Pol&iacute;tica de privacidad</a>.
                                 </label>
@@ -327,5 +334,266 @@
             </div>
         </div>
     </div>
+<script>
+  // Inline validation for registro form
+  document.addEventListener('DOMContentLoaded', function () {
+    const form = document.getElementById('registroForm');
+    if (!form) {
+      return;
+    }
+
+    const showInlineError = (field, message) => {
+      const { input, feedback } = field;
+      if (!feedback) {
+        return !message;
+      }
+      if (message) {
+        feedback.textContent = message;
+        feedback.classList.remove('d-none');
+        input.classList.add('is-invalid');
+        input.setAttribute('aria-invalid', 'true');
+        return false;
+      }
+      feedback.textContent = '';
+      feedback.classList.add('d-none');
+      input.classList.remove('is-invalid');
+      input.removeAttribute('aria-invalid');
+      return true;
+    };
+
+    const getField = (name) => {
+      const input = form.querySelector(`[name="${name}"]`);
+      const feedback = form.querySelector(`[data-feedback="${name}"]`);
+      if (!input) {
+        return null;
+      }
+      return { name, input, feedback };
+    };
+
+    const createField = (name, handlers) => {
+      const base = getField(name);
+      if (!base) {
+        return null;
+      }
+      return Object.assign(base, handlers || {});
+    };
+
+    const normalizeWord = (value) => value.replace(/\s+/g, ' ').trim();
+    const normalizeEmail = (value) => value.trim().replace(/\s+/g, '').toLowerCase();
+    const normalizePhone = (value) => {
+      const trimmed = (value || '').replace(/\s+/g, '');
+      if (!trimmed) {
+        return '';
+      }
+      let cleaned = trimmed.replace(/[^0-9+]/g, '');
+      if (cleaned.startsWith('+')) {
+        cleaned = '+' + cleaned.slice(1).replace(/[^0-9]/g, '');
+      } else {
+        cleaned = cleaned.replace(/[^0-9]/g, '');
+      }
+      const limit = cleaned.startsWith('+') ? 16 : 15;
+      return cleaned.slice(0, limit);
+    };
+
+    const hasLetter = (value) => /[A-Za-zÀ-ÿ]/.test(value);
+    const hasNumber = (value) => /[0-9]/.test(value);
+
+    const fields = [
+      createField('first_name', {
+        onInput(field) {
+          field.input.value = normalizeWord(field.input.value);
+          showInlineError(field, '');
+        },
+        onBlur(field) {
+          field.input.value = normalizeWord(field.input.value);
+        },
+        validate(field) {
+          const value = normalizeWord(field.input.value);
+          field.input.value = value;
+          if (!value) {
+            return 'Ingresa tu nombre.';
+          }
+          if (value.length < 2) {
+            return 'El nombre debe tener al menos 2 caracteres.';
+          }
+          return '';
+        }
+      }),
+      createField('last_name', {
+        onInput(field) {
+          field.input.value = normalizeWord(field.input.value);
+          showInlineError(field, '');
+        },
+        onBlur(field) {
+          field.input.value = normalizeWord(field.input.value);
+        },
+        validate(field) {
+          const value = normalizeWord(field.input.value);
+          field.input.value = value;
+          if (!value) {
+            return 'Ingresa tu apellido.';
+          }
+          if (value.length < 2) {
+            return 'El apellido debe tener al menos 2 caracteres.';
+          }
+          return '';
+        }
+      }),
+      createField('telefono', {
+        prepare(field) {
+          field.input.setAttribute('inputmode', 'tel');
+          field.input.setAttribute('maxlength', '16');
+          field.input.setAttribute('pattern', '\+?[0-9]{8,15}');
+          if (!field.input.getAttribute('placeholder')) {
+            field.input.setAttribute('placeholder', '+56912345678');
+          }
+        },
+        onInput(field) {
+          const cleaned = normalizePhone(field.input.value);
+          if (field.input.value !== cleaned) {
+            field.input.value = cleaned;
+          }
+          showInlineError(field, '');
+        },
+        onBlur(field) {
+          field.input.value = normalizePhone(field.input.value);
+        },
+        validate(field) {
+          const value = normalizePhone(field.input.value);
+          field.input.value = value;
+          if (!value) {
+            return 'Ingresa tu teléfono.';
+          }
+          if (!/^\+?[0-9]{8,15}$/.test(value)) {
+            return 'Ingresa un teléfono válido (8 a 15 dígitos).';
+          }
+          return '';
+        }
+      }),
+      createField('email', {
+        prepare(field) {
+          field.input.setAttribute('inputmode', 'email');
+          field.input.setAttribute('spellcheck', 'false');
+          field.input.setAttribute('autocorrect', 'off');
+          field.input.setAttribute('autocapitalize', 'none');
+          if (!field.input.getAttribute('autocomplete')) {
+            field.input.setAttribute('autocomplete', 'email');
+          }
+        },
+        onInput(field) {
+          const cleaned = field.input.value.replace(/\s+/g, '');
+          if (field.input.value !== cleaned) {
+            field.input.value = cleaned;
+          }
+          showInlineError(field, '');
+        },
+        onBlur(field) {
+          field.input.value = normalizeEmail(field.input.value);
+        },
+        validate(field) {
+          const value = normalizeEmail(field.input.value);
+          field.input.value = value;
+          if (!value) {
+            return 'Ingresa tu correo.';
+          }
+          if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(value)) {
+            return 'Ingresa un correo válido.';
+          }
+          return '';
+        }
+      }),
+      createField('password1', {
+        prepare(field) {
+          field.input.setAttribute('minlength', '8');
+        },
+        onInput(field) {
+          showInlineError(field, '');
+        },
+        validate(field) {
+          const value = field.input.value || '';
+          if (!value) {
+            return 'Crea una contraseña.';
+          }
+          if (value.length < 8) {
+            return 'Debe tener al menos 8 caracteres.';
+          }
+          if (!hasLetter(value) || !hasNumber(value)) {
+            return 'Incluye letras y números en tu contraseña.';
+          }
+          return '';
+        }
+      }),
+      createField('password2', {
+        onInput(field) {
+          showInlineError(field, '');
+        },
+        validate(field) {
+          const value = field.input.value || '';
+          if (!value) {
+            return 'Confirma tu contraseña.';
+          }
+          const first = form.querySelector('[name="password1"]').value || '';
+          if (value !== first) {
+            return 'Las contraseñas no coinciden.';
+          }
+          return '';
+        }
+      }),
+      createField('accept_legal_terms', {
+        onChange(field) {
+          showInlineError(field, '');
+        },
+        validate(field) {
+          if (!field.input.checked) {
+            return 'Debes aceptar los términos y condiciones.';
+          }
+          return '';
+        }
+      })
+    ].filter(Boolean);
+
+    const validateField = (field) => {
+      if (!field || !field.input || field.input.disabled) {
+        return true;
+      }
+      const message = field.validate ? field.validate(field) : '';
+      return showInlineError(field, message);
+    };
+
+    fields.forEach((field) => {
+      if (!field.input) {
+        return;
+      }
+      field.prepare?.(field);
+      if (field.input.type === 'checkbox') {
+        field.input.addEventListener('change', () => field.onChange?.(field));
+      } else {
+        field.input.addEventListener('input', () => field.onInput?.(field));
+        field.input.addEventListener('blur', () => {
+          field.onBlur?.(field);
+          validateField(field);
+        });
+      }
+    });
+
+    form.addEventListener('submit', (event) => {
+      let isValid = true;
+      fields.forEach((field) => {
+        const ok = validateField(field);
+        if (!ok) {
+          isValid = false;
+        }
+      });
+      if (!isValid) {
+        event.preventDefault();
+        event.stopPropagation();
+        const firstInvalid = fields.find((field) => field.input && field.input.classList.contains('is-invalid'));
+        if (firstInvalid?.input) {
+          firstInvalid.input.focus({ preventScroll: true });
+        }
+      }
+    });
+  });
+</script>
 </section>
 {% endblock %}
