@@ -20,8 +20,8 @@ from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.utils import timezone
 
-from .forms import CitaForm
-from .models import Cita
+from .forms import CitaForm, ProductoForm
+from .models import Cita, Producto
 
 # Local apps
 from .forms import CitaForm, DireccionForm, PerfilForm, RegistroForm, EmailLoginForm
@@ -385,17 +385,21 @@ from .forms import ProductoForm
 from .models import Producto
 
 @login_required
-def agregar_editar(request, pk=None):
-    if pk:  # editar
-        producto = Producto.objects.get(pk=pk)
-    else:   # agregar
+def agregar_editar(request, pk=None): 
+    if pk:  # Editar producto
+        producto = get_object_or_404(Producto, pk=pk)
+    else:   # Agregar producto
         producto = None
 
     if request.method == 'POST':
         form = ProductoForm(request.POST, request.FILES, instance=producto)
         if form.is_valid():
-            form.save()
+            producto = form.save()
             messages.success(request, 'Producto guardado correctamente.')
+            # 
+            if pk:
+                return redirect('editar_producto', pk=producto.pk)
+           
             return redirect('agregar_editar')
     else:
         form = ProductoForm(instance=producto)
