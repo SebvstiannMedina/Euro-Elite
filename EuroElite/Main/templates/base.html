@@ -37,6 +37,8 @@
         display: ruby-text;
         justify-content: space-between;
         width: 100%;
+        position: relative; /* importante para que el menú se posicione debajo */
+        z-index: 1000;
     }
 
     .navbar-container {
@@ -84,33 +86,7 @@
         cursor: pointer;
     }
 
-    /* Responsive */
-    @media (max-width: 992px) {
-        .navbar-menu {
-            display: none;
-            flex-direction: column;
-            position: absolute;
-            top: 100%;
-            left: 0;
-            width: 100%;
-            background: linear-gradient(135deg, #000000, #5777b8);
-            padding: 20px 0;
-            text-align: center;
-        }
-
-        .navbar-menu.show {
-            display: flex;
-        }
-
-        .navbar-toggle {
-            display: block;
-        }
-
-        .navbar-logo img {
-            height: 80px;
-        }
-    }
-
+    /* Responsive - Menú desplegable debajo del navbar */
     @media (max-width: 992px) {
         .navbar-container {
             flex-wrap: wrap;
@@ -121,32 +97,67 @@
         }
 
         .navbar-menu {
-            margin: 0;
-            gap: 0;
+            display: none;
+            flex-direction: column;
+            position: absolute;
+            top: 100%;       /* justo debajo del navbar */
+            left: 0;
+            width: 100%;     /* ocupa todo el ancho */
+            background: linear-gradient(135deg, #000000, #5777b8);
+            padding: 20px 0;
+            text-align: center;
+            z-index: 999;
+        }
+
+        .navbar-menu.show {
+            display: flex;
         }
 
         .navbar-menu li {
             border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            width: 100%;
         }
 
         .navbar-menu a {
-            font-size: 1rem;
+            font-size: 1.1rem;
             padding: 12px;
             display: block;
-        }
-
-        .navbar-actions {
             width: 100%;
-            display: flex;
-            justify-content: center;
-            margin: 10px 0;
         }
 
-        .cart-icon,
-        .user-icon {
-            margin: 0 10px;
-            font-size: 1.5rem;
+        .navbar-toggle {
+            display: block;
         }
+    }
+
+    /* Acciones (Carrito + Usuario + Botón menú) */
+    .navbar-actions {
+        display: flex !important;
+        align-items: center;
+        gap: 15px;
+        margin-left: auto;
+    }
+
+    .cart-icon,
+    .user-icon {
+        margin: 0 10px;
+        font-size: 1.5rem;
+        color: white;
+        cursor: pointer;
+        position: relative;
+    }
+
+    /* contador carrito */
+    .cart-count {
+        position: absolute;
+        top: -8px;
+        right: -12px;
+        background: red;
+        color: white;
+        font-size: 0.8rem;
+        font-weight: bold;
+        border-radius: 50%;
+        padding: 2px 6px;
     }
 
     .dropdown-item {
@@ -163,7 +174,9 @@
         border: 0;
         border-radius: var(--bs-dropdown-item-border-radius, 0);
         color: white;
+    }
 </style>
+
 
 <body data-auth="{% if user.is_authenticated %}true{% else %}false{% endif %}">
     <!-- NAVBAR -->
@@ -173,11 +186,6 @@
             <div class="navbar-logo">
                 <img src="{% static 'img/LogoApp.png' %}" alt="Logo" class="navbar-logo">
             </div>
-
-            <!-- Botón móvil -->
-            <button class="navbar-toggle" onclick="toggleMobileMenu()" aria-label="Abrir menú">
-                <i class="fas fa-bars"></i>
-            </button>
 
             <!-- Menú principal -->
             <ul class="navbar-menu" id="navbar-menu">
@@ -203,14 +211,24 @@
                 </li>
             </ul>
 
-            <!-- Acciones usuario y carrito (solo escritorio) -->
-            <div class="navbar-actions d-none d-lg-flex">
-                <div class="cart-icon" onclick="toggleCart()" role="button" aria-label="Ver carrito">
-                    <i class="fas fa-shopping-cart"></i>
-                    <span class="cart-count" id="cart-count">0</span>
+            <!-- Acciones (Botón menú + Carrito + Usuario) -->
+            <div class="navbar-actions">
+                <!-- Botón móvil -->
+                <button class="navbar-toggle" onclick="toggleMobileMenu()" aria-label="Abrir menú">
+                    <i class="fas fa-bars"></i>
+                </button>
+
+                <!-- Carrito -->
+                <div class="cart-icon">
+                    <a href="{% url 'carrito_compras' %}" onclick="event.preventDefault(); toggleCart();"
+                        style="color: white; text-decoration: none;">
+                        <i class="fas fa-shopping-cart"></i>
+                        <span class="cart-count" id="cart-count">0</span>
+                    </a>
                 </div>
 
-                <div class="user-icon" onclick="toggleUserMenu()" role="button" aria-haspopup="true"
+                <!-- Usuario escritorio -->
+                <div class="user-icon d-none d-lg-block" onclick="toggleUserMenu()" role="button" aria-haspopup="true"
                     aria-expanded="false">
                     <i class="fas fa-user"></i>
                     <div class="user-dropdown" id="user-dropdown">
@@ -311,4 +329,5 @@
     </script>
     {% block extra_scripts %}{% endblock %}
 </body>
+
 </html>

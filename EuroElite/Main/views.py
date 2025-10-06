@@ -451,7 +451,7 @@ def admin_pedidos(request):
     return render(request, 'Taller/admin_agendamientos.html')
 
 def admin_reportes(request):
-    return render(request, 'Taller/admin_agendamientos.html')
+    return render(request, 'Taller/admin_reportes.html')
 
 from django.contrib.auth import get_user_model
 from django.contrib import messages
