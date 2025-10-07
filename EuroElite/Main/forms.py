@@ -24,27 +24,66 @@ class PerfilForm(forms.ModelForm):
 
 
 # ================= REGISTRO =================
+from django import forms
+from django.contrib.auth.forms import UserCreationForm
+from .models import Usuario
+
 class RegistroForm(UserCreationForm):
-    username = forms.CharField(
-        label="Nombre de usuario",
-        widget=forms.TextInput(attrs={'placeholder': 'Ingresa tu nombre de usuario'})
-    )
+
     email = forms.EmailField(
         label="Correo electrónico",
-        widget=forms.EmailInput(attrs={'placeholder': 'Ingresa tu correo'})
+        widget=forms.EmailInput(attrs={'placeholder': 'Ingresa tu correo', 'class': 'form-control'})
     )
     password1 = forms.CharField(
         label="Contraseña",
-        widget=forms.PasswordInput(attrs={'placeholder': 'Ingresa tu contraseña'})
+        widget=forms.PasswordInput(attrs={'placeholder': 'Ingresa tu contraseña', 'class': 'form-control'})
     )
     password2 = forms.CharField(
         label="Repetir contraseña",
-        widget=forms.PasswordInput(attrs={'placeholder': 'Repite tu contraseña'})
+        widget=forms.PasswordInput(attrs={'placeholder': 'Repite tu contraseña', 'class': 'form-control'})
+    )
+    first_name = forms.CharField(
+        label="Nombre", 
+        required=True,
+        widget=forms.TextInput(attrs={'placeholder': 'Ingresa tu nombre', 'class': 'form-control'})
+    )
+    last_name = forms.CharField(
+        label="Apellido", 
+        required=True,
+        widget=forms.TextInput(attrs={'placeholder': 'Ingresa tu apellido', 'class': 'form-control'})
+    )
+    telefono = forms.CharField(
+        label="Teléfono", 
+        required=False,
+        widget=forms.TextInput(attrs={'placeholder': 'Ingresa tu teléfono', 'class': 'form-control'})
+    )
+    accept_legal_terms = forms.BooleanField(
+        label="Acepto los términos",
+        required=True
     )
 
     class Meta:
         model = Usuario
-        fields = ['username', 'email', 'password1', 'password2']
+        fields = [
+            'email', 'first_name', 'last_name',
+            'telefono', 'password1', 'password2', 'accept_legal_terms'
+        ]
+
+    def save(self, commit=True):
+        user = super().save(commit=False)
+        user.first_name = self.cleaned_data['first_name']
+        user.last_name = self.cleaned_data['last_name']
+        user.email = self.cleaned_data['email']
+        user.telefono = self.cleaned_data['telefono']
+        user.accept_legal_terms = self.cleaned_data['accept_legal_terms']
+
+        # 👇 se cifra la contraseña correctamente
+        user.set_password(self.cleaned_data["password1"])
+
+        if commit:
+            user.save()
+        return user
+
 
 # ================= CITA =================
 class CitaForm(forms.ModelForm):
@@ -154,7 +193,6 @@ class EmailLoginForm(forms.Form):
         label="Correo electrónico",
         widget=forms.EmailInput(attrs={'placeholder': 'Ingresa tu correo', 'class': 'form-control'})
     )
-
     password = forms.CharField(
         label="Contraseña",
         widget=forms.PasswordInput(attrs={'placeholder': 'Ingresa tu contraseña', 'class': 'form-control'})
@@ -166,18 +204,25 @@ class EmailLoginForm(forms.Form):
         password = cleaned_data.get("password")
 
         if email and password:
-            try:
-                user = Usuario.objects.get(email=email)
-            except Usuario.DoesNotExist:
-                raise forms.ValidationError("Correo o contraseña incorrectos.")
-            
-            user = authenticate(username=user.username, password=password)
+            user = authenticate(username=email, password=password)  # 👈 login con email
             if user is None:
                 raise forms.ValidationError("Correo o contraseña incorrectos.")
-            
             self.user_cache = user
         return cleaned_data
-    
+
     def get_user(self):
         return getattr(self, "user_cache", None)
 
+from django import forms
+from django.contrib.auth.forms import AuthenticationForm
+from .models import Usuario
+
+class EmailAuthenticationForm(AuthenticationForm):
+    username = forms.EmailField(
+        label="Correo electrónico",
+        widget=forms.EmailInput(attrs={
+            "autofocus": True,
+            "class": "form-control",
+            "placeholder": "Ingresa tu correo"
+        })
+    )

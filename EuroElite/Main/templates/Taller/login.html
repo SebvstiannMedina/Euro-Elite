@@ -178,23 +178,23 @@
                         <form method="post" id="loginForm" novalidate>
                             {% csrf_token %}
                             <div class="mb-4">
-                                <label for="{{ form.email.id_for_label }}" class="form-label">Correo electr&#243;nico</label>
+                                <label for="{{ form.username.id_for_label }}" class="form-label">Correo electr&#243;nico</label>
                                 <input type="email"
-                                       name="{{ form.email.html_name }}"
-                                       id="{{ form.email.id_for_label }}"
-                                       value="{{ form.email.value|default_if_none:'' }}"
+                                       name="{{ form.username.html_name }}"
+                                       id="{{ form.username.id_for_label }}"
+                                       value="{{ form.username.value|default_if_none:'' }}"
                                        class="form-control form-control-lg"
                                        placeholder="tu@correo.cl"
                                        autocomplete="email"
                                        required>
-                                <div class="text-danger small d-none" data-feedback="email"></div>
-                                {% if form.email.errors %}
+                                <div class="text-danger small d-none" data-feedback="username"></div>
+                                {% if form.username.errors %}
                                     <div class="invalid-feedback d-block">
-                                        {{ form.email.errors|striptags }}
+                                        {{ form.username.errors|striptags }}
                                     </div>
                                 {% endif %}
-                                {% if form.email.help_text %}
-                                    <div class="form-text">{{ form.email.help_text }}</div>
+                                {% if form.username.help_text %}
+                                    <div class="form-text">{{ form.username.help_text }}</div>
                                 {% endif %}
                             </div>
 
@@ -259,6 +259,7 @@
             </div>
         </div>
     </div>
+</section>
 <script>
   // Inline validation for login form
   document.addEventListener('DOMContentLoaded', function () {

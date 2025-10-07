@@ -25,23 +25,61 @@ class MarcaTiempo(models.Model):
 # =============================
 #   USUARIOS Y DIRECCIONES
 # =============================
+from django.contrib.auth.models import AbstractUser
+from django.db import models
+
+from django.contrib.auth.models import AbstractUser, BaseUserManager
+from django.db import models
+
+
+# --- MANAGER PERSONALIZADO ---
+class UsuarioManager(BaseUserManager):
+    def create_user(self, email, password=None, **extra_fields):
+        if not email:
+            raise ValueError("El email es obligatorio")
+        email = self.normalize_email(email)
+        user = self.model(email=email, **extra_fields)
+        user.set_password(password)
+        user.save(using=self._db)
+        return user
+
+    def create_superuser(self, email, password=None, **extra_fields):
+        extra_fields.setdefault("is_staff", True)
+        extra_fields.setdefault("is_superuser", True)
+        extra_fields.setdefault("rol", "ADMIN")  # 👈 opcional: superusers como admin
+
+        if extra_fields.get("is_staff") is not True:
+            raise ValueError("Superuser debe tener is_staff=True.")
+        if extra_fields.get("is_superuser") is not True:
+            raise ValueError("Superuser debe tener is_superuser=True.")
+
+        return self.create_user(email, password, **extra_fields)
+
+
+# --- MODELO USUARIO ---
 class Usuario(AbstractUser):
+    username = None  # 👈 eliminamos username
+    email = models.EmailField(unique=True)
+
+    telefono = models.CharField(max_length=20, blank=True, null=True)
+    rut = models.CharField(max_length=12, blank=True, null=True, unique=True)
+
     class Rol(models.TextChoices):
         ADMIN = "ADMIN", "Administrador"
         EMPLEADO = "EMPLEADO", "Empleado"
         CLIENTE = "CLIENTE", "Cliente"
 
-    email = models.EmailField(unique=True)
-    telefono = models.CharField(max_length=20, blank=True)
-    rut = models.CharField(max_length=12, blank=True, null=True ,unique=True)
     rol = models.CharField(max_length=12, choices=Rol.choices, default=Rol.CLIENTE, db_index=True)
     bloqueado = models.BooleanField(default=False)
+    accept_legal_terms = models.BooleanField(default=False)
 
-    REQUIRED_FIELDS = ["email"]
+    USERNAME_FIELD = "email"                       # login con email
+    REQUIRED_FIELDS = ["first_name", "last_name"]  # se piden en createsuperuser
+
+    objects = UsuarioManager()  # 👈 aquí va tu manager personalizado
 
     def __str__(self):
-        return self.get_full_name() or self.username
-
+        return self.get_full_name() or self.email
 
 class Direccion(MarcaTiempo):
     class Tipo(models.TextChoices):
@@ -358,3 +396,6 @@ class ConfigSitio(MarcaTiempo):
     habilitar_pasarela = models.BooleanField(default=True)
     costo_envio_base = models.DecimalField(max_digits=10, decimal_places=2, default=0)
     envio_gratis_desde = models.DecimalField(max_digits=12, decimal_places=2, null=True, blank=True)
+
+from django.contrib.auth.models import BaseUserManager
+

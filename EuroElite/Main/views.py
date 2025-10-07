@@ -245,27 +245,25 @@ def productos(request):
 
 
 # ========== LOGIN ==========
-def login_view(request):
-    if request.user.is_authenticated:
-        return redirect('home')  # Redirige a home una vez logueado
-    
-    if request.method == 'POST':
-        form = EmailLoginForm(request.POST)
-        if form.is_valid():
-            user = form.get_user()
-            login(request, user)
-            messages.success(request, f"Bienvenido: {user.username}")
-            return redirect('home')
-        else:
-            messages.error(request, 'Correo o contraseña incorrectos.')
-    else:
-        form = EmailLoginForm()
-    return render(request, 'Taller/login.html', {'form': form})
+from django.contrib.auth.views import LoginView, LogoutView
+from django.contrib import messages
+from .forms import EmailAuthenticationForm
+from .forms import RegistroForm
+from django.shortcuts import render, redirect
 
+class CustomLoginView(LoginView):
+    template_name = "Taller/login.html"
+    authentication_form = EmailAuthenticationForm
 
+    def form_valid(self, form):
+        messages.success(self.request, f"Bienvenido: {form.get_user().first_name or form.get_user().email}")
+        return super().form_valid(form)
 
-
+# ============ LOGOUT ============
+class CustomLogoutView(LogoutView):
+    next_page = "login"
 # ========== REGISTRO ==========
+
 def registro(request):
     if request.user.is_authenticated:
         return redirect('home')  # Redirige si ya está logueado
@@ -277,12 +275,13 @@ def registro(request):
             messages.success(request, 'Registro exitoso. Inicia sesión para continuar.')
             return redirect('login')
         else:
+            
+            print("Errores del formulario:", form.errors)
             messages.error(request, 'Por favor corrige los errores en el formulario.')
     else:
         form = RegistroForm()
 
     return render(request, 'Taller/registro.html', {'form': form})
-
 
 # ========== PERFIL ==========
 
@@ -672,3 +671,10 @@ def recuperar_contra_listo(request):
 
 def contra_cambiada_exitosa(request):
     return render(request, 'Taller/contra_cambiada_exitosa.html')
+
+from django.contrib.auth.views import LoginView
+from .forms import EmailAuthenticationForm
+
+class CustomLoginView(LoginView):
+    template_name = "Taller/login.html"
+    authentication_form = EmailAuthenticationForm

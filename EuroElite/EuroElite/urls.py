@@ -6,6 +6,10 @@ from django.conf.urls.static import static
 from django.contrib.auth import views as auth_views
 from Main import views as main_views
 from payments import views as pay_views
+from Main.views import CustomLoginView, registro
+from django.contrib import admin
+from django.urls import path, include
+from Main.views import CustomLoginView, CustomLogoutView, registro
 
 urlpatterns = [
     path('admin/', admin.site.urls),
@@ -17,8 +21,8 @@ urlpatterns = [
     path('productos', main_views.productos, name='productos'),
     path('perfil', main_views.perfil, name='perfil'),
     path('registro', main_views.registro, name='registro'),
-    path('login', main_views.login_view, name='login'),
-    path('logout/', LogoutView.as_view(next_page='home'), name='logout'),
+    path('login', CustomLoginView.as_view(template_name='Taller/login.html'), name='login'),
+    path('logout/', CustomLogoutView.as_view(), name='logout'),
     path('agendar', main_views.agendar, name='agendar'),
     path('mis_citas', main_views.mis_citas, name='mis_citas'),
     path('citas/<int:cita_id>/anular/', main_views.anular_cita, name='anular_cita'),

@@ -37,7 +37,8 @@
         display: ruby-text;
         justify-content: space-between;
         width: 100%;
-        position: relative; /* importante para que el menú se posicione debajo */
+        position: relative;
+        /* importante para que el menú se posicione debajo */
         z-index: 1000;
     }
 
@@ -100,9 +101,11 @@
             display: none;
             flex-direction: column;
             position: absolute;
-            top: 100%;       /* justo debajo del navbar */
+            top: 100%;
+            /* justo debajo del navbar */
             left: 0;
-            width: 100%;     /* ocupa todo el ancho */
+            width: 100%;
+            /* ocupa todo el ancho */
             background: linear-gradient(135deg, #000000, #5777b8);
             padding: 20px 0;
             text-align: center;
@@ -233,11 +236,11 @@
                     <i class="fas fa-user"></i>
                     <div class="user-dropdown" id="user-dropdown">
                         {% if user.is_authenticated %}
-                        <span>Hola, {{ user.username }}</span>
+                        <div class="dropdown-header">Hola, {{ user.first_name }}</div>
                         <a href="{% url 'perfil' %}">Mi Perfil</a>
-                        <form action="{% url 'logout' %}" method="post" style="display:inline;">
+                        <form action="{% url 'logout' %}" method="post" style="margin: 0;">
                             {% csrf_token %}
-                            <button type="submit" class="dropdown-item">Cerrar Sesión</button>
+                            <button type="submit" class="dropdown-item logout-btn">Cerrar Sesión</button>
                         </form>
                         {% else %}
                         <a href="{% url 'login' %}">Iniciar Sesión</a>
