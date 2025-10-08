@@ -32,6 +32,22 @@ document.addEventListener('DOMContentLoaded', () => {
     return { name, input, feedback };
   };
 
+  const applyPlaceholders = () => {
+    const placeholders = [
+      { name: 'first_name', value: 'Ingresa tu nombre' },
+      { name: 'last_name', value: 'Ingresa tu apellido' },
+      { name: 'email', value: 'ejemplo@dominio.com' },
+    ];
+    placeholders.forEach(({ name, value }) => {
+      const field = getField(name);
+      if (field?.input) {
+        field.input.setAttribute('placeholder', value);
+      }
+    });
+  };
+
+  applyPlaceholders();
+
   const sanitizeRutValue = (value) => {
     if (!value) {
       return '';
