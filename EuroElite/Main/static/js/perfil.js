@@ -484,6 +484,18 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   });
 
+  const runInitialValidation = () => {
+    fields.forEach((field) => {
+      if (!field?.input) {
+        return;
+      }
+      field.onBlur?.(field);
+      validateField(field);
+    });
+  };
+
+  runInitialValidation();
+
   form.addEventListener('submit', (event) => {
     let isValid = true;
     fields.forEach((field) => {
