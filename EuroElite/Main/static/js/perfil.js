@@ -66,6 +66,37 @@ const REGION_COMMUNES = [
 ];
 
 document.addEventListener('DOMContentLoaded', () => {
+  const ensureLocationStyles = () => {
+    if (document.getElementById('perfil-location-style')) {
+      return;
+    }
+    const style = document.createElement('style');
+    style.id = 'perfil-location-style';
+    style.textContent = `
+      .form-select.location-disabled {
+        background-color: #f8f9fa;
+        color: #6c757d;
+        cursor: not-allowed;
+        border-color: #dee2e6;
+      }
+      .location-guard {
+        position: absolute;
+        inset: 0;
+        z-index: 2;
+        border-radius: inherit;
+        background: transparent;
+        pointer-events: none;
+      }
+      .location-guard.active {
+        pointer-events: auto;
+        cursor: not-allowed;
+      }
+    `;
+    document.head.appendChild(style);
+  };
+
+  ensureLocationStyles();
+
   const form = document.getElementById('perfilForm');
   if (!form) {
     return;
@@ -218,6 +249,34 @@ document.addEventListener('DOMContentLoaded', () => {
     comunaField.replaceWith(comunaSelect);
     ensureFeedback(comunaSelect, 'comuna');
 
+    const wrapper = comunaSelect.parentElement;
+    let comunaGuard = null;
+    if (wrapper) {
+      const computed = window.getComputedStyle(wrapper);
+      if (!computed || computed.position === 'static') {
+        wrapper.style.position = 'relative';
+      }
+      comunaGuard = wrapper.querySelector('[data-location-guard="comuna"]');
+      if (!comunaGuard) {
+        comunaGuard = document.createElement('div');
+        comunaGuard.dataset.locationGuard = 'comuna';
+        comunaGuard.className = 'location-guard';
+        wrapper.appendChild(comunaGuard);
+      }
+    }
+
+    const setComunaGuardState = (isDisabled) => {
+      if (!comunaGuard) {
+        return;
+      }
+      comunaGuard.classList.toggle('active', Boolean(isDisabled));
+      if (isDisabled) {
+        comunaGuard.setAttribute('aria-hidden', 'false');
+      } else {
+        comunaGuard.removeAttribute('aria-hidden');
+      }
+    };
+
     const refreshComunas = (regionValue, comunaValue) => {
       const normalizedRegion = normalizeText(regionValue);
       const regionData = regionLookup.get(normalizedRegion);
@@ -225,7 +284,7 @@ document.addEventListener('DOMContentLoaded', () => {
       const source = requiresRegion
         ? []
         : regionData
-          ? regionData.comunas
+          ? [...regionData.comunas].sort((a, b) => a.localeCompare(b, 'es', { sensitivity: 'base' }))
           : allComunas;
 
       comunaSelect.innerHTML = '';
@@ -257,9 +316,13 @@ document.addEventListener('DOMContentLoaded', () => {
         comunaSelect.value = '';
       }
       comunaSelect.dataset.requiresRegion = requiresRegion ? 'true' : 'false';
+      comunaSelect.disabled = requiresRegion;
+      comunaSelect.setAttribute('aria-disabled', requiresRegion ? 'true' : 'false');
+      comunaSelect.classList.toggle('location-disabled', requiresRegion);
       if (!requiresRegion) {
         comunaRequiresRegionAttempted = false;
       }
+      setComunaGuardState(requiresRegion);
     };
 
     const focusRegionSoon = () => {
@@ -280,6 +343,24 @@ document.addEventListener('DOMContentLoaded', () => {
       focusRegionSoon();
       return true;
     };
+
+    if (comunaGuard && !comunaGuard.dataset.guardReady) {
+      const handleGuardInteraction = (event) => {
+        if (enforceRegionFirst()) {
+          event.preventDefault();
+        }
+      };
+      comunaGuard.addEventListener('mousedown', handleGuardInteraction);
+      comunaGuard.addEventListener('click', handleGuardInteraction);
+      comunaGuard.addEventListener(
+        'touchstart',
+        (event) => {
+          handleGuardInteraction(event);
+        },
+        { passive: false }
+      );
+      comunaGuard.dataset.guardReady = 'true';
+    }
 
     refreshComunas(regionField.value, initialComunaValue);
 
