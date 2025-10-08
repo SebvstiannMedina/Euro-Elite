@@ -296,7 +296,7 @@
                     <i class="fas fa-user"></i>
                     <div class="user-dropdown" id="user-dropdown">
                         {% if user.is_authenticated %}
-                        <span>Hola, {{ user.username }}</span>
+                        <span>Hola, {{ user.first_name }}</span>
                         <a href="{% url 'perfil' %}">Mi Perfil</a>
                         <form action="{% url 'logout' %}" method="post" style="display:inline;">
                             {% csrf_token %}
