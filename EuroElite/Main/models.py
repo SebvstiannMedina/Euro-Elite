@@ -360,6 +360,11 @@ class BloqueHorario(MarcaTiempo):
     fin = models.DateTimeField(db_index=True)
     bloqueado = models.BooleanField(default=False)
 
+    def clean(self):
+        from django.core.exceptions import ValidationError
+        if self.fin <= self.inicio:
+            raise ValidationError("La hora de término debe ser mayor que la de inicio.")
+
     def __str__(self):
         return f"{self.inicio.strftime('%d/%m/%Y %H:%M')} - {self.fin.strftime('%H:%M')}"
 

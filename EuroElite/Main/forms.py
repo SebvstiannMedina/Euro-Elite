@@ -87,14 +87,14 @@ class RegistroForm(UserCreationForm):
 
 # ================= CITA =================
 class CitaForm(forms.ModelForm):
+    # Campo de selección del bloque horario (el queryset se define en __init__)
     bloque = forms.ModelChoiceField(
-        queryset=BloqueHorario.objects.filter(
-            bloqueado=False, inicio__gte=timezone.now()
-        ).order_by('inicio'),
+        queryset=BloqueHorario.objects.none(),
         label="Bloque de horario",
         widget=forms.Select(attrs={'class': 'form-control'})
     )
 
+    # Servicio (solo los activos)
     servicio = forms.ModelChoiceField(
         queryset=Servicio.objects.filter(activo=True),
         label="Servicio requerido",
@@ -105,32 +105,37 @@ class CitaForm(forms.ModelForm):
         model = Cita
         fields = ['servicio', 'bloque', 'a_domicilio', 'direccion_domicilio']
         widgets = {
-            'a_domicilio': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
-            'direccion_domicilio': forms.TextInput(attrs={
-                'class': 'form-control',
-                'placeholder': 'Ej: Av. Libertador 1234, Santiago'
-            }),
+            'direccion_domicilio': forms.TextInput(attrs={'class': 'form-control'}),
         }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        self.fields["bloque"].queryset = (
+            BloqueHorario.objects
+            .filter(inicio__date__gte=timezone.localdate()) 
+            .filter(cita__isnull=True)                
+            .order_by("inicio")
+        )
 
     def clean(self):
         cleaned_data = super().clean()
         bloque = cleaned_data.get("bloque")
 
-  
         if bloque and bloque.inicio <= timezone.now():
             raise forms.ValidationError("No puedes agendar en un bloque de tiempo pasado.")
-
 
         if bloque and hasattr(bloque, "cita"):
             raise forms.ValidationError("Este bloque ya está reservado.")
 
-
+        # Validación para servicio a domicilio
         a_domicilio = cleaned_data.get("a_domicilio")
         direccion = cleaned_data.get("direccion_domicilio")
         if a_domicilio and not direccion:
             self.add_error("direccion_domicilio", "Debes ingresar una dirección para el servicio a domicilio.")
 
         return cleaned_data
+
 
 
 # ================= PRODUCTO =================

@@ -37,7 +37,7 @@
             {% for u in usuarios %}
             <tr>
               <td>{{ forloop.counter }}</td>
-              <td>{{ u.username }}</td>
+              <td>{{ u.first_name }}</td>
               <td>{{ u.email }}</td>
               <td>{{ u.date_joined|date:"d/m/Y H:i" }}</td>
               <td>
