@@ -1,3 +1,70 @@
+const REGION_COMMUNES = [
+  {
+    name: "Arica y Parinacota",
+    comunas: ["Arica", "Camarones", "Putre", "General Lagos"]
+  },
+  {
+    name: "Tarapac\u00e1",
+    comunas: ["Iquique", "Alto Hospicio", "Pozo Almonte", "Cami\u00f1a", "Colchane", "Huara", "Pica"]
+  },
+  {
+    name: "Antofagasta",
+    comunas: ["Antofagasta", "Mejillones", "Sierra Gorda", "Taltal", "Calama", "Ollag\u00fce", "San Pedro de Atacama", "Tocopilla", "Mar\u00eda Elena"]
+  },
+  {
+    name: "Atacama",
+    comunas: ["Copiap\u00f3", "Caldera", "Tierra Amarilla", "Cha\u00f1aral", "Diego de Almagro", "Vallenar", "Freirina", "Huasco", "Alto del Carmen"]
+  },
+  {
+    name: "Coquimbo",
+    comunas: ["La Serena", "Coquimbo", "Andacollo", "La Higuera", "Paihuano", "Vicu\u00f1a", "Illapel", "Canela", "Los Vilos", "Salamanca", "Ovalle", "Combarbal\u00e1", "Monte Patria", "Punitaqui", "R\u00edo Hurtado"]
+  },
+  {
+    name: "Valpara\u00edso",
+    comunas: ["Valpara\u00edso", "Casablanca", "Conc\u00f3n", "Juan Fern\u00e1ndez", "Puchuncav\u00ed", "Quilpu\u00e9", "Quintero", "Villa Alemana", "Vi\u00f1a del Mar", "Rapa Nui (Isla de Pascua)", "Los Andes", "Calle Larga", "Rinconada", "San Esteban", "La Ligua", "Cabildo", "Papudo", "Petorca", "Zapallar", "Quillota", "La Calera", "Hijuelas", "La Cruz", "Nogales", "Limache", "Olmu\u00e9", "San Antonio", "Algarrobo", "Cartagena", "El Quisco", "El Tabo", "Santo Domingo", "San Felipe", "Catemu", "Llay-Llay", "Panquehue", "Putaendo", "Santa Mar\u00eda"]
+  },
+  {
+    name: "Metropolitana de Santiago",
+    comunas: ["Cerrillos", "Cerro Navia", "Conchal\u00ed", "El Bosque", "Estaci\u00f3n Central", "Huechuraba", "Independencia", "La Cisterna", "La Florida", "La Granja", "La Pintana", "La Reina", "Las Condes", "Lo Barnechea", "Lo Espejo", "Lo Prado", "Macul", "Maip\u00fa", "\u00d1u\u00f1oa", "Pedro Aguirre Cerda", "Pe\u00f1alol\u00e9n", "Providencia", "Pudahuel", "Quilicura", "Quinta Normal", "Recoleta", "Renca", "San Joaqu\u00edn", "San Miguel", "San Ram\u00f3n", "Santiago", "Vitacura", "Colina", "Lampa", "Tiltil", "Puente Alto", "Pirque", "San Jos\u00e9 de Maipo", "San Bernardo", "Buin", "Calera de Tango", "Paine", "Melipilla", "Alhu\u00e9", "Curacav\u00ed", "Mar\u00eda Pinto", "San Pedro", "Talagante", "El Monte", "Isla de Maipo", "Padre Hurtado", "Pe\u00f1aflor"]
+  },
+  {
+    name: "O'Higgins",
+    comunas: ["Rancagua", "Codegua", "Coinco", "Coltauco", "Do\u00f1ihue", "Graneros", "Las Cabras", "Machal\u00ed", "Malloa", "Mostazal", "Olivar", "Peumo", "Pichidegua", "Quinta de Tilcoco", "Rengo", "Requ\u00ednoa", "San Vicente", "Pichilemu", "La Estrella", "Litueche", "Marchihue", "Navidad", "Paredones", "San Fernando", "Ch\u00e9pica", "Chimbarongo", "Lolol", "Nancagua", "Palmilla", "Peralillo", "Placilla", "Pumanque", "Santa Cruz"]
+  },
+  {
+    name: "Maule",
+    comunas: ["Talca", "Constituci\u00f3n", "Curepto", "Empedrado", "Maule", "Pelarco", "Pencahue", "R\u00edo Claro", "San Clemente", "San Rafael", "Cauquenes", "Chanco", "Pelluhue", "Curic\u00f3", "Huala\u00f1\u00e9", "Licant\u00e9n", "Molina", "Rauco", "Romeral", "Sagrada Familia", "Teno", "Vichuqu\u00e9n", "Linares", "Colb\u00fan", "Longav\u00ed", "Parral", "Retiro", "San Javier", "Villa Alegre", "Yerbas Buenas"]
+  },
+  {
+    name: "\u00d1uble",
+    comunas: ["Bulnes", "Chill\u00e1n", "Chill\u00e1n Viejo", "El Carmen", "Pemuco", "Pinto", "Quill\u00f3n", "San Ignacio", "Yungay", "Cobquecura", "Coelemu", "Ninhue", "Portezuelo", "Quirihue", "R\u00e1nquil", "Trehuaco", "Coihueco", "\u00d1iqu\u00e9n", "San Carlos", "San Fabi\u00e1n", "San Nicol\u00e1s"]
+  },
+  {
+    name: "Biob\u00edo",
+    comunas: ["Concepci\u00f3n", "Coronel", "Chiguayante", "Florida", "Hualp\u00e9n", "Hualqui", "Lota", "Penco", "San Pedro de la Paz", "Santa Juana", "Talcahuano", "Tom\u00e9", "Arauco", "Ca\u00f1ete", "Contulmo", "Curanilahue", "Lebu", "Los \u00c1lamos", "Tir\u00faa", "Los \u00c1ngeles", "Alto Biob\u00edo", "Antuco", "Cabrero", "Laja", "Mulch\u00e9n", "Nacimiento", "Negrete", "Quilaco", "Quilleco", "San Rosendo", "Santa B\u00e1rbara", "Tucapel", "Yumbel"]
+  },
+  {
+    name: "La Araucan\u00eda",
+    comunas: ["Temuco", "Carahue", "Cholchol", "Cunco", "Curarrehue", "Freire", "Galvarino", "Gorbea", "Lautaro", "Loncoche", "Melipeuco", "Nueva Imperial", "Padre Las Casas", "Perquenco", "Pitrufqu\u00e9n", "Puc\u00f3n", "Saavedra", "Teodoro Schmidt", "Tolt\u00e9n", "Vilc\u00fan", "Villarrica", "Angol", "Collipulli", "Curacaut\u00edn", "Ercilla", "Lonquimay", "Los Sauces", "Lumaco", "Pur\u00e9n", "Renaico", "Traigu\u00e9n", "Victoria"]
+  },
+  {
+    name: "Los R\u00edos",
+    comunas: ["Valdivia", "Corral", "Lanco", "Los Lagos", "M\u00e1fil", "Mariquina", "Paillaco", "Panguipulli", "La Uni\u00f3n", "Futrono", "Lago Ranco", "R\u00edo Bueno"]
+  },
+  {
+    name: "Los Lagos",
+    comunas: ["Ancud", "Castro", "Chonchi", "Curaco de V\u00e9lez", "Dalcahue", "Puqueld\u00f3n", "Queil\u00e9n", "Quemchi", "Quell\u00f3n", "Quinchao", "Calbuco", "Cocham\u00f3", "Fresia", "Frutillar", "Llanquihue", "Los Muermos", "Maull\u00edn", "Puerto Montt", "Puerto Varas", "Osorno", "Puerto Octay", "Purranque", "Puyehue", "R\u00edo Negro", "San Juan de la Costa", "San Pablo", "Chait\u00e9n", "Futaleuf\u00fa", "Hualaihu\u00e9", "Palena"]
+  },
+  {
+    name: "Ays\u00e9n del Gral. Carlos Ib\u00e1\u00f1ez del Campo",
+    comunas: ["Coyhaique", "Lago Verde", "Ays\u00e9n", "Cisnes", "Guaitecas", "Cochrane", "O\u2019Higgins", "Tortel", "Chile Chico", "R\u00edo Ib\u00e1\u00f1ez"]
+  },
+  {
+    name: "Magallanes y de la Ant\u00e1rtica Chilena",
+    comunas: ["Punta Arenas", "Laguna Blanca", "R\u00edo Verde", "San Gregorio", "Porvenir", "Primavera", "Timaukel", "Cabo de Hornos (Puerto Williams)", "Ant\u00e1rtica", "Natales", "Torres del Paine"]
+  },
+];
+
 document.addEventListener('DOMContentLoaded', () => {
   const form = document.getElementById('perfilForm');
   if (!form) {
@@ -47,6 +114,223 @@ document.addEventListener('DOMContentLoaded', () => {
   };
 
   applyPlaceholders();
+
+  const normalizeText = (value) => {
+    if (!value) {
+      return '';
+    }
+    const trimmed = value.trim();
+    if (!trimmed) {
+      return '';
+    }
+    return trimmed
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f\u00ad]/g, '')
+      .replace(/[^a-zA-Z0-9]/g, '')
+      .toLowerCase();
+  };
+
+  const regionLookup = new Map(
+    REGION_COMMUNES.map((region) => [normalizeText(region.name), region])
+  );
+
+  const allComunas = Array.from(
+    new Set(REGION_COMMUNES.flatMap((region) => region.comunas))
+  ).sort((a, b) => a.localeCompare(b, 'es', { sensitivity: 'base' }));
+
+  let comunaRequiresRegionAttempted = false;
+
+  const setupLocationFields = () => {
+    const regionField = form.querySelector('select[name="region"]');
+    const comunaField = form.querySelector('[name="comuna"]');
+    if (!regionField || !comunaField) {
+      return;
+    }
+
+    const ensureFeedback = (input, name) => {
+      if (!input) {
+        return null;
+      }
+      const selector = `[data-feedback="${name}"]`;
+      let feedback = form.querySelector(selector);
+      if (feedback) {
+        return feedback;
+      }
+      feedback = document.createElement('div');
+      feedback.className = 'text-danger small d-none';
+      feedback.dataset.feedback = name;
+      input.insertAdjacentElement('afterend', feedback);
+      return feedback;
+    };
+
+    ensureFeedback(regionField, 'region');
+    ensureFeedback(comunaField, 'comuna');
+
+    if (regionField.classList.contains('form-control')) {
+      regionField.classList.remove('form-control');
+      regionField.classList.add('form-select');
+    } else if (!regionField.classList.contains('form-select')) {
+      regionField.classList.add('form-select');
+    }
+
+    const initialComunaValue = (comunaField.value || '').trim();
+    const comunaSelect = document.createElement('select');
+    comunaSelect.name = comunaField.name || 'comuna';
+    comunaSelect.id = comunaField.id || 'id_comuna';
+
+    const originalClasses = (comunaField.getAttribute('class') || '')
+      .split(/\s+/)
+      .filter(Boolean);
+    const updatedClasses = originalClasses.filter((cls) => cls !== 'form-control');
+    if (!updatedClasses.includes('form-select')) {
+      updatedClasses.push('form-select');
+    }
+    if (updatedClasses.length > 0) {
+      comunaSelect.className = updatedClasses.join(' ');
+    }
+    if (comunaField.hasAttribute('required')) {
+      comunaSelect.setAttribute('required', 'required');
+    }
+    if (comunaField.hasAttribute('aria-describedby')) {
+      comunaSelect.setAttribute(
+        'aria-describedby',
+        comunaField.getAttribute('aria-describedby')
+      );
+    }
+    Array.from(comunaField.attributes).forEach((attr) => {
+      const name = attr.name;
+      if (
+        name === 'class' ||
+        name === 'name' ||
+        name === 'id' ||
+        name === 'type' ||
+        name === 'value' ||
+        name === 'required' ||
+        name === 'aria-describedby'
+      ) {
+        return;
+      }
+      if (name.startsWith('data-') || name.startsWith('aria-')) {
+        comunaSelect.setAttribute(name, attr.value);
+      }
+    });
+
+    comunaField.replaceWith(comunaSelect);
+    ensureFeedback(comunaSelect, 'comuna');
+
+    const refreshComunas = (regionValue, comunaValue) => {
+      const normalizedRegion = normalizeText(regionValue);
+      const regionData = regionLookup.get(normalizedRegion);
+      const requiresRegion = !regionData && !normalizedRegion;
+      const source = requiresRegion
+        ? []
+        : regionData
+          ? regionData.comunas
+          : allComunas;
+
+      comunaSelect.innerHTML = '';
+      const placeholder = document.createElement('option');
+      placeholder.value = '';
+      placeholder.textContent = requiresRegion
+        ? 'Selecciona una regi\u00f3n primero'
+        : 'Selecciona una comuna';
+      placeholder.disabled = true;
+      placeholder.hidden = true;
+      comunaSelect.appendChild(placeholder);
+
+      const normalizedComuna = normalizeText(comunaValue);
+      let matched = false;
+      source.forEach((name) => {
+        const option = new Option(name, name);
+        if (normalizedComuna && normalizeText(name) === normalizedComuna) {
+          option.selected = true;
+          matched = true;
+        }
+        comunaSelect.appendChild(option);
+      });
+
+      if (!matched) {
+        placeholder.selected = true;
+      }
+
+      if (requiresRegion) {
+        comunaSelect.value = '';
+      }
+      comunaSelect.dataset.requiresRegion = requiresRegion ? 'true' : 'false';
+      if (!requiresRegion) {
+        comunaRequiresRegionAttempted = false;
+      }
+    };
+
+    const focusRegionSoon = () => {
+      setTimeout(() => {
+        regionField.focus({ preventScroll: true });
+      }, 0);
+    };
+
+    const enforceRegionFirst = () => {
+      if (normalizeText(regionField.value)) {
+        return false;
+      }
+      comunaRequiresRegionAttempted = true;
+      const comunaFieldState = getField('comuna');
+      if (comunaFieldState) {
+        showInlineError(comunaFieldState, 'Primero debes seleccionar regi\u00f3n');
+      }
+      focusRegionSoon();
+      return true;
+    };
+
+    refreshComunas(regionField.value, initialComunaValue);
+
+    regionField.addEventListener('change', () => {
+      refreshComunas(regionField.value, '');
+      comunaRequiresRegionAttempted = false;
+      const comunaFieldState = getField('comuna');
+      if (comunaFieldState) {
+        showInlineError(comunaFieldState, '');
+      }
+    });
+
+    const guardComunaSelection = (event) => {
+      if (enforceRegionFirst()) {
+        event.preventDefault();
+      }
+    };
+
+    comunaSelect.addEventListener('mousedown', (event) => {
+      guardComunaSelection(event);
+    });
+
+    comunaSelect.addEventListener('keydown', (event) => {
+      guardComunaSelection(event);
+    });
+
+    comunaSelect.addEventListener('touchstart', (event) => {
+      guardComunaSelection(event);
+    });
+
+    comunaSelect.addEventListener('focus', () => {
+      if (enforceRegionFirst()) {
+        setTimeout(() => comunaSelect.blur(), 0);
+        return;
+      }
+      const comunaFieldState = getField('comuna');
+      if (comunaFieldState) {
+        showInlineError(comunaFieldState, '');
+      }
+    });
+
+    comunaSelect.addEventListener('change', () => {
+      comunaRequiresRegionAttempted = false;
+      const comunaFieldState = getField('comuna');
+      if (comunaFieldState) {
+        showInlineError(comunaFieldState, '');
+      }
+    });
+  };
+
+  setupLocationFields();
 
   const sanitizeRutValue = (value) => {
     if (!value) {
@@ -375,6 +659,80 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         if (digits.length < 8) {
           return 'Tel\u00e9fono debe contener 8 caracteres';
+        }
+        return '';
+      }
+    },
+    {
+      ...getField('region'),
+      prepare(field) {
+        if (!field?.input) {
+          return;
+        }
+        field.input.classList.remove('form-control');
+        if (!field.input.classList.contains('form-select')) {
+          field.input.classList.add('form-select');
+        }
+        field.input.setAttribute('aria-required', 'true');
+      },
+      onFocus(field) {
+        showInlineError(field, '');
+      },
+      onInput(field) {
+        showInlineError(field, '');
+      },
+      onBlur(field) {
+        if (!normalizeText(field.input.value)) {
+          field.input.value = '';
+        }
+      },
+      validate(field) {
+        if (!normalizeText(field.input.value)) {
+          return 'Debes seleccionar una regi\u00f3n';
+        }
+        return '';
+      }
+    },
+    {
+      ...getField('comuna'),
+      prepare(field) {
+        if (!field?.input) {
+          return;
+        }
+        field.input.classList.remove('form-control');
+        if (!field.input.classList.contains('form-select')) {
+          field.input.classList.add('form-select');
+        }
+        field.input.setAttribute('aria-required', 'true');
+      },
+      onFocus(field) {
+        if (!normalizeText(field.input.value)) {
+          const regionInput = form.querySelector('[name="region"]');
+          const regionSelected = normalizeText(regionInput?.value || '');
+          if (!regionSelected && comunaRequiresRegionAttempted) {
+            showInlineError(field, 'Primero debes seleccionar regi\u00f3n');
+            return;
+          }
+        }
+        showInlineError(field, '');
+      },
+      onInput(field) {
+        comunaRequiresRegionAttempted = false;
+        showInlineError(field, '');
+      },
+      onBlur(field) {
+        if (!normalizeText(field.input.value)) {
+          field.input.value = '';
+        }
+      },
+      validate(field) {
+        const regionInput = form.querySelector('[name="region"]');
+        const regionSelected = normalizeText(regionInput?.value || '');
+        if (!regionSelected) {
+          return comunaRequiresRegionAttempted ? 'Primero debes seleccionar regi\u00f3n' : '';
+        }
+        if (!normalizeText(field.input.value)) {
+          return 'Debes seleccionar una comuna';
         }
         return '';
       }
