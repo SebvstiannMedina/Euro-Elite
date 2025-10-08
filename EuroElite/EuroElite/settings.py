@@ -47,6 +47,7 @@ INSTALLED_APPS = [
     'Main',
     'payments',
     'django.contrib.humanize',
+    'analytics',
 ]
 
 # Usuario personalizado

@@ -19,7 +19,7 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.utils import timezone
-
+from analytics.utils import track
 from .forms import CitaForm, ProductoForm
 from .models import Cita, Producto
 
@@ -60,6 +60,7 @@ def cart_add(request):
 
     # Cantidad total de ítems
     total_items = sum(i.cantidad for i in cart.items.all())
+    track(request, "add_to_cart", product_id=producto.id, qty=qty)
     return JsonResponse({"ok": True, "items": total_items})
 
 
@@ -97,6 +98,7 @@ def cart_remove(request):
     cart = _get_active_cart(request.user)
     item = get_object_or_404(ItemCarrito, id=item_id, carrito=cart)
     item.delete()
+    track(request, "remove_from_cart", item_id=item.id, product_id=item.producto.id)  # ← ANALYTICS
     return JsonResponse({"ok": True})
 
 
@@ -182,7 +184,7 @@ def checkout_crear_pedido_y_pagar(request):
     # Cerrar carrito
     cart.activo = False
     cart.save(update_fields=['activo'])
-
+    track(request, "purchase", order_id=pedido.id, total=int(pedido.total))  # ← ANALYTICS
     # Redirigir a Flow
     pay_url = reverse("flow_crear_orden")
     return redirect(f"{pay_url}?pedido_id={pedido.id}")
@@ -222,6 +224,7 @@ def producto_detalle(request, pk):
         pk=pk,
         activo=True
     )
+    track(request, "view_product", product_id=p.id)
     return render(request, 'Taller/producto_detalle.html', {'p': p})
 
 def nosotros(request):
@@ -257,6 +260,7 @@ class CustomLoginView(LoginView):
 
     def form_valid(self, form):
         messages.success(self.request, f"Bienvenido: {form.get_user().first_name or form.get_user().email}")
+        track(self.request, "login", user_id=form.get_user().id)  # ← ANALYTICS
         return super().form_valid(form)
 
 # ============ LOGOUT ============
@@ -631,7 +635,7 @@ def api_cart_add(request):
     # Congela precio al momento
     item.precio_unitario = p.precio_con_descuento
     item.save()
-
+    track(request, "add_to_cart", product_id=p.id, qty=quantity)
     count = cart.items.aggregate(total=Sum('cantidad'))['total'] or 0
     return JsonResponse({"ok": True, "count": count})
 
