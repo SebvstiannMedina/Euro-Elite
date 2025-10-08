@@ -201,7 +201,7 @@
                 <!-- Usuario en móvil -->
                 <li class="d-lg-none">
                     {% if user.is_authenticated %}
-                    <span class="text-white">Hola, {{ user.username }}</span>
+                    <span class="text-white">Hola, {{ user.first_name }}</span>
                     <a href="{% url 'perfil' %}">Mi Perfil</a>
                     <form action="{% url 'logout' %}" method="post" style="display:inline;">
                         {% csrf_token %}
@@ -310,7 +310,7 @@
             </div>
         </div>
 
-        <div class="footer-bottom" style="text-align: center;">
+        <div class="footer-bottom" style="text-align: center;margin: 0.25rem;">
             <p>&copy; 2025 Euro Elite. Todos los derechos reservados. | Diseñado con ❤️ para los amantes del automóvil
             </p>
         </div>

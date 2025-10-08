@@ -21,11 +21,24 @@ from django.contrib import messages
 from django.utils import timezone
 from analytics.utils import track
 from .forms import CitaForm, ProductoForm
-from .models import Cita, Producto
+from .models import Cita, Producto, BloqueHorario
 
 # Local apps
 from .forms import CitaForm, DireccionForm, PerfilForm, RegistroForm, EmailLoginForm
 from .models import (Carrito,Categoria,ConfigSitio,Direccion,ItemCarrito,ItemPedido,Pago,Pedido,Producto,)
+
+#temportal -- borrar despues
+from django.db import transaction, IntegrityError
+from django.contrib.auth.decorators import login_required
+from django.shortcuts import render, redirect
+from django.contrib import messages
+from django.utils import timezone
+from django.contrib.auth.decorators import login_required
+from django.shortcuts import render
+from .models import Cita
+
+from .forms import CitaForm
+from .models import Cita, BloqueHorario
 
 def _get_active_cart(user):
     """Devuelve (o crea) el carrito activo del usuario."""
@@ -331,17 +344,46 @@ def agendar(request):
     if request.method == "POST":
         form = CitaForm(request.POST)
         if form.is_valid():
-            cita = form.save(commit=False)
-            cita.usuario = request.user
-            cita.estado = Cita.Estado.RESERVADA
-            cita.save()
+            try:
+                with transaction.atomic():
+                    bloque_id = form.cleaned_data["bloque"].id
 
-            # Marcar bloque como ocupado
-            cita.bloque.bloqueado = True
-            cita.bloque.save()
+                    # 1) Lock a nivel fila:
+                    bloque = (
+                        BloqueHorario.objects
+                        .select_for_update()
+                        .get(id=bloque_id)
+                    )
 
-            messages.success(request, "Tu cita fue reservada correctamente ✅")
-            return redirect("mis_citas")
+                    # 2) Doble chequeo con el lock tomado:
+                    if bloque.bloqueado or Cita.objects.filter(bloque=bloque).exists():
+                        form.add_error("bloque", "Este bloque ya está reservado.")
+                        raise ValueError("Bloque ya reservado")
+
+                    # 3) Crear la cita (única por bloque):
+                    cita = Cita(
+                        usuario=request.user,
+                        servicio=form.cleaned_data["servicio"],
+                        bloque=bloque,
+                        estado=Cita.Estado.RESERVADA,
+                        a_domicilio=form.cleaned_data.get("a_domicilio", False),
+                        direccion_domicilio=form.cleaned_data.get("direccion_domicilio", ""),
+                    )
+                    cita.save()
+
+                    # 4) Marcar bloque como ocupado:
+                    bloque.bloqueado = True
+                    bloque.save(update_fields=["bloqueado"])
+
+            except ValueError:
+                # Ya añadimos error en el form; seguimos mostrando el form.
+                pass
+            except IntegrityError:
+                # Por si, a pesar del lock, colisiona la unicidad:
+                form.add_error("bloque", "Este bloque ya está reservado.")
+            else:
+                messages.success(request, "Tu cita fue reservada correctamente ✅")
+                return redirect("mis_citas")
     else:
         form = CitaForm()
 
@@ -349,7 +391,12 @@ def agendar(request):
 
 @login_required
 def mis_citas(request):
-    citas = Cita.objects.filter(usuario=request.user).select_related("servicio", "bloque").order_by("-bloque__inicio")
+    citas = (
+        Cita.objects
+        .filter(usuario=request.user)
+        .select_related("servicio", "bloque")
+        .order_by("bloque__inicio")
+    )
     return render(request, "taller/mis_citas.html", {"citas": citas})
 
 
