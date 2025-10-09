@@ -102,22 +102,76 @@ document.addEventListener('DOMContentLoaded', () => {
     return;
   }
 
+  const submitButtons = Array.from(
+    form.querySelectorAll('button[type="submit"], input[type="submit"]')
+  );
+
+  const setSubmitDisabled = (disabled) => {
+    submitButtons.forEach((button) => {
+      if (!button) {
+        return;
+      }
+      if (disabled) {
+        button.setAttribute('disabled', 'disabled');
+        button.setAttribute('aria-disabled', 'true');
+        button.classList.add('disabled');
+      } else {
+        button.removeAttribute('disabled');
+        button.removeAttribute('aria-disabled');
+        button.classList.remove('disabled');
+      }
+    });
+  };
+
+  const hasVisibleErrors = () => {
+    if (form.querySelector('[data-feedback].text-danger:not(.d-none)')) {
+      return true;
+    }
+    if (form.querySelector('.is-invalid')) {
+      return true;
+    }
+    return false;
+  };
+
+  const updateSubmitState = () => {
+    setSubmitDisabled(hasVisibleErrors());
+  };
+
+  updateSubmitState();
+
   const showInlineError = (field, message) => {
     const { input, feedback } = field;
+    const hasMessage = Boolean(message);
     if (!feedback) {
-      return !message;
+      if (input) {
+        if (hasMessage) {
+          input.classList.add('is-invalid');
+          input.setAttribute('aria-invalid', 'true');
+        } else {
+          input.classList.remove('is-invalid');
+          input.removeAttribute('aria-invalid');
+        }
+      }
+      updateSubmitState();
+      return !hasMessage;
     }
-    if (message) {
+    if (hasMessage) {
       feedback.textContent = message;
       feedback.classList.remove('d-none');
-      input.classList.add('is-invalid');
-      input.setAttribute('aria-invalid', 'true');
+      if (input) {
+        input.classList.add('is-invalid');
+        input.setAttribute('aria-invalid', 'true');
+      }
+      updateSubmitState();
       return false;
     }
     feedback.textContent = '';
     feedback.classList.add('d-none');
-    input.classList.remove('is-invalid');
-    input.removeAttribute('aria-invalid');
+    if (input) {
+      input.classList.remove('is-invalid');
+      input.removeAttribute('aria-invalid');
+    }
+    updateSubmitState();
     return true;
   };
 
@@ -934,6 +988,7 @@ document.addEventListener('DOMContentLoaded', () => {
   };
 
   runInitialValidation();
+  updateSubmitState();
 
   form.addEventListener('submit', (event) => {
     let isValid = true;
