@@ -1,196 +1,206 @@
-{% extends 'base.html' %}
+{% extends "base.html" %}
 {% load static %}
 {% block title %}Nosotros - Euro Elite{% endblock %}
 {% block content %}
 
-<!-- Hero con video -->
-<section class="hero-section position-relative text-white text-center">
-  <video autoplay muted loop playsinline class="hero-video">
-    <source src="{% static 'videos/hero.mp4' %}" type="video/mp4">
-  </video>
+<!-- ESTILOS -->
+<style>
+.hero-nosotros{min-height:80vh;position:relative;display:flex;align-items:center;justify-content:center;}
+.hero-bg{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;filter:brightness(.6);animation:zoomHero 15s infinite alternate;}
+.overlay{position:absolute;inset:0;background:linear-gradient(135deg,rgba(13,110,253,0.6),rgba(102,16,242,0.6));}
+.hero-content{position:relative;z-index:2;}
+@keyframes zoomHero{from{transform:scale(1);}to{transform:scale(1.1);}}
+.animate-fade{animation:fadeIn 1s ease forwards;}
+.animate-fade-delay{opacity:0;animation:fadeIn 1s ease .5s forwards;}
+.animate-fade-delay2{opacity:0;animation:fadeIn 1s ease 1s forwards;}
+@keyframes fadeIn{to{opacity:1;transform:translateY(0);}}
+.icon-circle{width:70px;height:70px;border-radius:50%;background:linear-gradient(135deg,#0d6efd,#6610f2);color:white;display:flex;align-items:center;justify-content:center;margin:0 auto;transition:.3s;}
+.valor-card:hover .icon-circle{transform:scale(1.1);}
+.timeline{position:relative;margin-left:20px;}
+.timeline::before{content:"";position:absolute;left:0;top:0;bottom:0;width:2px;background:#0d6efd;}
+.timeline-item{position:relative;margin-bottom:20px;padding-left:30px;}
+.timeline-item .dot{position:absolute;left:-7px;top:5px;width:14px;height:14px;background:#fff;border:3px solid #0d6efd;border-radius:50%;}
+.team-card{position:relative;overflow:hidden;}
+.team-card img{width:120px;height:120px;object-fit:cover;}
+.team-card .overlay{position:absolute;inset:0;background:rgba(0,0,0,.6);color:white;display:flex;align-items:center;justify-content:center;opacity:0;transition:.3s;border-radius:50%;}
+.team-card:hover .overlay{opacity:1;}
+.gallery img{width:100%;border-radius:12px;transition:.4s;}
+.gallery:hover img{transform:scale(1.05);}
+.cta-nosotros{background:linear-gradient(135deg,#0d6efd,#6610f2);}
+.pulse{animation:pulseAnim 2s infinite;}
+@keyframes pulseAnim{0%{box-shadow:0 0 0 0 rgba(255,255,255,.7);}70%{box-shadow:0 0 0 20px rgba(255,255,255,0);}100%{box-shadow:0 0 0 0 rgba(255,255,255,0);}}
+/* Degradado en texto */
+.text-gradient{background:linear-gradient(135deg,#0d6efd,#6610f2);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;color:transparent;}
+</style>
+<!-- HERO -->
+<section class="hero-nosotros text-white text-center">
   <div class="overlay"></div>
+  <img class="hero-bg" src="https://images.unsplash.com/photo-1502877338535-766e1452684a?w=1600&q=80" alt="Auto de lujo">
   <div class="container hero-content">
-    <h1 class="display-3 fw-bold mb-3" data-aos="fade-down">Conoce Euro Elite</h1>
-    <p class="lead mb-4" data-aos="fade-up">Confianza, calidad y pasión por los autos.</p>
-    <div class="d-flex justify-content-center gap-3">
-      <a href="{% url 'productos' %}" class="btn btn-primary btn-lg rounded-pill shadow" data-aos="zoom-in">Ver productos</a>
-      <a href="{% url 'nosotros' %}" class="btn btn-outline-light btn-lg rounded-pill shadow" data-aos="zoom-in" data-aos-delay="200">Nosotros</a>
+    <h1 class="display-3 fw-bold text-gradient animate-fade">Conoce Euro Elite</h1>
+    <p class="lead animate-fade-delay">Más que autos, experiencias de confianza.</p>
+    <div class="d-flex justify-content-center gap-3 mt-3 animate-fade-delay2">
+      <a href="{% url 'productos' %}" class="btn btn-light btn-lg rounded-pill shadow">Ver autos</a>
+      <a href="{% url 'agendar' %}" class="btn btn-outline-light btn-lg rounded-pill shadow">Agendar cita</a>
     </div>
   </div>
 </section>
 
-<!-- Valores -->
-<div id="valores" class="container my-5">
-  <h2 class="text-center mb-5 fw-bold" data-aos="fade-up">Nuestros valores</h2>
-  <div class="row text-center g-4">
-    <div class="col-md-3" data-aos="flip-left" data-aos-delay="100">
-      <div class="value-card p-4 shadow-sm rounded-4">
-        <i class="fas fa-handshake fa-3x mb-3 text-primary"></i>
-        <h5>Confianza</h5>
-        <p class="text-muted">Relaciones transparentes con nuestros clientes.</p>
+<!-- QUIÉNES SOMOS -->
+<section class="py-5">
+  <div class="container">
+    <div class="row align-items-center g-5">
+      <div class="col-lg-6">
+        <img src="https://images.unsplash.com/photo-1525609004556-c46c7d6cf023?w=1000&q=80" 
+             class="img-fluid rounded-4 shadow" alt="Sucursal">
       </div>
-    </div>
-    <div class="col-md-3" data-aos="flip-left" data-aos-delay="200">
-      <div class="value-card p-4 shadow-sm rounded-4">
-        <i class="fas fa-car fa-3x mb-3 text-primary"></i>
-        <h5>Calidad</h5>
-        <p class="text-muted">Vehículos de elite, seleccionados cuidadosamente.</p>
-      </div>
-    </div>
-    <div class="col-md-3" data-aos="flip-left" data-aos-delay="300">
-      <div class="value-card p-4 shadow-sm rounded-4">
-        <i class="fas fa-cogs fa-3x mb-3 text-primary"></i>
-        <h5>Innovación</h5>
-        <p class="text-muted">Tecnología y procesos modernos en cada servicio.</p>
-      </div>
-    </div>
-    <div class="col-md-3" data-aos="flip-left" data-aos-delay="400">
-      <div class="value-card p-4 shadow-sm rounded-4">
-        <i class="fas fa-users fa-3x mb-3 text-primary"></i>
-        <h5>Compromiso</h5>
-        <p class="text-muted">Atención personalizada en cada etapa de tu compra.</p>
-      </div>
-    </div>
-  </div>
-</div>
-
-<!-- Historia en timeline -->
-<div class="container my-5">
-  <h2 class="text-center mb-5 fw-bold" data-aos="fade-up">Nuestra historia</h2>
-  <div class="timeline">
-    <div class="timeline-item left" data-aos="fade-right">
-      <h5>2020</h5>
-      <p>Nace Euro Elite con la idea de traer autos de elite a Chile.</p>
-    </div>
-    <div class="timeline-item right" data-aos="fade-left">
-      <h5>2021</h5>
-      <p>Inauguramos nuestra primera sucursal.</p>
-    </div>
-    <div class="timeline-item left" data-aos="fade-right">
-      <h5>2023</h5>
-      <p>Más de 500 clientes confiaron en nosotros.</p>
-    </div>
-    <div class="timeline-item right" data-aos="fade-left">
-      <h5>2025</h5>
-      <p>Consolidamos nuestra plataforma online Euro Elite.</p>
-    </div>
-  </div>
-</div>
-
-<!-- Video destacado -->
-<div class="container my-5" data-aos="zoom-in">
-  <div class="video-wrapper position-relative">
-    <img src="{% static 'img/mecanico.jpg' %}" class="img-fluid rounded-4 shadow" alt="Mecánico en acción">
-    <button class="btn btn-light play-btn" data-bs-toggle="modal" data-bs-target="#videoModal">
-      <i class="fas fa-play fa-2x text-primary"></i>
-    </button>
-  </div>
-</div>
-
-<!-- Modal video -->
-<div class="modal fade" id="videoModal" tabindex="-1" aria-hidden="true">
-  <div class="modal-dialog modal-dialog-centered modal-lg">
-    <div class="modal-content rounded-4">
-      <div class="modal-body p-0">
-        <div class="ratio ratio-16x9">
-          <iframe id="videoFrame" src="https://www.youtube.com/embed/dQw4w9WgXcQ" 
-                  title="Video Euro Elite" allowfullscreen></iframe>
+      <div class="col-lg-6">
+        <h2 class="fw-bold mb-3 text-gradient">Quiénes somos</h2>
+        <p class="text-muted">
+          En <b>Euro Elite</b> seleccionamos e importamos vehículos de alta gama con transparencia, servicio humano y excelencia técnica. 
+          Queremos que cada cliente viva una experiencia premium al comprar su auto.
+        </p>
+        <div class="row g-3 mt-3">
+          <div class="col-sm-6">
+            <div class="card h-100 shadow-sm p-3">
+              <h6 class="fw-bold">Misión</h6>
+              <p class="small text-muted mb-0">Ofrecer confianza y excelencia en cada auto que entregamos.</p>
+            </div>
+          </div>
+          <div class="col-sm-6">
+            <div class="card h-100 shadow-sm p-3">
+              <h6 class="fw-bold">Visión</h6>
+              <p class="small text-muted mb-0">Ser la automotora premium más confiable e innovadora de Chile.</p>
+            </div>
+          </div>
         </div>
       </div>
     </div>
   </div>
-</div>
+</section>
 
-<!-- Testimonios en carrusel -->
-<div class="container my-5">
-  <h2 class="text-center mb-5 fw-bold" data-aos="fade-up">Lo que dicen nuestros clientes</h2>
-  <div id="carouselTestimonios" class="carousel slide" data-bs-ride="carousel">
-    <div class="carousel-inner text-center">
-      <div class="carousel-item active">
-        <img src="{% static 'img/cliente1.jpg' %}" class="rounded-circle mb-3" width="80" height="80" alt="Cliente">
-        <p class="fst-italic">“Excelente atención, el auto llegó impecable y con garantía real.”</p>
-        <div class="stars text-warning mb-2">⭐⭐⭐⭐⭐</div>
-        <h6>- María</h6>
+<!-- VALORES -->
+<section class="py-5 bg-light">
+  <div class="container">
+    <h2 class="fw-bold text-center mb-5 text-gradient">Nuestros valores</h2>
+    <div class="row text-center g-4">
+      <div class="col-md-3">
+        <div class="valor-card p-4 shadow-sm">
+          <div class="icon-circle"><i class="fas fa-handshake fa-lg"></i></div>
+          <h6 class="mt-3">Confianza</h6>
+          <p class="text-muted small">Relaciones honestas y claras.</p>
+        </div>
       </div>
-      <div class="carousel-item">
-        <img src="{% static 'img/cliente2.jpg' %}" class="rounded-circle mb-3" width="80" height="80" alt="Cliente">
-        <p class="fst-italic">“Me ayudaron a encontrar el auto perfecto para mi familia.”</p>
-        <div class="stars text-warning mb-2">⭐⭐⭐⭐⭐</div>
-        <h6>- Javier</h6>
+      <div class="col-md-3">
+        <div class="valor-card p-4 shadow-sm">
+          <div class="icon-circle"><i class="fas fa-car-side fa-lg"></i></div>
+          <h6 class="mt-3">Calidad</h6>
+          <p class="text-muted small">Unidades seleccionadas a mano.</p>
+        </div>
       </div>
-      <div class="carousel-item">
-        <img src="{% static 'img/cliente3.jpg' %}" class="rounded-circle mb-3" width="80" height="80" alt="Cliente">
-        <p class="fst-italic">“Euro Elite es sinónimo de confianza. Volvería a comprar.”</p>
-        <div class="stars text-warning mb-2">⭐⭐⭐⭐⭐</div>
-        <h6>- Andrés</h6>
+      <div class="col-md-3">
+        <div class="valor-card p-4 shadow-sm">
+          <div class="icon-circle"><i class="fas fa-microchip fa-lg"></i></div>
+          <h6 class="mt-3">Innovación</h6>
+          <p class="text-muted small">Procesos modernos y tecnología.</p>
+        </div>
+      </div>
+      <div class="col-md-3">
+        <div class="valor-card p-4 shadow-sm">
+          <div class="icon-circle"><i class="fas fa-users fa-lg"></i></div>
+          <h6 class="mt-3">Compromiso</h6>
+          <p class="text-muted small">Acompañamiento en cada etapa.</p>
+        </div>
       </div>
     </div>
   </div>
-</div>
+</section>
 
-<!-- CTA final -->
-<section class="cta-section text-center text-white py-5">
-  <div class="container" data-aos="zoom-in">
-    <h2 class="mb-3 fw-bold">¿Listo para tu próximo auto?</h2>
-    <a href="{% url 'productos' %}" class="btn btn-light btn-lg rounded-pill shadow pulse-btn">Ver autos disponibles</a>
+<!-- HISTORIA -->
+<section class="py-5">
+  <div class="container">
+    <h2 class="fw-bold text-center mb-5 text-gradient">Nuestra historia</h2>
+    <div class="timeline">
+      <div class="timeline-item"><span class="dot"></span><div class="content"><h6>2020</h6><p>Nace Euro Elite en Chile.</p></div></div>
+      <div class="timeline-item"><span class="dot"></span><div class="content"><h6>2021</h6><p>Abrimos nuestra primera sucursal.</p></div></div>
+      <div class="timeline-item"><span class="dot"></span><div class="content"><h6>2023</h6><p>Superamos los 500 clientes felices.</p></div></div>
+      <div class="timeline-item"><span class="dot"></span><div class="content"><h6>2025</h6><p>Lanzamos nuestra plataforma online.</p></div></div>
+    </div>
+  </div>
+</section>
+
+<!-- EQUIPO -->
+<section class="py-5 bg-light">
+  <div class="container">
+    <h2 class="fw-bold text-center mb-5 text-gradient">Nuestro equipo</h2>
+    <div class="row text-center g-4">
+      <div class="col-md-3">
+        <div class="team-card">
+          <img src="https://randomuser.me/api/portraits/women/44.jpg" class="rounded-circle mb-3">
+          <div class="overlay"><p>Gerente Comercial</p></div>
+          <h6>Camila Rivas</h6>
+        </div>
+      </div>
+      <div class="col-md-3">
+        <div class="team-card">
+          <img src="https://randomuser.me/api/portraits/men/45.jpg" class="rounded-circle mb-3">
+          <div class="overlay"><p>Jefe de Ventas</p></div>
+          <h6>Tomás Muñoz</h6>
+        </div>
+      </div>
+      <div class="col-md-3">
+        <div class="team-card">
+          <img src="https://randomuser.me/api/portraits/women/68.jpg" class="rounded-circle mb-3">
+          <div class="overlay"><p>Importación</p></div>
+          <h6>Valentina Díaz</h6>
+        </div>
+      </div>
+      <div class="col-md-3">
+        <div class="team-card">
+          <img src="https://randomuser.me/api/portraits/men/77.jpg" class="rounded-circle mb-3">
+          <div class="overlay"><p>Jefe de Taller</p></div>
+          <h6>Ricardo Soto</h6>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- GALERÍA -->
+<section class="py-5">
+  <div class="container">
+    <h2 class="fw-bold text-center mb-5 text-gradient">Galería</h2>
+    <div class="row g-3">
+      <div class="col-md-4"><div class="gallery"><img src="https://images.unsplash.com/photo-1606660454928-01e68bc65a0a?w=800&q=80"></div></div>
+      <div class="col-md-4"><div class="gallery"><img src="https://images.unsplash.com/photo-1511919884226-fd3cad34687c?w=800&q=80"></div></div>
+      <div class="col-md-4"><div class="gallery"><img src="https://images.unsplash.com/photo-1625727820304-ecb2fc90d92c?w=800&q=80"></div></div>
+    </div>
+  </div>
+</section>
+
+<!-- TESTIMONIOS -->
+<section class="py-5 bg-light">
+  <div class="container">
+    <h2 class="fw-bold text-center mb-5 text-gradient">Lo que dicen nuestros clientes</h2>
+    <div class="row text-center g-4">
+      <div class="col-md-4"><p class="fst-italic">“Excelente atención y garantía real.”</p><small>- María ⭐⭐⭐⭐⭐</small></div>
+      <div class="col-md-4"><p class="fst-italic">“Me ayudaron a encontrar el auto ideal.”</p><small>- Javier ⭐⭐⭐⭐⭐</small></div>
+      <div class="col-md-4"><p class="fst-italic">“Euro Elite es confianza total.”</p><small>- Andrés ⭐⭐⭐⭐⭐</small></div>
+    </div>
+  </div>
+</section>
+
+<!-- CTA -->
+<section class="cta-nosotros text-center text-white py-5">
+  <div class="container">
+    <h2 class="fw-bold mb-3 text-gradient" >¿Listo para tu próximo auto?</h2>
+    <div class="d-flex justify-content-center gap-3">
+      <a href="{% url 'productos' %}" class="btn btn-light btn-lg rounded-pill shadow pulse">Ver autos</a>
+      <a href="{% url 'agendar' %}" class="btn btn-outline-light btn-lg rounded-pill shadow pulse">Agendar cita</a>
+    </div>
   </div>
 </section>
 
 {% endblock %}
 
-<!-- Extra styles -->
-<style>
-.hero-video {
-  position: absolute;
-  top: 0; left: 0; width: 100%; height: 100%; object-fit: cover;
-  z-index: -1;
-}
-.hero-section .overlay {
-  background: rgba(0,0,0,0.5);
-  position: absolute; top:0; left:0; width:100%; height:100%;
-}
-.hero-content { position: relative; z-index: 2; }
 
-.value-card { transition: all 0.3s ease; }
-.value-card:hover { transform: translateY(-8px); box-shadow: 0 6px 20px rgba(0,0,0,0.2); }
-
-.timeline { position: relative; margin: 2rem 0; }
-.timeline::before {
-  content: ""; position: absolute; left: 50%; top: 0; bottom: 0;
-  width: 4px; background: #0d6efd;
-}
-.timeline-item {
-  width: 45%; padding: 1rem; background: #f8f9fa; border-radius: 8px;
-  position: relative; margin-bottom: 2rem;
-}
-.timeline-item.left { float: left; clear: both; }
-.timeline-item.right { float: right; clear: both; }
-.timeline-item h5 { font-weight: bold; color: #0d6efd; }
-
-.video-wrapper { position: relative; display: inline-block; }
-.play-btn {
-  position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
-  border-radius: 50%; padding: 20px; background: white;
-  box-shadow: 0 4px 20px rgba(0,0,0,0.3); transition: transform 0.3s;
-}
-.play-btn:hover { transform: translate(-50%, -50%) scale(1.1); }
-
-.cta-section { background: linear-gradient(135deg, #0d6efd, #6610f2); }
-.pulse-btn { animation: pulse 2s infinite; }
-@keyframes pulse {
-  0% { box-shadow: 0 0 0 0 rgba(255,255,255,0.7); }
-  70% { box-shadow: 0 0 0 20px rgba(255,255,255,0); }
-  100% { box-shadow: 0 0 0 0 rgba(255,255,255,0); }
-}
-</style>
-
-<!-- Script para pausar video al cerrar -->
-<script>
-document.addEventListener("DOMContentLoaded", function() {
-  var videoModal = document.getElementById('videoModal');
-  var videoFrame = document.getElementById('videoFrame');
-  videoModal.addEventListener('hidden.bs.modal', function () {
-    videoFrame.src = videoFrame.src;
-  });
-});
-</script>
