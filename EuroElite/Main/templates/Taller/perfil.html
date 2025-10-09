@@ -90,6 +90,7 @@
             <div class="col-12 col-md-6">
               <label for="{{ direccion_form.linea1.id_for_label }}" class="form-label fw-semibold text-muted">Calle / Dirección</label>
               {{ direccion_form.linea1 }}
+              <div class="text-danger small d-none" data-feedback="linea1"></div>
               {% if direccion_form.linea1.errors %}
                 <div class="text-danger small">{{ direccion_form.linea1.errors }}</div>
               {% endif %}
@@ -97,6 +98,7 @@
             <div class="col-12 col-md-6">
               <label for="{{ direccion_form.linea2.id_for_label }}" class="form-label fw-semibold text-muted">Departamento / Oficina</label>
               {{ direccion_form.linea2 }}
+              <div class="text-danger small d-none" data-feedback="linea2"></div>
               {% if direccion_form.linea2.errors %}
                 <div class="text-danger small">{{ direccion_form.linea2.errors }}</div>
               {% endif %}

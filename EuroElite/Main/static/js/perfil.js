@@ -570,6 +570,38 @@ document.addEventListener('DOMContentLoaded', () => {
     return '';
   };
 
+  const sanitizeAddressValue = (value) => {
+    if (!value) {
+      return '';
+    }
+    const normalized = value.normalize('NFC');
+    const filtered = normalized.replace(/[^A-Za-zÁÉÍÓÚÜÑáéíóúüñ0-9º°ª#.,'\/\-\s]/g, '');
+    const singleSpaced = filtered.replace(/\s{2,}/g, ' ');
+    const withoutLeading = singleSpaced.replace(/^\s+/, '');
+    return withoutLeading.slice(0, 120);
+  };
+
+  const sanitizeAddressInput = (field) => {
+    const { input } = field;
+    const sanitized = sanitizeAddressValue(input.value);
+    if (input.value !== sanitized) {
+      input.value = sanitized;
+      if (typeof input.setSelectionRange === 'function') {
+        const caret = sanitized.length;
+        input.setSelectionRange(caret, caret);
+      }
+    }
+  };
+
+  const validateAddressField = (field) => {
+    const sanitized = sanitizeAddressValue(field.input.value).trim();
+    field.input.value = sanitized;
+    if (!sanitized) {
+      return 'Debes rellenar este campo';
+    }
+    return '';
+  };
+
   const sanitizeEmailValue = (value) => {
     if (!value) {
       return '';
@@ -796,6 +828,70 @@ document.addEventListener('DOMContentLoaded', () => {
           return 'Tel\u00e9fono debe contener 8 caracteres';
         }
         return '';
+      }
+    },
+    {
+      ...getField('linea1'),
+      prepare(field) {
+        if (!field?.input) {
+          return;
+        }
+        field.input.setAttribute('autocomplete', 'address-line1');
+        field.input.setAttribute('inputmode', 'text');
+        field.input.setAttribute('maxlength', '120');
+        field.input.setAttribute('aria-required', 'true');
+        field.input.setAttribute('required', 'required');
+        if (!field.input.getAttribute('placeholder')) {
+          field.input.setAttribute('placeholder', 'Av. Siempre Viva 742');
+        }
+      },
+      onFocus(field) {
+        showInlineError(field, '');
+      },
+      onInput(field) {
+        sanitizeAddressInput(field);
+        showInlineError(field, '');
+      },
+      onPaste(field, event) {
+        applyPasteSanitation(field, event, sanitizeAddressValue, sanitizeAddressInput);
+      },
+      onBlur(field) {
+        field.input.value = sanitizeAddressValue(field.input.value).trim();
+      },
+      validate(field) {
+        return validateAddressField(field);
+      }
+    },
+    {
+      ...getField('linea2'),
+      prepare(field) {
+        if (!field?.input) {
+          return;
+        }
+        field.input.setAttribute('autocomplete', 'address-line2');
+        field.input.setAttribute('inputmode', 'text');
+        field.input.setAttribute('maxlength', '120');
+        field.input.setAttribute('aria-required', 'true');
+        field.input.setAttribute('required', 'required');
+        if (!field.input.getAttribute('placeholder')) {
+          field.input.setAttribute('placeholder', 'Depto / Oficina');
+        }
+      },
+      onFocus(field) {
+        showInlineError(field, '');
+      },
+      onInput(field) {
+        sanitizeAddressInput(field);
+        showInlineError(field, '');
+      },
+      onPaste(field, event) {
+        applyPasteSanitation(field, event, sanitizeAddressValue, sanitizeAddressInput);
+      },
+      onBlur(field) {
+        field.input.value = sanitizeAddressValue(field.input.value).trim();
+      },
+      validate(field) {
+        return validateAddressField(field);
       }
     },
     {
