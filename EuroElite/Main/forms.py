@@ -181,12 +181,11 @@ class DireccionForm(forms.ModelForm):
     """Formulario para editar o agregar dirección del usuario."""
     class Meta:
         model = Direccion
-        fields = ['linea1', 'linea2', 'comuna', 'ciudad', 'region', 'codigo_postal']
+        fields = ['linea1', 'linea2', 'comuna', 'region', 'codigo_postal']
         widgets = {
             'linea1': forms.TextInput(attrs={'class': 'form-control'}),
             'linea2': forms.TextInput(attrs={'class': 'form-control'}),
             'comuna': forms.TextInput(attrs={'class': 'form-control'}),
-            'ciudad': forms.TextInput(attrs={'class': 'form-control'}),
             'region': forms.Select(attrs={"class": "form-control"}),
             'codigo_postal': forms.TextInput(attrs={'class': 'form-control'}),
         }
