@@ -230,3 +230,18 @@ class EmailAuthenticationForm(AuthenticationForm):
             "placeholder": "Ingresa tu correo"
         })
     )
+
+from django import forms
+from .models import VehiculoEnVenta
+
+class VehiculoForm(forms.ModelForm):
+    class Meta:
+        model = VehiculoEnVenta
+        fields = [
+            'marca', 'modelo', 'año', 'kilometraje',
+            'transmision', 'combustible', 'precio',
+            'descripcion', 'imagen'
+        ]
+        widgets = {
+            'descripcion': forms.Textarea(attrs={'rows': 3, 'class': 'form-control'}),
+        }

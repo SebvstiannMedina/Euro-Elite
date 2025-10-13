@@ -729,3 +729,66 @@ from .forms import EmailAuthenticationForm
 class CustomLoginView(LoginView):
     template_name = "Taller/login.html"
     authentication_form = EmailAuthenticationForm
+
+from django.shortcuts import render, redirect, get_object_or_404
+from django.contrib import messages
+from django.contrib.auth.decorators import login_required
+from django.contrib.admin.views.decorators import staff_member_required
+from .models import VehiculoEnVenta
+from .forms import VehiculoForm
+
+
+
+@login_required
+def publicar_vehiculo(request):
+    if request.method == 'POST':
+        form = VehiculoForm(request.POST, request.FILES)
+        if form.is_valid():
+            vehiculo = form.save(commit=False)
+            vehiculo.usuario = request.user
+            vehiculo.save()
+            messages.success(request, "Tu vehículo fue enviado para aprobación del administrador.")
+            return redirect('estado_revi_vehiculo')
+        else:
+            messages.error(request, "Por favor revisa los campos del formulario.")
+    else:
+        form = VehiculoForm()
+
+    return render(request, 'taller/publicar_vehiculo.html', {'form': form})
+
+
+# 🔹 Ver estado del usuario
+@login_required
+def estado_revi_vehiculos(request):
+    vehiculos = VehiculoEnVenta.objects.filter(usuario=request.user)
+    return render(request, 'taller/estado_revi_vehiculos.html', {'vehiculos': vehiculos})
+
+
+# 🔹 Revisión por parte del administrador
+@staff_member_required
+def revisar_vehiculo(request):
+    pendientes = VehiculoEnVenta.objects.filter(estado='pendiente')
+    aprobados = VehiculoEnVenta.objects.filter(estado='aprobado')
+    return render(request, 'taller/revisar_vehiculo.html', {
+        'pendientes': pendientes,
+        'aprobados': aprobados
+    })
+
+
+# 🔹 Aprobar o rechazar vehículo
+@staff_member_required
+def aprobar_vehiculo(request, id):
+    vehiculo = get_object_or_404(VehiculoEnVenta, id=id)
+    vehiculo.estado = 'aprobado'
+    vehiculo.save()
+    messages.success(request, f"Vehículo {vehiculo.marca} {vehiculo.modelo} aprobado correctamente.")
+    return redirect('revisar_vehiculo')
+
+
+@staff_member_required
+def rechazar_vehiculo(request, id):
+    vehiculo = get_object_or_404(VehiculoEnVenta, id=id)
+    vehiculo.estado = 'rechazado'
+    vehiculo.save()
+    messages.error(request, f"Vehículo {vehiculo.marca} {vehiculo.modelo} fue rechazado.")
+    return redirect('revisar_vehiculo')

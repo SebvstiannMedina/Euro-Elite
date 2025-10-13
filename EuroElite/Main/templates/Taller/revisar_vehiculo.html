@@ -1,0 +1,71 @@
+{% extends 'base.html' %}
+{% load humanize %}
+{% block title %}Revisión de Vehículos - Euro Elite{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+  <h2 class="text-center mb-4">🛠 Revisión de Vehículos Publicados</h2>
+
+  {% if messages %}
+    {% for message in messages %}
+      <div class="alert alert-{{ message.tags }}">{{ message }}</div>
+    {% endfor %}
+  {% endif %}
+
+  <div class="row">
+    {% for v in pendientes %}
+      <div class="col-md-6 mb-4">
+        <div class="card shadow-sm border-0 rounded-4">
+          {% if v.imagen %}
+            <img src="{{ v.imagen.url }}" class="card-img-top rounded-top-4" alt="{{ v.marca }}">
+          {% endif %}
+          <div class="card-body">
+            <h5 class="card-title">{{ v.marca }} {{ v.modelo }} ({{ v.año }})</h5>
+            <p class="text-muted mb-1">Publicado por: <strong>{{ v.usuario.username }}</strong></p>
+            <ul class="list-unstyled mb-3">
+              <li>⚙️ <strong>Transmisión:</strong> {{ v.get_transmision_display }}</li>
+              <li>⛽ <strong>Combustible:</strong> {{ v.get_combustible_display }}</li>
+              <li>📏 <strong>Kilometraje:</strong> {{ v.kilometraje|intcomma }} km</li>
+            </ul>
+            <p class="fw-bold text-success mb-2">${{ v.precio|floatformat:0 }}</p>
+            <p>{{ v.descripcion|truncatechars:120 }}</p>
+
+            <div class="d-flex justify-content-between mt-3">
+              <a href="{% url 'aprobar_vehiculo' v.id %}" class="btn btn-success">
+                ✅ Aprobar
+              </a>
+              <a href="{% url 'rechazar_vehiculo' v.id %}" class="btn btn-danger">
+                ❌ Rechazar
+              </a>
+            </div>
+          </div>
+        </div>
+      </div>
+    {% empty %}
+      <p class="text-center mt-5">No hay vehículos pendientes de revisión.</p>
+    {% endfor %}
+  </div>
+
+  <hr class="my-5">
+
+  <h3 class="text-center mb-3">✅ Vehículos Aprobados</h3>
+  <div class="row">
+    {% for v in aprobados %}
+      <div class="col-md-4 mb-4">
+        <div class="card border-0 shadow-sm rounded-4">
+          {% if v.imagen %}
+            <img src="{{ v.imagen.url }}" class="card-img-top rounded-top-4" alt="{{ v.marca }}">
+          {% endif %}
+          <div class="card-body text-center">
+            <h5>{{ v.marca }} {{ v.modelo }} ({{ v.año }})</h5>
+            <p>⚙️ {{ v.get_transmision_display }} | ⛽ {{ v.get_combustible_display }}</p>
+            <p class="text-success fw-bold mb-0">${{ v.precio|floatformat:0 }}</p>
+          </div>
+        </div>
+      </div>
+    {% empty %}
+      <p class="text-center">No hay vehículos aprobados aún.</p>
+    {% endfor %}
+  </div>
+</div>
+{% endblock %}

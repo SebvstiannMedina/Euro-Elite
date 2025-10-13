@@ -10,6 +10,7 @@ from Main.views import CustomLoginView, registro
 from django.contrib import admin
 from django.urls import path, include
 from Main.views import CustomLoginView, CustomLogoutView, registro
+from Main import views as main_views
 
 urlpatterns = [
     path('admin/', admin.site.urls),
@@ -89,8 +90,17 @@ urlpatterns = [
              template_name='taller/contra_cambiada_exitosa.html'  
          ), 
          name='password_reset_complete'),
+    
+    path('publicar_vehiculo', main_views.publicar_vehiculo, name='publicar_vehiculo'),
+    path('estado_revi_vehiculos', main_views.estado_revi_vehiculos, name='estado_revi_vehiculos'),
+    path('revisar_vehiculo', main_views.revisar_vehiculo, name='revisar_vehiculo'),
+    path('aprobar_vehiculo/<int:id>/', main_views.aprobar_vehiculo, name='aprobar_vehiculo'),
+    path('rechazar_vehiculo/<int:id>/', main_views.rechazar_vehiculo, name='rechazar_vehiculo'),
 
     path('custom_404', main_views.custom_404, name='custom_404'),
+
+    
+
 ]
 
 if settings.DEBUG:

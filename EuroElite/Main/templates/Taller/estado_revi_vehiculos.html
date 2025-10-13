@@ -1,0 +1,48 @@
+{% extends 'base.html' %}
+{% load humanize %}
+{% block title %}Mis Vehículos - Euro Elite{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+  <h2 class="text-center mb-4">🚘 Mis Vehículos Publicados</h2>
+
+  {% if messages %}
+    {% for message in messages %}
+      <div class="alert alert-{{ message.tags }}">{{ message }}</div>
+    {% endfor %}
+  {% endif %}
+
+  {% if vehiculos %}
+    <div class="row">
+      {% for v in vehiculos %}
+        <div class="col-md-4 mb-4">
+          <div class="card border-0 shadow-sm rounded-4">
+            {% if v.imagen %}
+              <img src="{{ v.imagen.url }}" class="card-img-top rounded-top-4" alt="{{ v.marca }}">
+            {% endif %}
+            <div class="card-body">
+              <h5 class="card-title">{{ v.marca }} {{ v.modelo }} ({{ v.año }})</h5>
+              <p>⚙️ {{ v.get_transmision_display }} | ⛽ {{ v.get_combustible_display }}</p>
+              <p>📏 {{ v.kilometraje|intcomma }} km</p>
+              <p class="fw-bold text-success mb-2">${{ v.precio|floatformat:0 }}</p>
+
+              {% if v.estado == "pendiente" %}
+                <span class="badge bg-warning text-dark d-block mb-2">Pendiente de aprobación</span>
+              {% elif v.estado == "aprobado" %}
+                <span class="badge bg-success d-block mb-2">Aprobado y publicado</span>
+              {% elif v.estado == "rechazado" %}
+                <span class="badge bg-danger d-block mb-2">Rechazado por el administrador</span>
+              {% endif %}
+            </div>
+          </div>
+        </div>
+      {% endfor %}
+    </div>
+  {% else %}
+    <p class="text-center mt-5 text-muted">
+      No tienes vehículos publicados todavía.<br>
+      <a href="{% url 'publicar_vehiculo' %}" class="btn btn-primary mt-3">Publicar nuevo vehículo</a>
+    </p>
+  {% endif %}
+</div>
+{% endblock %}

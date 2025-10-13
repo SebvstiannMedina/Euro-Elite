@@ -404,3 +404,44 @@ class ConfigSitio(MarcaTiempo):
 
 from django.contrib.auth.models import BaseUserManager
 
+from django.contrib.auth.models import User
+
+from django.db import models
+from django.conf import settings
+
+class VehiculoEnVenta(models.Model):
+    TRANSMISIONES = [
+        ('manual', 'Manual'),
+        ('automatica', 'Automática'),
+    ]
+
+    COMBUSTIBLES = [
+        ('bencina', 'Bencina'),
+        ('diesel', 'Diésel / Petrolero'),
+    ]
+
+    ESTADOS = [
+        ('pendiente', 'Pendiente de aprobación'),
+        ('aprobado', 'Aprobado'),
+        ('rechazado', 'Rechazado'),
+    ]
+
+    usuario = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name='vehiculos_publicados'
+    )
+    marca = models.CharField(max_length=50)
+    modelo = models.CharField(max_length=50)
+    año = models.PositiveIntegerField()
+    kilometraje = models.PositiveIntegerField(help_text="Kilómetros recorridos")
+    transmision = models.CharField(max_length=20, choices=TRANSMISIONES)
+    combustible = models.CharField(max_length=20, choices=COMBUSTIBLES)
+    precio = models.DecimalField(max_digits=10, decimal_places=2)
+    descripcion = models.TextField(blank=True)
+    imagen = models.ImageField(upload_to='vehiculos/', blank=True, null=True)
+    estado = models.CharField(max_length=20, choices=ESTADOS, default='pendiente')
+    fecha_publicacion = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"{self.marca} {self.modelo} ({self.año}) - {self.usuario.username}"
