@@ -71,10 +71,10 @@ urlpatterns = [
 
     # esto es para que se vea confirmado el envio del correo electronico    
     path('recuperar_contra_listo/', 
-         auth_views.PasswordResetDoneView.as_view(
-             template_name='taller/recuperar_contra_listo.html'
-         ), 
-         name='password_reset_done'),
+     auth_views.PasswordResetDoneView.as_view(
+         template_name='Taller/recuperar_contra_listo.html'
+     ), 
+     name='password_reset_done'),
 
      # Página con el formulario para poner la nueva contraseña
     path('nueva_contrasena/<uidb64>/<token>/', 

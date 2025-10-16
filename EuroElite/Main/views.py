@@ -433,7 +433,9 @@ def privacidad(request):
 
 from .forms import ProductoForm
 from .models import Producto
+from django.contrib.admin.views.decorators import staff_member_required
 
+@staff_member_required
 @login_required
 def agregar_editar(request, pk=None): 
     if pk:  # Editar producto
@@ -757,14 +759,14 @@ def publicar_vehiculo(request):
     return render(request, 'taller/publicar_vehiculo.html', {'form': form})
 
 
-# 🔹 Ver estado del usuario
+
 @login_required
 def estado_revi_vehiculos(request):
     vehiculos = VehiculoEnVenta.objects.filter(usuario=request.user)
     return render(request, 'taller/estado_revi_vehiculos.html', {'vehiculos': vehiculos})
 
 
-# 🔹 Revisión por parte del administrador
+
 @staff_member_required
 def revisar_vehiculo(request):
     pendientes = VehiculoEnVenta.objects.filter(estado='pendiente')
@@ -775,7 +777,7 @@ def revisar_vehiculo(request):
     })
 
 
-# 🔹 Aprobar o rechazar vehículo
+
 @staff_member_required
 def aprobar_vehiculo(request, id):
     vehiculo = get_object_or_404(VehiculoEnVenta, id=id)

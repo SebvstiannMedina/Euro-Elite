@@ -48,7 +48,11 @@ INSTALLED_APPS = [
     'payments',
     'django.contrib.humanize',
     'analytics',
+    'django.contrib.sites',
 ]
+
+SITE_ID = 1
+
 
 # Usuario personalizado
 AUTH_USER_MODEL = 'Main.Usuario'
@@ -70,7 +74,7 @@ ROOT_URLCONF = 'EuroElite.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
+        'DIRS': [BASE_DIR / 'templates'],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -148,7 +152,15 @@ LOGOUT_REDIRECT_URL = '/'
 MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
 
-EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
+EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
+EMAIL_HOST = "smtp.gmail.com"
+EMAIL_PORT = 587
+EMAIL_USE_TLS = True
+EMAIL_HOST_USER = "seba.medina2602@gmail.com"
+EMAIL_HOST_PASSWORD = "xuyg enzc hqzk mevf"
+DEFAULT_FROM_EMAIL = "Euro Elite <seba.medina2602@gmail.com>"
+
+
 
 AUTHENTICATION_BACKENDS = [
     "django.contrib.auth.backends.ModelBackend",
