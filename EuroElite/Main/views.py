@@ -227,7 +227,7 @@ def home(request):
         .order_by('-id')[:6]
     )
 
-    return render(request, 'Taller/main.html', {
+    return render(request, 'taller/main.html', {
         'productos_oferta': productos_oferta,
         'productos_normales': productos_normales,
     })
@@ -239,13 +239,13 @@ def producto_detalle(request, pk):
         activo=True
     )
     track(request, "view_product", product_id=p.id)
-    return render(request, 'Taller/producto_detalle.html', {'p': p})
+    return render(request, 'taller/producto_detalle.html', {'p': p})
 
 def nosotros(request):
-    return render(request, 'Taller/nosotros.html')
+    return render(request, 'taller/nosotros.html')
 
 def equipo(request):
-    return render(request, 'Taller/equipo.html')
+    return render(request, 'taller/equipo.html')
 
 def productos(request):
     productos = Producto.objects.filter(activo=True).select_related("categoria")
@@ -255,7 +255,7 @@ def productos(request):
         p.promocion = p.promocion_vigente
         p.precio_descuento = p.precio_con_descuento
 
-    return render(request, "Taller/productos.html", {
+    return render(request, "taller/productos.html", {
         "productos": productos,
         "categorias": categorias,
     })
@@ -269,7 +269,7 @@ from .forms import RegistroForm
 from django.shortcuts import render, redirect
 
 class CustomLoginView(LoginView):
-    template_name = "Taller/login.html"
+    template_name = "taller/login.html"
     authentication_form = EmailAuthenticationForm
 
     def form_valid(self, form):
@@ -299,7 +299,7 @@ def registro(request):
     else:
         form = RegistroForm()
 
-    return render(request, 'Taller/registro.html', {'form': form})
+    return render(request, 'taller/registro.html', {'form': form})
 
 # ========== PERFIL ==========
 
@@ -325,7 +325,7 @@ def perfil(request):
         perfil_form = PerfilForm(instance=usuario)
         direccion_form = DireccionForm(instance=addr)
 
-    return render(request, "Taller/perfil.html", {
+    return render(request, "taller/perfil.html", {
         "form": perfil_form,
         "direccion_form": direccion_form,
         "user": usuario,
@@ -418,19 +418,19 @@ def anular_cita(request, cita_id):
 
 
 def nueva_contrasena(request):
-    return render(request, 'Taller/nueva_contrasena.html')
+    return render(request, 'taller/nueva_contrasena.html')
 
 def pago(request):
-    return render(request, 'Taller/pago.html')
+    return render(request, 'taller/pago.html')
 
 def carrito_compras(request):
-    return render(request, 'Taller/carrito_compras.html')
+    return render(request, 'taller/carrito_compras.html')
 
 def terminos(request):
-    return render(request, 'Taller/terminos.html')
+    return render(request, 'taller/terminos.html')
 
 def privacidad(request):
-    return render(request, 'Taller/privacidad.html')
+    return render(request, 'taller/privacidad.html')
 
 from .forms import ProductoForm
 from .models import Producto
@@ -458,7 +458,7 @@ def agregar_editar(request, pk=None):
         form = ProductoForm(instance=producto)
 
     productos = Producto.objects.all().order_by('-id')
-    return render(request, 'Taller/agregar_editar.html', {
+    return render(request, 'taller/agregar_editar.html', {
         'form': form,
         'productos': productos,
         'editando': producto is not None
@@ -466,17 +466,17 @@ def agregar_editar(request, pk=None):
 
 
 def prueba(request):
-    return render(request, 'Taller/prueba.html')
+    return render(request, 'taller/prueba.html')
 
 @csrf_exempt
 def compra_exitosa(request):
-    return render(request, 'Taller/compra_exitosa.html')
+    return render(request, 'taller/compra_exitosa.html')
 
 def ofertas(request):
-    return render(request, 'Taller/ofertas.html')
+    return render(request, 'taller/ofertas.html')
 
 def retiro_despacho(request):
-    return render(request, 'Taller/retiro_despacho.html')
+    return render(request, 'taller/retiro_despacho.html')
 
 from django.contrib.admin.views.decorators import staff_member_required
 
@@ -485,7 +485,7 @@ from django.contrib.admin.views.decorators import staff_member_required
 def admin_agendamientos(request):
     citas = Cita.objects.all().order_by('-bloque__inicio')
 
-    return render(request, 'Taller/admin_agendamientos.html', {'citas': citas})
+    return render(request, 'taller/admin_agendamientos.html', {'citas': citas})
 
 def anular_cita(request, cita_id):
     cita = get_object_or_404(Cita, id=cita_id)
@@ -496,16 +496,16 @@ def anular_cita(request, cita_id):
     return redirect("mis_citas")
 
 def admin_configuracion(request):
-    return render(request, 'Taller/admin_configuracion.html')
+    return render(request, 'taller/admin_configuracion.html')
 
 def admin_dashboard(request):
-    return render(request, 'Taller/admin_agendamientos.html')
+    return render(request, 'taller/admin_agendamientos.html')
 
 def admin_pedidos(request):
-    return render(request, 'Taller/admin_agendamientos.html')
+    return render(request, 'taller/admin_agendamientos.html')
 
 def admin_reportes(request):
-    return render(request, 'Taller/admin_reportes.html')
+    return render(request, 'taller/admin_reportes.html')
 
 from django.contrib.auth import get_user_model
 from django.contrib import messages
@@ -518,13 +518,13 @@ Usuario = get_user_model()  # tu modelo custom de usuario
 @staff_member_required
 def admin_usuarios(request):
     usuarios = Usuario.objects.all().order_by('-date_joined')
-    return render(request, 'Taller/admin_usuarios.html', {"usuarios": usuarios})
+    return render(request, 'taller/admin_usuarios.html', {"usuarios": usuarios})
 
 # Detalle de un usuario
 @staff_member_required
 def detalle_usuario(request, usuario_id):
     usuario = get_object_or_404(Usuario, id=usuario_id)
-    return render(request, 'Taller/detalle_usuario.html', {"usuario": usuario})
+    return render(request, 'taller/detalle_usuario.html', {"usuario": usuario})
 
 # Eliminar un usuario
 @staff_member_required
@@ -548,7 +548,7 @@ def mis_pedidos(request):
         }
         for p in pedidos_qs
     ]
-    return render(request, 'Taller/mis_pedidos.html', {
+    return render(request, 'taller/mis_pedidos.html', {
         'pedidos': pedidos,
         'DEBUG': settings.DEBUG,
     })
@@ -562,7 +562,7 @@ def resumen_compra(request):
             shipping_cost = int(cfg.costo_envio_base)
     except Exception:
         pass
-    return render(request, 'Taller/resumen_compra.html', {
+    return render(request, 'taller/resumen_compra.html', {
         'shipping_cost': shipping_cost,
     })
 
@@ -604,14 +604,14 @@ def confirmacion_datos(request):
 
         return redirect('pago')
 
-    return render(request, 'Taller/confirmacion_datos.html', {
+    return render(request, 'taller/confirmacion_datos.html', {
         'rut': rut,
         'addr': addr,
         'user': user,
     })
 
 def olvide_contra(request):
-    return render(request, 'Taller/olvide_contra.html')
+    return render(request, 'taller/olvide_contra.html')
 
 def estadistica(request):
     labels = ["Enero 2025", "Febrero 2025", "Marzo 2025"]
@@ -623,7 +623,7 @@ def estadistica(request):
     mes_max = labels[values.index(max_val)] if values else "N/A"
     cantidad_pedidos = len(values)
 
-    return render(request, "Taller/estadistica.html", {
+    return render(request, "taller/estadistica.html", {
         "labels": labels,
         "values": values,
         "total": total,
@@ -632,7 +632,7 @@ def estadistica(request):
     })
 
 def custom_404(request, exception):
-    return render(request, 'Taller/notfound.html')
+    return render(request, 'taller/notfound.html')
 
 def _get_or_create_cart(request):
     # Asegura que exista una sesión
@@ -719,19 +719,19 @@ def _merge_on_login(sender, user, request, **kwargs):
 
 
 def recuperar_contrasena(request):
-    return render(request, 'Taller/recuperar_contrasena.html')
+    return render(request, 'taller/recuperar_contrasena.html')
 
 def recuperar_contra_listo(request):
-    return render(request, 'Taller/recuperar_contra_listo.html')
+    return render(request, 'taller/recuperar_contra_listo.html')
 
 def contra_cambiada_exitosa(request):
-    return render(request, 'Taller/contra_cambiada_exitosa.html')
+    return render(request, 'taller/contra_cambiada_exitosa.html')
 
 from django.contrib.auth.views import LoginView
 from .forms import EmailAuthenticationForm
 
 class CustomLoginView(LoginView):
-    template_name = "Taller/login.html"
+    template_name = "taller/login.html"
     authentication_form = EmailAuthenticationForm
 
 from django.shortcuts import render, redirect, get_object_or_404

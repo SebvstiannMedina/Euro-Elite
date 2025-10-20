@@ -22,7 +22,7 @@ urlpatterns = [
     path('productos', main_views.productos, name='productos'),
     path('perfil', main_views.perfil, name='perfil'),
     path('registro', main_views.registro, name='registro'),
-    path('login', CustomLoginView.as_view(template_name='Taller/login.html'), name='login'),
+    path('login', CustomLoginView.as_view(template_name='taller/login.html'), name='login'),
     path('logout/', CustomLogoutView.as_view(), name='logout'),
     path('agendar', main_views.agendar, name='agendar'),
     path('mis_citas', main_views.mis_citas, name='mis_citas'),
@@ -65,21 +65,21 @@ urlpatterns = [
     #esto es para que al usuario le pida el correo para recuperar la contraseña
     path('recuperar_contrasena/', 
          auth_views.PasswordResetView.as_view(
-             template_name='Taller/recuperar_contrasena.html'
+             template_name='taller/recuperar_contrasena.html'
          ), 
          name='password_reset'),
 
     # esto es para que se vea confirmado el envio del correo electronico    
     path('recuperar_contra_listo/', 
      auth_views.PasswordResetDoneView.as_view(
-         template_name='Taller/recuperar_contra_listo.html'
+         template_name='taller/recuperar_contra_listo.html'
      ), 
      name='password_reset_done'),
 
      # Página con el formulario para poner la nueva contraseña
     path('nueva_contrasena/<uidb64>/<token>/', 
          auth_views.PasswordResetConfirmView.as_view(
-             template_name='taller/nueva_contrasena.html'  # 👉 tienes que crear este
+             template_name='taller/nueva_contrasena.html'
          ), 
          name='password_reset_confirm'),
 
