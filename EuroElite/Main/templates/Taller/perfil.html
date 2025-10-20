@@ -128,7 +128,7 @@
 
           <!-- Botones -->
           <div class="mt-4 d-flex gap-2">
-            <button type="submit" class="btn btn-success">Guardar cambios</button>
+            <button id="perfilSubmit" type="submit" class="btn btn-success" disabled>Guardar cambios</button>
             <a href="{% url 'perfil' %}" class="btn btn-secondary">Cancelar</a>
           </div>
         </form>
@@ -143,19 +143,67 @@
     const telefonoFeedback = document.getElementById('telefono-feedback');
     const rut = document.getElementById('rut');
     const rutFeedback = document.getElementById('rut-feedback');
-    
+    const submitBtn = document.getElementById('perfilSubmit');
+    const firstNameInput = document.querySelector('[name="first_name"]');
+    const lastNameInput = document.querySelector('[name="last_name"]');
+
+    function getFeedbackFor(name) {
+      return document.querySelector(`[data-feedback="${name}"]`);
+    }
+
     function showTelefonoError(message) {
       telefonoFeedback.textContent = message;
       telefonoFeedback.classList.remove('d-none');
       telefono.classList.add('is-invalid');
     }
-    
+
     function hideTelefonoError() {
       telefonoFeedback.textContent = '';
       telefonoFeedback.classList.add('d-none');
       telefono.classList.remove('is-invalid');
     }
-    
+
+    function showNameError(input, message) {
+      const fb = getFeedbackFor(input.name);
+      if (fb) {
+        fb.textContent = message;
+        fb.classList.remove('d-none');
+      }
+      input.classList.add('is-invalid');
+    }
+
+    function hideNameError(input) {
+      const fb = getFeedbackFor(input.name);
+      if (fb) {
+        fb.textContent = '';
+        fb.classList.add('d-none');
+      }
+      input.classList.remove('is-invalid');
+    }
+
+    function validateNameInput(input) {
+      if (!input) return true;
+      const value = (input.value || '').trim();
+      if (!value) {
+        showNameError(input, 'Debes rellenar este campo');
+        return false;
+      }
+      if (/[0-9]/.test(value)) {
+        showNameError(input, 'No puede contener números');
+        return false;
+      }
+      if (value.length < 3) {
+        showNameError(input, 'Debe tener al menos 3 caracteres');
+        return false;
+      }
+      if (value.length > 25) {
+        showNameError(input, 'No puede tener más de 25 caracteres');
+        return false;
+      }
+      hideNameError(input);
+      return true;
+    }
+
     function validateTelefonoField() {
       const value = telefono.value.replace(/\D/g, '');
       if (!value) {
@@ -169,44 +217,174 @@
       hideTelefonoError();
       return true;
     }
-    
+
     if (telefono) {
       telefono.addEventListener('input', function () {
         telefono.value = telefono.value.replace(/\D/g, '').slice(0, 8);
         validateTelefonoField();
+        updateSubmitButton();
       });
-      
+
       telefono.addEventListener('blur', function () {
         validateTelefonoField();
+        updateSubmitButton();
       });
-      
+
       telefono.addEventListener('paste', function (e) {
         setTimeout(function () {
           telefono.value = telefono.value.replace(/\D/g, '').slice(0, 8);
           validateTelefonoField();
+          updateSubmitButton();
         }, 0);
       });
-      
+
       validateTelefonoField();
     }
 
+    function updateSubmitButton() {
+      if (!submitBtn) return false;
+      const firstOk = validateNameInput(firstNameInput);
+      const lastOk = validateNameInput(lastNameInput);
+      const telOk = validateTelefonoField();
+      const rutOk = validateRut(rut);
+        const emailField = document.querySelector('[name="email"]');
+        const emailOk = validateEmailField(emailField);
+        const allOk = firstOk && lastOk && telOk && rutOk && emailOk;
+      submitBtn.disabled = !allOk;
+      submitBtn.setAttribute('aria-disabled', String(!allOk));
+      return allOk;
+    }
+
+      function validateEmailField(input) {
+        if (!input) return true;
+        const value = input.value.trim();
+        const feedback = getFeedbackFor('email');
+      
+        if (!value) {
+          if (feedback) {
+            feedback.textContent = 'El correo electrónico es obligatorio';
+            feedback.classList.remove('d-none');
+          }
+          input.classList.add('is-invalid');
+          return false;
+        }
+      
+        if (value.length < 5) {
+          if (feedback) {
+            feedback.textContent = 'El correo electrónico debe tener al menos 5 caracteres';
+            feedback.classList.remove('d-none');
+          }
+          input.classList.add('is-invalid');
+          return false;
+        }
+      
+        if (value.length > 100) {
+          if (feedback) {
+            feedback.textContent = 'El correo electrónico no puede tener más de 100 caracteres';
+            feedback.classList.remove('d-none');
+          }
+          input.classList.add('is-invalid');
+          return false;
+        }
+      
+        if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) {
+          if (feedback) {
+            feedback.textContent = 'Por favor ingrese un correo electrónico válido';
+            feedback.classList.remove('d-none');
+          }
+          input.classList.add('is-invalid');
+          return false;
+        }
+      
+        if (feedback) {
+          feedback.textContent = '';
+          feedback.classList.add('d-none');
+        }
+        input.classList.remove('is-invalid');
+        return true;
+      }
+
+      const emailInput = document.querySelector('[name="email"]');
+      if (emailInput) {
+        emailInput.addEventListener('input', function() {
+          this.value = this.value.trim().replace(/[\r\n\t]/g,'');
+          validateEmailField(this);
+          updateSubmitButton();
+        });
+      
+        emailInput.addEventListener('blur', function() {
+          this.value = this.value.trim();
+          validateEmailField(this);
+          updateSubmitButton();
+        });
+      
+        emailInput.addEventListener('paste', function() {
+          setTimeout(() => {
+            this.value = this.value.trim().replace(/[\r\n\t]/g,'');
+            validateEmailField(this);
+            updateSubmitButton();
+          }, 0);
+        });
+      }
+    if (firstNameInput) {
+      firstNameInput.addEventListener('input', function () { validateNameInput(firstNameInput); updateSubmitButton(); });
+      firstNameInput.addEventListener('blur', function () { validateNameInput(firstNameInput); updateSubmitButton(); });
+      firstNameInput.addEventListener('paste', function () { setTimeout(function () { validateNameInput(firstNameInput); updateSubmitButton(); }, 0); });
+    }
+    if (lastNameInput) {
+      lastNameInput.addEventListener('input', function () { validateNameInput(lastNameInput); updateSubmitButton(); });
+      lastNameInput.addEventListener('blur', function () { validateNameInput(lastNameInput); updateSubmitButton(); });
+      lastNameInput.addEventListener('paste', function () { setTimeout(function () { validateNameInput(lastNameInput); updateSubmitButton(); }, 0); });
+    }
+
+    if (rut) {
+      rut.addEventListener('input', function() {
+        const raw = rut.value;
+        const cleaned = cleanRut(raw);
+        const formatted = formatRut(cleaned);
+        if (rut.value !== formatted) {
+          rut.value = formatted;
+          if (typeof rut.setSelectionRange === 'function') {
+            const caret = formatted.length;
+            rut.setSelectionRange(caret, caret);
+          }
+        }
+        validateRut(rut);
+        updateSubmitButton();
+      });
+
+      rut.addEventListener('blur', function() {
+        const raw = rut.value;
+        const cleaned = cleanRut(raw);
+        const formatted = formatRut(cleaned);
+        rut.value = formatted;
+        validateRut(rut);
+        updateSubmitButton();
+      });
+
+      rut.addEventListener('paste', function(e) {
+        setTimeout(function() {
+          const cleaned = cleanRut(rut.value);
+          const formatted = formatRut(cleaned);
+          rut.value = formatted;
+          validateRut(rut);
+          updateSubmitButton();
+        }, 0);
+      });
+
+      validateRut(rut);
+    }
+
+    // initial enable/disable
+    updateSubmitButton();
+
     function validateForm(event) {
-      event.preventDefault();
-      let isValid = true;
-
-      if (!validateTelefonoField()) {
-        isValid = false;
+      // final guard: prevent submit if invalid
+      if (!updateSubmitButton()) {
+        event.preventDefault();
+        return false;
       }
-
-      if (!validateRut(rut)) {
-        isValid = false;
-      }
-
-      if (isValid) {
-        document.getElementById('perfilForm').submit();
-      }
-
-      return isValid;
+      return true;
     }
 
     function sanitizeRutValue(value) {

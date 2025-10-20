@@ -16,6 +16,37 @@ class PerfilForm(forms.ModelForm):
         if len(telefono_digits) != 8:
             raise forms.ValidationError('El teléfono debe tener exactamente 8 dígitos.')
         return telefono_digits
+    
+    def clean_first_name(self):
+        first = (self.cleaned_data.get('first_name', '') or '').strip()
+        if any(ch.isdigit() for ch in first):
+            raise forms.ValidationError('El nombre no puede contener números.')
+        if len(first) < 3:
+            raise forms.ValidationError('El nombre debe tener al menos 3 caracteres.')
+        if len(first) > 25:
+            raise forms.ValidationError('El nombre no puede tener más de 25 caracteres.')
+        return first
+    def clean_last_name(self):
+        last = (self.cleaned_data.get('last_name', '') or '').strip()
+        if any(ch.isdigit() for ch in last):
+            raise forms.ValidationError('El apellido no puede contener números.')
+        if len(last) < 3:
+            raise forms.ValidationError('El apellido debe tener al menos 3 caracteres.')
+        if len(last) > 25:
+            raise forms.ValidationError('El apellido no puede tener más de 25 caracteres.')
+        return last
+
+    def clean_email(self):
+        email = (self.cleaned_data.get('email', '') or '').strip()
+        if not email:
+            raise forms.ValidationError('El correo electrónico es obligatorio.')
+        if len(email) < 5:
+            raise forms.ValidationError('El correo electrónico debe tener al menos 5 caracteres.')
+        if len(email) > 100:
+            raise forms.ValidationError('El correo electrónico no puede tener más de 100 caracteres.')
+        email = ''.join(ch for ch in email if ch not in '\r\n\t')
+        return email
+
     """Formulario para que el usuario edite su perfil básico."""
     class Meta:
         model = Usuario
@@ -23,13 +54,23 @@ class PerfilForm(forms.ModelForm):
         widgets = {
             'first_name': forms.TextInput(attrs={
                 'class': 'form-control',
-                'oninput': "this.value=this.value.replace(/[^A-Za-zÁÉÍÓÚÜÑáéíóúüñ0-9 ]/g,'');"
+                'oninput': "this.value=this.value.replace(/[^A-Za-zÁÉÍÓÚÜÑáéíóúüñ ]/g,'');",
+                'minlength': '3',
+                'maxlength': '25'
             }),
             'last_name': forms.TextInput(attrs={
                 'class': 'form-control',
-                'oninput': "this.value=this.value.replace(/[^A-Za-zÁÉÍÓÚÜÑáéíóúüñ0-9 ]/g,'');"
+                'oninput': "this.value=this.value.replace(/[^A-Za-zÁÉÍÓÚÜÑáéíóúüñ ]/g,'');",
+                'minlength': '3',
+                'maxlength': '25'
             }),
-            'email': forms.EmailInput(attrs={'class': 'form-control'}),
+            'email': forms.EmailInput(attrs={
+                'class': 'form-control',
+                'required': True,
+                'minlength': '5',
+                'maxlength': '100',
+                'oninput': "this.value=this.value.trim().replace(/[\r\n\t]/g,'')"
+            }),
             'telefono': forms.TextInput(attrs={
                 'class': 'form-control',
                 'oninput': "this.value=this.value.replace(/[^0-9]/g,'');",
@@ -61,13 +102,45 @@ class RegistroForm(UserCreationForm):
     first_name = forms.CharField(
         label="Nombre", 
         required=True,
-        widget=forms.TextInput(attrs={'placeholder': 'Ingresa tu nombre', 'class': 'form-control'})
+        widget=forms.TextInput(attrs={
+            'placeholder': 'Ingresa tu nombre',
+            'class': 'form-control',
+            'oninput': "this.value=this.value.replace(/[^A-Za-zÁÉÍÓÚÜÑáéíóúüñ ]/g,'');",
+            'minlength': '3',
+            'maxlength': '25'
+        })
     )
     last_name = forms.CharField(
         label="Apellido", 
         required=True,
-        widget=forms.TextInput(attrs={'placeholder': 'Ingresa tu apellido', 'class': 'form-control'})
+        widget=forms.TextInput(attrs={
+            'placeholder': 'Ingresa tu apellido',
+            'class': 'form-control',
+            'oninput': "this.value=this.value.replace(/[^A-Za-zÁÉÍÓÚÜÑáéíóúüñ ]/g,'');",
+            'minlength': '3',
+            'maxlength': '25'
+        })
     )
+
+    def clean_first_name(self):
+        first = (self.cleaned_data.get('first_name', '') or '').strip()
+        if any(ch.isdigit() for ch in first):
+            raise forms.ValidationError('El nombre no puede contener números.')
+        if len(first) < 3:
+            raise forms.ValidationError('El nombre debe tener al menos 3 caracteres.')
+        if len(first) > 25:
+            raise forms.ValidationError('El nombre no puede tener más de 25 caracteres.')
+        return first
+
+    def clean_last_name(self):
+        last = (self.cleaned_data.get('last_name', '') or '').strip()
+        if any(ch.isdigit() for ch in last):
+            raise forms.ValidationError('El apellido no puede contener números.')
+        if len(last) < 3:
+            raise forms.ValidationError('El apellido debe tener al menos 3 caracteres.')
+        if len(last) > 25:
+            raise forms.ValidationError('El apellido no puede tener más de 25 caracteres.')
+        return last
     telefono = forms.CharField(
         label="Teléfono", 
         required=False,
@@ -133,7 +206,6 @@ class CitaForm(forms.ModelForm):
             .filter(cita__isnull=True)                
             .order_by("inicio")
         )
-
     def clean(self):
         cleaned_data = super().clean()
         bloque = cleaned_data.get("bloque")
@@ -149,8 +221,6 @@ class CitaForm(forms.ModelForm):
         direccion = cleaned_data.get("direccion_domicilio")
         if a_domicilio and not direccion:
             self.add_error("direccion_domicilio", "Debes ingresar una dirección para el servicio a domicilio.")
-
-        return cleaned_data
 
 
 
@@ -195,6 +265,12 @@ class ProductoForm(forms.ModelForm):
 # ================= DIRECCION =================
 class DireccionForm(forms.ModelForm):
     """Formulario para editar o agregar dirección del usuario."""
+    def clean_codigo_postal(self):
+        codigo = self.cleaned_data.get('codigo_postal', '')
+        codigo_digits = ''.join(filter(str.isdigit, str(codigo)))
+        if len(codigo_digits) != 7:
+            raise forms.ValidationError('El código postal debe tener exactamente 7 dígitos.')
+        return codigo_digits
     class Meta:
         model = Direccion
         fields = ['linea1', 'linea2', 'comuna', 'region', 'codigo_postal']
@@ -211,7 +287,9 @@ class DireccionForm(forms.ModelForm):
             'region': forms.Select(attrs={"class": "form-control"}),
             'codigo_postal': forms.TextInput(attrs={
                 'class': 'form-control',
-                'oninput': "this.value=this.value.replace(/[^0-9]/g,'');"
+                'oninput': "this.value=this.value.replace(/[^0-9]/g,'');",
+                'maxlength': '7',
+                'pattern': '[0-9]{7}'
             }),
         }
 
