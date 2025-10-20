@@ -11,13 +11,13 @@
 <!-- FILTROS -->
 <section class="py-4 bg-light">
   <div class="container d-flex flex-wrap justify-content-center gap-3">
-    <input type="text" id="searchInput" placeholder="Buscar producto..." 
-           class="form-control w-auto" onkeyup="searchProducts()">
+    <input type="text" id="searchInput" placeholder="Buscar producto..." class="form-control w-auto"
+      onkeyup="searchProducts()">
 
     <select id="categoryFilter" class="form-select w-auto" onchange="filterProducts()">
       <option value="all">Todas</option>
       {% for cat in categorias %}
-        <option value="{{ cat.slug }}">{{ cat.nombre }}</option>
+      <option value="{{ cat.slug }}">{{ cat.nombre }}</option>
       {% endfor %}
     </select>
   </div>
@@ -28,30 +28,49 @@
   <h2 class="section-title">Productos en Venta</h2>
   <div class="offers-grid">
     {% for p in productos %}
-      <div class="product-card" data-category="{{ p.categoria.slug|default:'sin-categoria' }}">
-        
-        {% if p.promocion_vigente %}
-          <div class="offer-badge">
-            {% if p.promocion_vigente.tipo == 'PORCENTAJE' %}
-              -{{ p.promocion_vigente.valor|floatformat:0 }}%
-            {% else %}
-              Oferta
-            {% endif %}
-          </div>
-        {% endif %}
+    <div class="product-card" data-category="{{ p.categoria.slug|default:'sin-categoria' }}">
 
-        <div class="offer-image">
-          {% if p.imagen %}
-            <img src="{{ p.imagen.url }}" alt="{{ p.nombre }}">
+      {% if p.promocion_vigente %}
+      <div class="offer-badge">
+        {% if p.promocion_vigente.tipo == 'PORCENTAJE' %}
+        -{{ p.promocion_vigente.valor|floatformat:0 }}%
+        {% else %}
+        Oferta
+        {% endif %}
+      </div>
+      {% endif %}
+
+      <div class="offer-image">
+        {% if p.imagen %}
+        <img src="{{ p.imagen.url }}" alt="{{ p.nombre }}">
+        {% else %}
+        <img src="{% static 'img/no-image.png' %}" alt="Sin imagen">
+        {% endif %}
+      </div>
+
+      <div class="offer-content">
+        <h3 class="product-title">{{ p.nombre }}</h3>
+        <p class="product-description">{{ p.descripcion|truncatewords:20 }}</p>
+
+        <div class="offer-price">
+          {% if p.promocion_vigente %}
+          <span class="current-price">${{ p.precio_con_descuento|miles_chilenos }}</span>
+          <span class="original-price">${{ p.precio|miles_chilenos }}</span>
           {% else %}
-            <img src="{% static 'img/no-image.png' %}" alt="Sin imagen">
+          <span class="current-price">${{ p.precio|miles_chilenos }}</span>
           {% endif %}
         </div>
 
-        <div class="offer-content">
-          <h3 class="product-title">{{ p.nombre }}</h3>
-          <p class="product-description">{{ p.descripcion|truncatewords:20 }}</p>
+        <div class="product-actions">
+          <button class="btn btn-primary" onclick="handleAddToCart(this,
+                                    '{{ p.nombre|escapejs }}',
+                                    '{% if p.promocion_vigente %}{{ p.precio_con_descuento }}{% else %}{{ p.precio }}{% endif %}',
+                                    '{{ p.id }}',
+                                    '{{ p.stock }}')">
+            <i class="fas fa-shopping-cart"></i> Añadir al Carrito
+          </button>
 
+<<<<<<< Updated upstream
           <div class="offer-price">
             {% if p.promocion_vigente %}
               <span class="current-price">${{ p.precio_con_descuento|miles_chilenos }}</span>
@@ -86,10 +105,20 @@
                       data-image="{% static 'img/no-image.png' %}">Ver detalle</button>
             {% endif %}
           </div>
+=======
+          <button class="btn btn-outline-primary"
+            onclick="showProductDetail('{{ p.nombre|escapejs }}',
+                                      '{{ p.descripcion|default_if_none:''|escapejs }}',
+                                      {{ p.precio }},
+                                      '{% if p.imagen %}{{ p.imagen.url }}{% else %}{% static 'img/no-image.png' %}{% endif %}')">
+            Ver detalle
+          </button>
+>>>>>>> Stashed changes
         </div>
       </div>
+    </div>
     {% empty %}
-      <p class="text-center">No hay productos disponibles.</p>
+    <p class="text-center">No hay productos disponibles.</p>
     {% endfor %}
   </div>
 </section>

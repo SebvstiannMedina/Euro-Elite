@@ -63,19 +63,42 @@ def cart_add(request):
     producto = get_object_or_404(Producto, id=prod_id)
     cart = _get_active_cart(request.user)
 
-    item, created = ItemCarrito.objects.get_or_create(
-        carrito=cart, producto=producto,
-        defaults={'cantidad': qty, 'precio_unitario': producto.precio}
-    )
-    if not created:
-        item.cantidad += qty
-        item.precio_unitario = producto.precio  # asegura precio vigente
-        item.save(update_fields=['cantidad', 'precio_unitario'])
+    # Si no tiene stock definido, asumimos 0 para evitar exceso
+    stock_disponible = producto.stock if producto.stock is not None else 0
+    if stock_disponible <= 0:
+        return JsonResponse({"ok": False, "msg": "Producto sin stock disponible."}, status=400)
 
-    # Cantidad total de ítems
+    item, created = ItemCarrito.objects.get_or_create(
+        carrito=cart,
+        producto=producto,
+        defaults={'cantidad': 0, 'precio_unitario': producto.precio}
+    )
+
+    # Calculamos nueva cantidad
+    nueva_cantidad = item.cantidad + qty
+
+    # Si supera el stock, lo dejamos en el máximo permitido
+    if nueva_cantidad > stock_disponible:
+        nueva_cantidad = stock_disponible
+
+    # Si no cambia (ya está al máximo), avisamos al usuario
+    if nueva_cantidad == item.cantidad:
+        return JsonResponse({
+            "ok": False,
+            "msg": "Ya has agregado el máximo disponible de este producto."
+        }, status=400)
+
+    # Actualizamos cantidad y precio
+    item.cantidad = nueva_cantidad
+    item.precio_unitario = producto.precio
+    item.save(update_fields=['cantidad', 'precio_unitario'])
+
     total_items = sum(i.cantidad for i in cart.items.all())
-    track(request, "add_to_cart", product_id=producto.id, qty=qty)
-    return JsonResponse({"ok": True, "items": total_items})
+    return JsonResponse({
+        "ok": True,
+        "items": total_items,
+        "msg": f"Producto agregado. Cantidad total: {item.cantidad}"
+    })
 
 
 @login_required
@@ -796,3 +819,93 @@ def rechazar_vehiculo(request, id):
     vehiculo.save()
     messages.error(request, f"Vehículo {vehiculo.marca} {vehiculo.modelo} fue rechazado.")
     return redirect('revisar_vehiculo')
+
+from django.http import JsonResponse
+from django.contrib.auth.decorators import login_required
+from .models import Carrito, ItemCarrito
+
+@login_required
+def carrito_json(request):
+    try:
+        # Busca el carrito del usuario activo
+        carrito = Carrito.objects.filter(usuario=request.user, activo=True).prefetch_related('items__producto').first()
+
+        if not carrito:
+            return JsonResponse({"items": [], "total": 0})
+
+        items_data = []
+        total = 0
+
+        for item in carrito.items.all():
+            subtotal = float(item.precio_unitario) * item.cantidad
+            total += subtotal
+            items_data.append({
+                "item_id": item.id,
+                "producto_id": item.producto.id,
+                "nombre": item.producto.nombre,
+                "precio": float(item.precio_unitario),
+                "cantidad": item.cantidad,
+                "subtotal": subtotal
+            })
+
+        return JsonResponse({"items": items_data, "total": total})
+
+    except Exception as e:
+        print("Error en carrito_json:", e)
+        return JsonResponse({"items": [], "total": 0})
+
+from django.views.decorators.http import require_POST
+from django.shortcuts import get_object_or_404
+from django.http import JsonResponse
+
+from django.views.decorators.http import require_POST
+from django.http import JsonResponse
+from django.shortcuts import get_object_or_404
+from django.contrib.auth.decorators import login_required
+
+@require_POST
+@login_required
+def carrito_actualizar(request, item_id):
+    item = get_object_or_404(
+        ItemCarrito,
+        id=item_id,
+        carrito__usuario=request.user,
+        carrito__activo=True
+    )
+
+   
+    try:
+        nueva_cantidad = int(request.POST.get("cantidad", 1))
+    except (ValueError, TypeError):
+        nueva_cantidad = 1
+
+   
+    if nueva_cantidad <= 0:
+        item.delete()
+        return JsonResponse({"ok": True, "msg": "Producto eliminado"})
+
+   
+    stock = getattr(item.producto, "stock", None)
+    if stock and nueva_cantidad > stock:
+        nueva_cantidad = stock
+
+    
+    item.cantidad = nueva_cantidad
+    item.save(update_fields=["cantidad"])
+
+   
+    return JsonResponse({
+        "ok": True,
+        "msg": "Cantidad actualizada",
+        "cantidad": item.cantidad,
+        "subtotal": float(item.cantidad * item.precio_unitario)
+    })
+
+
+
+@require_POST
+@login_required
+def carrito_eliminar(request, item_id):
+    item = get_object_or_404(ItemCarrito, id=item_id, carrito__usuario=request.user, carrito__activo=True)
+    item.delete()
+    return JsonResponse({"ok": True, "msg": "Producto eliminado"})
