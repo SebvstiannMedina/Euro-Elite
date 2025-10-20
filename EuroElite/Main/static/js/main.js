@@ -33,6 +33,24 @@ function toggleMobileMenu() {
 // =============== CARRITO (versión servidor) ===============
 let cart = [];
 
+function parsePriceStringGlobal(s) {
+  if (s === undefined || s === null) return 0;
+  let t = s.toString().trim();
+  if (!t) return 0;
+  t = t.replace(/[^0-9.,-]/g, '').trim();
+  if (t === '') return 0;
+  if (t.indexOf('.') !== -1 && t.indexOf(',') !== -1) {
+    t = t.replace(/\./g, '');
+    t = t.replace(/,/g, '.');
+  } else if (t.indexOf(',') !== -1 && t.indexOf('.') === -1) {
+    t = t.replace(/,/g, '.');
+  } else {
+    t = t.replace(/[^0-9.\-]/g, '');
+  }
+  const n = parseFloat(t);
+  return Number.isFinite(n) ? n : 0;
+}
+
 function getCSRFToken() {
   const name = 'csrftoken=';
   const cookies = document.cookie ? document.cookie.split(';') : [];
@@ -73,9 +91,25 @@ async function addToCart(productName, price, productId, stock) {
     await postForm('/carrito/agregar', { producto_id: productId, cantidad: 1 });
     showCartNotification(productName);
     await refreshCartBadge();
+
+    try {
+      const raw = localStorage.getItem('cart');
+      const clientCart = raw ? JSON.parse(raw) : [];
+      const priceNum = parsePriceStringGlobal(price);
+      const existing = clientCart.find(it => (it.product_id && it.product_id.toString() === productId.toString()));
+      if (existing) {
+        existing.quantity = Number(existing.quantity || 0) + 1;
+        existing.price = priceNum;
+      } else {
+        clientCart.push({ name: productName, price: priceNum, quantity: 1, sku: null, product_id: productId });
+      }
+      localStorage.setItem('cart', JSON.stringify(clientCart));
+    } catch (e) {
+      console.warn('Could not update localStorage cart', e);
+    }
   } catch (e) {
     console.warn('No se pudo agregar al carrito', e);
-    alert('No se pudo agregar al carrito. Intenta nuevamente.');
+    alert('Por favor, inicia sesión para agregar productos al carrito.');
   }
 }
 
@@ -384,4 +418,38 @@ function showProductDetail(name, description, price, image) {
         </div>
     </div>`;
     document.body.appendChild(modal);
+}
+
+function showProductDetailFromButton(btn) {
+  if (!btn) return;
+  const name = btn.getAttribute('data-name') || '';
+  const description = btn.getAttribute('data-description') || '';
+  const rawPrice = (btn.getAttribute('data-price') || '').toString().trim();
+  const image = btn.getAttribute('data-image') || '';
+
+  function parsePriceString(s) {
+    if (!s) return 0;
+    let t = s.replace(/[^0-9.,-]/g, '').trim();
+    if (t === '') return 0;
+
+    if (t.indexOf('.') !== -1 && t.indexOf(',') !== -1) {
+      t = t.replace(/\./g, '');
+      t = t.replace(/,/g, '.');
+    } else if (t.indexOf(',') !== -1 && t.indexOf('.') === -1) {
+      t = t.replace(/,/g, '.');
+    } else {
+      t = t.replace(/[^0-9.\-]/g, '');
+    }
+
+    const n = parseFloat(t);
+    return Number.isFinite(n) ? n : 0;
+  }
+
+  const price = parsePriceString(rawPrice);
+
+  try {
+    showProductDetail(name, description, price, image);
+  } catch (e) {
+    console.warn('Error showing product detail', e);
+  }
 }

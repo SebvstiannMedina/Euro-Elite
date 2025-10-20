@@ -35,7 +35,7 @@
     <section class="col-12 col-md-9">
       <h3>Mis datos</h3>
       <div class="card shadow-sm p-3">
-        <form method="post" id="perfilForm" novalidate>
+        <form method="post" id="perfilForm" onsubmit="return validateForm(event)" novalidate>
           {% csrf_token %}
           <div class="row gy-3">
             <!-- Datos personales -->
@@ -64,21 +64,20 @@
               {% endif %}
             </div>
             <div class="col-12 col-md-6">
-              <label for="{{ form.rut.id_for_label }}" class="form-label fw-semibold text-muted">RUT</label>
-              {{ form.rut }}
-              <div id="rut-feedback" class="text-danger small d-none" data-feedback="rut"></div>
-
+              <label for="rut" class="form-label fw-semibold text-muted">RUT</label>
+              <input id="rut" name="rut" type="text" class="form-control" required value="{{ form.rut.value|default:'' }}" placeholder="Ej: 12.345.678-9">
+              <div id="rut-feedback" class="text-danger small d-none"></div>
               {% if form.rut.errors %}
                 <div class="text-danger small">{{ form.rut.errors }}</div>
               {% endif %}
             </div>
             <div class="col-12 col-md-6">
-              <label for="{{ form.telefono.id_for_label }}" class="form-label fw-semibold text-muted">Teléfono</label>
+              <label for="telefono" class="form-label fw-semibold text-muted">Teléfono</label>
               <div class="input-group">
                 <span class="input-group-text">+56 9</span>
-                {{ form.telefono }}
+                <input id="telefono" name="telefono" type="text" class="form-control" required maxlength="8" pattern="[0-9]{8}" autocomplete="tel" inputmode="numeric" value="{{ form.telefono.value|default:'' }}" placeholder="Ej: 12345678">
               </div>
-              <div class="text-danger small d-none" data-feedback="telefono"></div>
+              <div id="telefono-feedback" class="text-danger small d-none"></div>
               {% if form.telefono.errors %}
                 <div class="text-danger small">{{ form.telefono.errors }}</div>
               {% endif %}
@@ -96,8 +95,8 @@
               {% endif %}
             </div>
             <div class="col-12 col-md-6">
-              <label for="{{ direccion_form.linea2.id_for_label }}" class="form-label fw-semibold text-muted">Departamento / Oficina</label>
-              {{ direccion_form.linea2 }}
+              <label for="{{ direccion_form.linea2.id_for_label }}" class="form-label fw-semibold text-muted">Departamento / Oficina <span class="text-muted small">(opcional)</span></label>
+              <input type="text" name="{{ direccion_form.linea2.name }}" id="{{ direccion_form.linea2.id_for_label }}" class="form-control" maxlength="45" pattern="[A-Za-zÁÉÍÓÚÜÑáéíóúüñ0-9 ]{0,45}" placeholder="Ej: Depto 101" value="{{ direccion_form.linea2.value|default:'' }}" autocomplete="address-line2" inputmode="text" oninput="this.value=this.value.replace(/[^A-Za-zÁÉÍÓÚÜÑáéíóúüñ0-9 ]/g,'');">
               <div class="text-danger small d-none" data-feedback="linea2"></div>
               {% if direccion_form.linea2.errors %}
                 <div class="text-danger small">{{ direccion_form.linea2.errors }}</div>
@@ -138,6 +137,191 @@
   </div>
 </div>
 
+<script>
+  document.addEventListener('DOMContentLoaded', function () {
+    const telefono = document.getElementById('telefono');
+    const telefonoFeedback = document.getElementById('telefono-feedback');
+    const rut = document.getElementById('rut');
+    const rutFeedback = document.getElementById('rut-feedback');
+    
+    function showTelefonoError(message) {
+      telefonoFeedback.textContent = message;
+      telefonoFeedback.classList.remove('d-none');
+      telefono.classList.add('is-invalid');
+    }
+    
+    function hideTelefonoError() {
+      telefonoFeedback.textContent = '';
+      telefonoFeedback.classList.add('d-none');
+      telefono.classList.remove('is-invalid');
+    }
+    
+    function validateTelefonoField() {
+      const value = telefono.value.replace(/\D/g, '');
+      if (!value) {
+        showTelefonoError('Por favor ingresa tu número de teléfono para continuar.');
+        return false;
+      }
+      if (value.length < 8) {
+        showTelefonoError('El teléfono debe tener 8 dígitos.');
+        return false;
+      }
+      hideTelefonoError();
+      return true;
+    }
+    
+    if (telefono) {
+      telefono.addEventListener('input', function () {
+        telefono.value = telefono.value.replace(/\D/g, '').slice(0, 8);
+        validateTelefonoField();
+      });
+      
+      telefono.addEventListener('blur', function () {
+        validateTelefonoField();
+      });
+      
+      telefono.addEventListener('paste', function (e) {
+        setTimeout(function () {
+          telefono.value = telefono.value.replace(/\D/g, '').slice(0, 8);
+          validateTelefonoField();
+        }, 0);
+      });
+      
+      validateTelefonoField();
+    }
+
+    function validateForm(event) {
+      event.preventDefault();
+      let isValid = true;
+
+      if (!validateTelefonoField()) {
+        isValid = false;
+      }
+
+      if (!validateRut(rut)) {
+        isValid = false;
+      }
+
+      if (isValid) {
+        document.getElementById('perfilForm').submit();
+      }
+
+      return isValid;
+    }
+
+    function sanitizeRutValue(value) {
+      if (!value) return '';
+      const normalized = value.normalize('NFC').replace(/\s+/g, '');
+      let result = '';
+      for (const char of normalized) {
+        if (result.length >= 9) break;
+        if (/[0-9]/.test(char)) { result += char; continue; }
+        if ((char === 'k' || char === 'K') && result.length === 8) { result += 'K'; }
+      }
+      return result;
+    }
+
+    function cleanRut(value) { 
+      return sanitizeRutValue(value); 
+    }
+
+    function formatRut(value) {
+      const cleaned = cleanRut(value);
+      if (cleaned.length <= 1) return cleaned;
+      const body = cleaned.slice(0, -1);
+      const dv = cleaned.slice(-1);
+      const reversed = body.split('').reverse();
+      const chunks = [];
+      for (let i = 0; i < reversed.length; i += 3) {
+        chunks.push(reversed.slice(i, i + 3).reverse().join(''));
+      }
+      return chunks.reverse().join('.') + '-' + dv;
+    }
+
+    function computeDV(body) {
+      let sum = 0;
+      let multiplier = 2;
+      for (let i = body.length - 1; i >= 0; i--) {
+        sum += parseInt(body[i], 10) * multiplier;
+        multiplier = multiplier === 7 ? 2 : multiplier + 1;
+      }
+      const remainder = 11 - (sum % 11);
+      if (remainder === 11) return '0';
+      if (remainder === 10) return 'K';
+      return String(remainder);
+    }
+
+    function isValidRut(value) {
+      const cleaned = cleanRut(value);
+      if (cleaned.length < 2) return false;
+      const body = cleaned.slice(0, -1);
+      const dv = cleaned.slice(-1);
+      if (!/^[0-9]+$/.test(body)) return false;
+      return computeDV(body) === dv;
+    }
+
+    function showRutError(message) {
+      rutFeedback.textContent = message;
+      rutFeedback.classList.remove('d-none');
+      rut.classList.add('is-invalid');
+    }
+
+    function hideRutError() {
+      rutFeedback.textContent = '';
+      rutFeedback.classList.add('d-none');
+      rut.classList.remove('is-invalid');
+    }
+
+    function validateRut(input) {
+      const cleaned = cleanRut(input.value);
+      if (!cleaned) {
+        showRutError('Debes rellenar este campo');
+        return false;
+      }
+      if (!isValidRut(cleaned)) {
+        showRutError('RUT inválido');
+        return false;
+      }
+      hideRutError();
+      return true;
+    }
+
+    if (rut) {
+      rut.addEventListener('input', function() {
+        const raw = rut.value;
+        const cleaned = cleanRut(raw);
+        const formatted = formatRut(cleaned);
+        if (rut.value !== formatted) {
+          rut.value = formatted;
+          if (typeof rut.setSelectionRange === 'function') {
+            const caret = formatted.length;
+            rut.setSelectionRange(caret, caret);
+          }
+        }
+        validateRut(rut);
+      });
+
+      rut.addEventListener('blur', function() {
+        const raw = rut.value;
+        const cleaned = cleanRut(raw);
+        const formatted = formatRut(cleaned);
+        rut.value = formatted;
+        validateRut(rut);
+      });
+
+      rut.addEventListener('paste', function(e) {
+        setTimeout(function() {
+          const cleaned = cleanRut(rut.value);
+          const formatted = formatRut(cleaned);
+          rut.value = formatted;
+          validateRut(rut);
+        }, 0);
+      });
+
+      validateRut(rut);
+    }
+  });
+</script>
 <script src="{% static 'js/perfil.js' %}" defer></script>
 <style>
   .profile-wrapper .card {

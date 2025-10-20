@@ -87,18 +87,22 @@
         </div>
 
         <div class="product-actions">
-          <button class="add-to-cart btn btn-primary" onclick="addToCart('{{ p.nombre|escapejs }}',
-                            '{% if p.promocion_vigente %}{{ p.precio_con_descuento }}{% else %}{{ p.precio }}{% endif %}',
-                            '{{ p.id }}',
-                            '{{ p.stock }}')">
+          <button class="add-to-cart btn btn-primary" onclick='addToCart("{{ p.nombre|escapejs }}","{% if p.promocion_vigente %}{{ p.precio_con_descuento }}{% else %}{{ p.precio }}{% endif %}","{{ p.id }}","{{ p.stock }}")'>
             <i class="fas fa-shopping-cart"></i> Añadir al Carrito
           </button>
-          <button class="btn btn-outline-primary" onclick="showProductDetail('{{ p.nombre|escapejs }}',
-                                                '{{ p.descripcion|default_if_none:""|escapejs }}',
-                                                {{ p.precio }},
-                                                '{% if p.imagen %}{{ p.imagen.url }}{% else %}{% static "
-            img/no-image.png" %}{% endif %}')">Ver detalle
-          </button>
+          {% if p.imagen %}
+            <button class="btn btn-outline-primary" onclick="showProductDetailFromButton(this)"
+                    data-name="{{ p.nombre|escapejs }}"
+                    data-description="{{ p.descripcion|default_if_none:''|escapejs }}"
+                    data-price="{{ p.precio }}"
+                    data-image="{{ p.imagen.url }}">Ver detalle</button>
+          {% else %}
+            <button class="btn btn-outline-primary" onclick="showProductDetailFromButton(this)"
+                    data-name="{{ p.nombre|escapejs }}"
+                    data-description="{{ p.descripcion|default_if_none:''|escapejs }}"
+                    data-price="{{ p.precio }}"
+                    data-image="{% static 'img/no-image.png' %}">Ver detalle</button>
+          {% endif %}
         </div>
       </div>
     </div>
@@ -115,50 +119,54 @@
   <h2 class="section-title">Productos Destacados</h2>
   <div class="offers-grid">
     {% for p in productos_normales %}
-    <div class="product-card" data-category="{{ p.categoria.slug|default:'sin-categoria' }}">
-      <div class="offer-image">
-        {% if p.imagen %}
-        <img src="{{ p.imagen.url }}" alt="{{ p.nombre }}">
-        {% else %}
-        <img src="{% static 'img/no-image.png' %}" alt="Sin imagen">
-        {% endif %}
-      </div>
-
-      <div class="offer-content">
-        <h3 class="product-title">{{ p.nombre }}</h3>
-        <p class="product-description">{{ p.descripcion|truncatewords:20 }}</p>
-
-        <div class="offer-price">
-          <span class="current-price">${{ p.precio|miles_chilenos }}</span>
+      <div class="product-card" data-category="{{ p.categoria.slug|default:'sin-categoria' }}">
+        <div class="offer-image">
+          {% if p.imagen %}
+            <img src="{{ p.imagen.url }}" alt="{{ p.nombre }}">
+          {% else %}
+            <img src="{% static 'img/no-image.png' %}" alt="Sin imagen">
+          {% endif %}
         </div>
 
-        <div class="product-actions">
-          <button class="btn btn-primary" onclick="addToCart('{{ p.nombre|escapejs }}',
-                                    '{{ p.precio }}',
-                                    '{{ p.id }}',
-                                    '{{ p.stock }}')">
-            <i class="fas fa-shopping-cart"></i> Añadir al Carrito
-          </button>
-          <button class="btn btn-outline-primary" onclick="showProductDetail('{{ p.nombre|escapejs }}',
-                                                '{{ p.descripcion|default_if_none:""|escapejs }}',
-                                                {{ p.precio }},
-                                                '{% if p.imagen %}{{ p.imagen.url }}{% else %}{% static "
-            img/no-image.png" %}{% endif %}')">Ver detalle
-          </button>
+        <div class="offer-content">
+          <h3 class="product-title">{{ p.nombre }}</h3>
+          <p class="product-description">{{ p.descripcion|truncatewords:20 }}</p>
+
+          <div class="offer-price">
+            <span class="current-price">${{ p.precio|miles_chilenos }}</span>
+          </div>
+
+          <div class="product-actions">
+    <button class="btn btn-primary" onclick='addToCart("{{ p.nombre|escapejs }}","{{ p.precio }}","{{ p.id }}","{{ p.stock }}")'>
+      <i class="fas fa-shopping-cart"></i> Añadir al Carrito
+    </button>
+
+  {% if p.imagen %}
+    <button class="btn btn-outline-primary" onclick="showProductDetailFromButton(this)"
+        data-name="{{ p.nombre|escapejs }}"
+        data-description="{{ p.descripcion|default_if_none:''|escapejs }}"
+        data-price="{{ p.precio }}"
+        data-image="{{ p.imagen.url }}">Ver detalle</button>
+  {% else %}
+    <button class="btn btn-outline-primary" onclick="showProductDetailFromButton(this)"
+        data-name="{{ p.nombre|escapejs }}"
+        data-description="{{ p.descripcion|default_if_none:''|escapejs }}"
+        data-price="{{ p.precio }}"
+        data-image="{% static 'img/no-image.png' %}">Ver detalle</button>
+  {% endif %}
+</div>
         </div>
       </div>
-    </div>
     {% empty %}
-    <div class="col-12">
-      <p class="text-center">No hay productos destacados en este momento.</p>
-    </div>
+      <div class="col-12">
+        <p class="text-center">No hay productos destacados en este momento.</p>
+      </div>
     {% endfor %}
   </div>
 </section>
 
 {% endblock %}
 
-<!--El const carrito URL es para que la página de carrito cargue la URL correcta-->
 <script>
   const carritoURL = "{% url 'carrito_compras' %}";
 </script>

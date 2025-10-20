@@ -10,15 +10,31 @@ Usuario = get_user_model()
 
 # ================= PERFIL =================
 class PerfilForm(forms.ModelForm):
+    def clean_telefono(self):
+        telefono = self.cleaned_data.get('telefono', '')
+        telefono_digits = ''.join(filter(str.isdigit, telefono))
+        if len(telefono_digits) != 8:
+            raise forms.ValidationError('El teléfono debe tener exactamente 8 dígitos.')
+        return telefono_digits
     """Formulario para que el usuario edite su perfil básico."""
     class Meta:
         model = Usuario
         fields = ['first_name', 'last_name', 'email', 'telefono', 'rut']
         widgets = {
-            'first_name': forms.TextInput(attrs={'class': 'form-control'}),
-            'last_name': forms.TextInput(attrs={'class': 'form-control'}),
+            'first_name': forms.TextInput(attrs={
+                'class': 'form-control',
+                'oninput': "this.value=this.value.replace(/[^A-Za-zÁÉÍÓÚÜÑáéíóúüñ0-9 ]/g,'');"
+            }),
+            'last_name': forms.TextInput(attrs={
+                'class': 'form-control',
+                'oninput': "this.value=this.value.replace(/[^A-Za-zÁÉÍÓÚÜÑáéíóúüñ0-9 ]/g,'');"
+            }),
             'email': forms.EmailInput(attrs={'class': 'form-control'}),
-            'telefono': forms.TextInput(attrs={'class': 'form-control'}),
+            'telefono': forms.TextInput(attrs={
+                'class': 'form-control',
+                'oninput': "this.value=this.value.replace(/[^0-9]/g,'');",
+                'maxlength': '8'
+            }),
             'rut': forms.TextInput(attrs={'class': 'form-control'}),
         }
 
@@ -183,11 +199,20 @@ class DireccionForm(forms.ModelForm):
         model = Direccion
         fields = ['linea1', 'linea2', 'comuna', 'region', 'codigo_postal']
         widgets = {
-            'linea1': forms.TextInput(attrs={'class': 'form-control'}),
-            'linea2': forms.TextInput(attrs={'class': 'form-control'}),
+            'linea1': forms.TextInput(attrs={
+                'class': 'form-control',
+                'oninput': "this.value=this.value.replace(/[^A-Za-zÁÉÍÓÚÜÑáéíóúüñ0-9 ]/g,'');"
+            }),
+            'linea2': forms.TextInput(attrs={
+                'class': 'form-control',
+                'oninput': "this.value=this.value.replace(/[^A-Za-zÁÉÍÓÚÜÑáéíóúüñ0-9 ]/g,'');"
+            }),
             'comuna': forms.TextInput(attrs={'class': 'form-control'}),
             'region': forms.Select(attrs={"class": "form-control"}),
-            'codigo_postal': forms.TextInput(attrs={'class': 'form-control'}),
+            'codigo_postal': forms.TextInput(attrs={
+                'class': 'form-control',
+                'oninput': "this.value=this.value.replace(/[^0-9]/g,'');"
+            }),
         }
 
 # ================= Login Con correo =================

@@ -120,18 +120,7 @@ document.addEventListener('DOMContentLoaded', () => {
         button.removeAttribute('aria-disabled');
         button.classList.remove('disabled');
       }
-    });
-  };
-
-  const hasVisibleErrors = () => {
-    if (form.querySelector('[data-feedback].text-danger:not(.d-none)')) {
-      return true;
-    }
-    if (form.querySelector('.is-invalid')) {
-      return true;
-    }
-    return false;
-  };
+  });
 
   const updateSubmitState = () => {
     setSubmitDisabled(hasVisibleErrors());
@@ -843,38 +832,6 @@ document.addEventListener('DOMContentLoaded', () => {
         field.input.setAttribute('required', 'required');
         if (!field.input.getAttribute('placeholder')) {
           field.input.setAttribute('placeholder', 'Av. Siempre Viva 742');
-        }
-      },
-      onFocus(field) {
-        showInlineError(field, '');
-      },
-      onInput(field) {
-        sanitizeAddressInput(field);
-        showInlineError(field, '');
-      },
-      onPaste(field, event) {
-        applyPasteSanitation(field, event, sanitizeAddressValue, sanitizeAddressInput);
-      },
-      onBlur(field) {
-        field.input.value = sanitizeAddressValue(field.input.value).trim();
-      },
-      validate(field) {
-        return validateAddressField(field);
-      }
-    },
-    {
-      ...getField('linea2'),
-      prepare(field) {
-        if (!field?.input) {
-          return;
-        }
-        field.input.setAttribute('autocomplete', 'address-line2');
-        field.input.setAttribute('inputmode', 'text');
-        field.input.setAttribute('maxlength', '120');
-        field.input.setAttribute('aria-required', 'true');
-        field.input.setAttribute('required', 'required');
-        if (!field.input.getAttribute('placeholder')) {
-          field.input.setAttribute('placeholder', 'Depto / Oficina');
         }
       },
       onFocus(field) {

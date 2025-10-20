@@ -72,13 +72,19 @@
             </button>
 
             <!-- Botón detalle -->
-            <button class="btn btn-outline-primary"
-                    onclick="showProductDetail('{{ p.nombre|escapejs }}',
-                                                '{{ p.descripcion|default_if_none:""|escapejs }}',
-                                                {{ p.precio }},
-                                                '{% if p.imagen %}{{ p.imagen.url }}{% else %}{% static "img/no-image.png" %}{% endif %}')">
-              Ver detalle
-            </button>
+            {% if p.imagen %}
+              <button class="btn btn-outline-primary" onclick="showProductDetailFromButton(this)"
+                      data-name="{{ p.nombre|escapejs }}"
+                      data-description="{{ p.descripcion|default_if_none:''|escapejs }}"
+                      data-price="{{ p.precio }}"
+                      data-image="{{ p.imagen.url }}">Ver detalle</button>
+            {% else %}
+              <button class="btn btn-outline-primary" onclick="showProductDetailFromButton(this)"
+                      data-name="{{ p.nombre|escapejs }}"
+                      data-description="{{ p.descripcion|default_if_none:''|escapejs }}"
+                      data-price="{{ p.precio }}"
+                      data-image="{% static 'img/no-image.png' %}">Ver detalle</button>
+            {% endif %}
           </div>
         </div>
       </div>

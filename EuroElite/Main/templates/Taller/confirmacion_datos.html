@@ -49,10 +49,12 @@
               </div>
 
               <div class="col-12 col-md-6">
-                <label for="telefono" class="form-label">Teléfono</label>
-                <input id="telefono" name="telefono" type="tel" class="form-control" required
-                       placeholder="+56 9 1234 5678">
-                <div class="invalid-feedback">Ingresa tu teléfono.</div>
+                <label for="telefono" class="form-label fw-semibold text-muted">Teléfono</label>
+                <div class="input-group">
+                  <span class="input-group-text">+56 9</span>
+                  <input id="telefono" name="telefono" type="tel" class="form-control" required placeholder="12345678">
+                </div>
+                <div id="telefono-feedback" class="text-danger small d-none"></div>
               </div>
 
               <div class="col-12 col-md-6">
@@ -135,9 +137,184 @@
 
 <script>
   (function () {
-    const form = document.getElementById('confirmForm');
+  const form = document.getElementById('confirmForm');
+  const telefono = document.getElementById('telefono');
+  const telefonoHelper = document.getElementById('telefono-helper');
+  const rut = document.getElementById('rut');
+
+    function sanitizePhoneValue(value) {
+      const digits = (value || '').replace(/\D/g, '');
+      return digits.slice(0, 8);
+    }
+    function sanitizePhoneInput(input) {
+      const sanitized = sanitizePhoneValue(input.value);
+      if (input.value !== sanitized) {
+        input.value = sanitized;
+        if (typeof input.setSelectionRange === 'function') {
+          const caret = sanitized.length;
+          input.setSelectionRange(caret, caret);
+        }
+      }
+        if (telefonoHelper) {
+          telefonoHelper.style.display = sanitized.length === 0 ? '' : 'none';
+        }
+    }
+    function validatePhone(input) {
+      const digits = sanitizePhoneValue(input.value);
+      input.value = digits;
+      if (!digits) {
+        input.setCustomValidity('Debes rellenar este campo');
+        return false;
+      }
+      if (digits.length < 8) {
+        input.setCustomValidity('Teléfono debe contener 8 dígitos');
+        return false;
+      }
+      input.setCustomValidity('');
+      return true;
+    }
+
+    function sanitizeRutValue(value) {
+      if (!value) return '';
+      const normalized = value.normalize('NFC').replace(/\s+/g, '');
+      let result = '';
+      for (const char of normalized) {
+        if (result.length >= 9) break;
+        if (/[0-9]/.test(char)) { result += char; continue; }
+        if ((char === 'k' || char === 'K') && result.length === 8) { result += 'K'; }
+      }
+      return result;
+    }
+    function cleanRut(value) { return sanitizeRutValue(value); }
+    function formatRut(value) {
+      const cleaned = cleanRut(value);
+      if (cleaned.length <= 1) return cleaned;
+      const body = cleaned.slice(0, -1);
+      const dv = cleaned.slice(-1);
+      const reversed = body.split('').reverse();
+      const chunks = [];
+      for (let i = 0; i < reversed.length; i += 3) {
+        chunks.push(reversed.slice(i, i + 3).reverse().join(''));
+      }
+      return chunks.reverse().join('.') + '-' + dv;
+    }
+    function computeDV(body) {
+      let sum = 0;
+      let multiplier = 2;
+      for (let i = body.length - 1; i >= 0; i--) {
+        sum += parseInt(body[i], 10) * multiplier;
+        multiplier = multiplier === 7 ? 2 : multiplier + 1;
+      }
+      const remainder = 11 - (sum % 11);
+      if (remainder === 11) return '0';
+      if (remainder === 10) return 'K';
+      return String(remainder);
+    }
+    function isValidRut(value) {
+      const cleaned = cleanRut(value);
+      if (cleaned.length < 2) return false;
+      const body = cleaned.slice(0, -1);
+      const dv = cleaned.slice(-1);
+      if (!/^[0-9]+$/.test(body)) return false;
+      return computeDV(body) === dv;
+    }
+    function sanitizeRutInput(input) {
+      const raw = input.value;
+      const cleaned = cleanRut(raw);
+      const formatted = formatRut(cleaned);
+      if (input.value !== formatted) {
+        input.value = formatted;
+        if (typeof input.setSelectionRange === 'function') {
+          const caret = formatted.length;
+          input.setSelectionRange(caret, caret);
+        }
+      }
+      validateRut(input);
+    }
+    function validateRut(input) {
+      const cleaned = cleanRut(input.value);
+      if (!cleaned) {
+        input.setCustomValidity('Debes rellenar este campo');
+        return false;
+      }
+      if (!isValidRut(cleaned)) {
+        input.setCustomValidity('RUT inválido');
+        return false;
+      }
+      input.setCustomValidity('');
+      return true;
+    }
+
+    if (telefono) {
+      const telefonoFeedback = document.getElementById('telefono-feedback');
+      function showTelefonoError(message) {
+        telefonoFeedback.textContent = message;
+        telefonoFeedback.classList.remove('d-none');
+        telefono.classList.add('is-invalid');
+      }
+      function hideTelefonoError() {
+        telefonoFeedback.textContent = '';
+        telefonoFeedback.classList.add('d-none');
+        telefono.classList.remove('is-invalid');
+      }
+      function validateTelefonoField() {
+        const value = telefono.value.replace(/\D/g, '');
+        if (!value) {
+          showTelefonoError('Por favor ingresa tu número de teléfono para continuar.');
+          return false;
+        }
+        if (value.length < 8) {
+          showTelefonoError('El teléfono debe tener 8 dígitos.');
+          return false;
+        }
+        hideTelefonoError();
+        return true;
+      }
+      telefono.addEventListener('input', function () {
+        telefono.value = telefono.value.replace(/\D/g, '').slice(0, 8);
+        validateTelefonoField();
+      });
+      telefono.addEventListener('blur', function () {
+        validateTelefonoField();
+      });
+      telefono.addEventListener('paste', function (e) {
+        setTimeout(function () {
+          telefono.value = telefono.value.replace(/\D/g, '').slice(0, 8);
+          validateTelefonoField();
+        }, 0);
+      });
+      validateTelefonoField();
+    }
+    if (rut) {
+      rut.addEventListener('input', function () {
+        sanitizeRutInput(rut);
+        rut.classList.remove('is-invalid');
+      });
+      rut.addEventListener('blur', function () {
+        sanitizeRutInput(rut);
+        if (!validateRut(rut)) {
+          rut.classList.add('is-invalid');
+        } else {
+          rut.classList.remove('is-invalid');
+        }
+      });
+      rut.addEventListener('paste', function (e) {
+        setTimeout(function () {
+          sanitizeRutInput(rut);
+          if (!validateRut(rut)) {
+            rut.classList.add('is-invalid');
+          } else {
+            rut.classList.remove('is-invalid');
+          }
+        }, 0);
+      });
+    }
+
     form.addEventListener('submit', function (e) {
-      if (!form.checkValidity()) {
+      let valid = true;
+      if (telefono && !validatePhone(telefono)) valid = false;
+      if (rut && !validateRut(rut)) valid = false;
+      if (!form.checkValidity() || !valid) {
         e.preventDefault();
         e.stopPropagation();
       }
