@@ -3,7 +3,7 @@
 {% block title %}Resumen de compra - Euro Elite{% endblock %}
 {% block content %}
 
-<br><br><br><br><br>
+<br><br>
 
 <div class="container my-4">
   <div class="row g-3">
@@ -80,27 +80,43 @@
 </style>
 
 <script>
-  (function () {
-    const itemsContainer = document.getElementById('resumen-items');
-    const sidebar = document.getElementById('resumen-sidebar');
-    if (!itemsContainer || !sidebar) return;
+document.addEventListener("DOMContentLoaded", async () => {
+  const itemsContainer = document.getElementById('resumen-items');
+  const sidebar = document.getElementById('resumen-sidebar');
+  if (!itemsContainer || !sidebar) return;
 
-    // Lee carrito desde localStorage (mismo formato que main.js)
-    let cart = [];
-    try { cart = JSON.parse(localStorage.getItem('cart')) || []; } catch { cart = []; }
+  const shippingBase = parseInt(sidebar.dataset.envio || '0', 10) || 0;
 
-    const shippingBase = parseInt(sidebar.dataset.envio || '0', 10) || 0;
+  // Guardar / leer método de entrega
+  let delivery = (localStorage.getItem('delivery_method') === 'retiro') ? 'retiro' : 'envio';
+  const radioEnvio = document.getElementById('delivery-envio');
+  const radioRetiro = document.getElementById('delivery-retiro');
 
-    // Selección de método de entrega
-    const radioEnvio = document.getElementById('delivery-envio');
-    const radioRetiro = document.getElementById('delivery-retiro');
-    let delivery = (localStorage.getItem('delivery_method') === 'retiro') ? 'retiro' : 'envio';
-    if (radioEnvio && radioRetiro) {
-      radioEnvio.checked = (delivery === 'envio');
-      radioRetiro.checked = (delivery === 'retiro');
+  if (radioEnvio && radioRetiro) {
+    radioEnvio.checked = (delivery === 'envio');
+    radioRetiro.checked = (delivery === 'retiro');
+  }
+
+  // Cargar carrito real desde Django
+  try {
+    const response = await fetch("/carrito/json/");
+    if (!response.ok) throw new Error("No se pudo obtener el carrito");
+    const data = await response.json();
+
+    const items = data.items || [];
+    if (!items.length) {
+      itemsContainer.innerHTML = `
+        <div class="empty-cart">
+          <img src="{% static 'img/LogoApp.png' %}" alt="Euro Elite">
+          <h6>Tu carrito está vacío</h6>
+          <p class="muted">Agrega productos para ver el resumen de compra.</p>
+          <a href="{% url 'productos' %}" class="btn btn-primary btn-sm">Explorar productos</a>
+        </div>`;
+      updateTotals(0);
+      return;
     }
 
-    // Cabecera de columnas
+    // Encabezado de columnas
     const head = document.createElement('div');
     head.className = 'row-head';
     head.innerHTML = `
@@ -109,74 +125,75 @@
       <div class="qty">Cant.</div>
       <div class="subtotal">Subtotal</div>
     `;
-
-    // subtotal global para cálculos
-    let subtotal = 0;
-
-    // Función para actualizar totales según método
-    function updateTotals() {
-      const envio = (delivery === 'retiro') ? 0 : shippingBase;
-      const total = subtotal + envio;
-      document.getElementById('subtotal-text').textContent = (subtotal).toLocaleString('es-CL', { style: 'currency', currency: 'CLP' });
-      document.getElementById('envio-text').textContent = (envio).toLocaleString('es-CL', { style: 'currency', currency: 'CLP' });
-      document.getElementById('total-text').textContent = (total).toLocaleString('es-CL', { style: 'currency', currency: 'CLP' });
-    }
-
-    // Listeners para cambiar método
-    if (radioEnvio) radioEnvio.addEventListener('change', () => {
-      if (radioEnvio.checked) {
-        delivery = 'envio';
-        localStorage.setItem('delivery_method', delivery);
-        updateTotals();
-      }
-    });
-    if (radioRetiro) radioRetiro.addEventListener('change', () => {
-      if (radioRetiro.checked) {
-        delivery = 'retiro';
-        localStorage.setItem('delivery_method', delivery);
-        updateTotals();
-      }
-    });
-
-    if (!cart.length) {
-      itemsContainer.innerHTML = `
-        <div class="empty-cart">
-          <img src="{% static 'img/LogoApp.png' %}" alt="Euro Elite">
-          <h6>Tu carrito está vacío</h6>
-          <p class="muted">Agrega productos para ver el resumen de compra.</p>
-          <a href="{% url 'productos' %}" class="btn btn-primary btn-sm">Explorar productos</a>
-        </div>`;
-      // Actualiza resumen considerando método
-      subtotal = 0;
-      updateTotals();
-      return;
-    }
-
     itemsContainer.appendChild(head);
 
-    // Recalcula subtotal con items
-    cart.forEach(item => {
-      const itemSubtotal = (Number(item.price) || 0) * (Number(item.quantity) || 0);
-      subtotal += itemSubtotal;
-
+    // Generar filas
+    let subtotal = 0;
+    items.forEach(item => {
+      const sub = item.precio * item.cantidad;
+      subtotal += sub;
       const row = document.createElement('div');
       row.className = 'item-row';
       row.innerHTML = `
         <div class="name-col">
-          <div class="fw-semibold">${item.name || 'Producto'}</div>
-          <div class="muted small">${item.sku ? 'SKU: ' + item.sku : ''}</div>
+          <div class="fw-semibold">${item.nombre}</div>
         </div>
-        <div class="price">${(Number(item.price) || 0).toLocaleString('es-CL', { style: 'currency', currency: 'CLP' })}</div>
-        <div class="qty">${Number(item.quantity) || 0}</div>
-        <div class="subtotal">${itemSubtotal.toLocaleString('es-CL', { style: 'currency', currency: 'CLP' })}</div>
+        <div class="price">$${item.precio.toLocaleString()}</div>
+        <div class="qty">${item.cantidad}</div>
+        <div class="subtotal">$${sub.toLocaleString()}</div>
       `;
       itemsContainer.appendChild(row);
     });
 
-    // Render inicial de totales (envío o retiro)
-    updateTotals();
-  })();
+    // Mostrar totales iniciales
+    updateTotals(subtotal);
+
+  } catch (error) {
+    console.error("❌ Error al cargar el resumen:", error);
+    itemsContainer.innerHTML = `
+      <div class="alert alert-danger mt-4" role="alert">
+        No se pudo cargar el resumen de compra. Intenta nuevamente.
+      </div>`;
+    updateTotals(0);
+  }
+
+  // Función para actualizar totales
+  function updateTotals(subtotal = 0) {
+    const envio = (delivery === 'retiro') ? 0 : shippingBase;
+    const total = subtotal + envio;
+    document.getElementById('subtotal-text').textContent =
+      subtotal.toLocaleString('es-CL', { style: 'currency', currency: 'CLP' });
+    document.getElementById('envio-text').textContent =
+      envio.toLocaleString('es-CL', { style: 'currency', currency: 'CLP' });
+    document.getElementById('total-text').textContent =
+      total.toLocaleString('es-CL', { style: 'currency', currency: 'CLP' });
+  }
+
+  // Listeners de método de entrega
+  if (radioEnvio) {
+    radioEnvio.addEventListener('change', () => {
+      if (radioEnvio.checked) {
+        delivery = 'envio';
+        localStorage.setItem('delivery_method', delivery);
+        const subtotal = parseInt(document.getElementById('subtotal-text').textContent.replace(/[^\d]/g, '')) || 0;
+        updateTotals(subtotal);
+      }
+    });
+  }
+
+  if (radioRetiro) {
+    radioRetiro.addEventListener('change', () => {
+      if (radioRetiro.checked) {
+        delivery = 'retiro';
+        localStorage.setItem('delivery_method', delivery);
+        const subtotal = parseInt(document.getElementById('subtotal-text').textContent.replace(/[^\d]/g, '')) || 0;
+        updateTotals(subtotal);
+      }
+    });
+  }
+});
 </script>
+
 
 <script src="{% static 'js/main.js' %}"></script>
 

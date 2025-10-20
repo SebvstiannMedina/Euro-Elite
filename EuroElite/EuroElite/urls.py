@@ -31,6 +31,7 @@ urlpatterns = [
     path('resumen_compra', main_views.resumen_compra, name='resumen_compra'),
     path('confirmacion_datos', main_views.confirmacion_datos, name='confirmacion_datos'),
     path('carrito_compras', main_views.carrito_compras, name='carrito_compras'),
+    path('carrito/json/', main_views.carrito_json, name='carrito_json'),
     path('terminos', main_views.terminos, name='terminos'),
     path('privacidad', main_views.privacidad, name='privacidad'),
     path('agregar_editar', main_views.agregar_editar, name='agregar_editar'),
@@ -96,8 +97,13 @@ urlpatterns = [
     path('revisar_vehiculo', main_views.revisar_vehiculo, name='revisar_vehiculo'),
     path('aprobar_vehiculo/<int:id>/', main_views.aprobar_vehiculo, name='aprobar_vehiculo'),
     path('rechazar_vehiculo/<int:id>/', main_views.rechazar_vehiculo, name='rechazar_vehiculo'),
+    path('carrito/json/', main_views.carrito_json, name='carrito_json'),
+    path('carrito/actualizar/<int:item_id>/', main_views.carrito_actualizar, name='carrito_actualizar'),
+    path('carrito/eliminar/<int:item_id>/', main_views.carrito_eliminar, name='carrito_eliminar'),
 
     path('custom_404', main_views.custom_404, name='custom_404'),
+
+    
 
     
 

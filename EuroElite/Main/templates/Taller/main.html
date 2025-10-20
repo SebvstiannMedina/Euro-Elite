@@ -48,7 +48,6 @@
   <a href="{% url 'productos' %}" class="cta-button">Explorar Catálogo</a>
 </section>
 
-
 <!-- PRODUCTOS EN OFERTA -->
 <section class="featured-offers" id="offers">
   <h2 class="section-title">Productos en Oferta</h2>
@@ -87,6 +86,9 @@
         </div>
 
         <div class="product-actions">
+<<<<<<< Updated upstream
+<<<<<<< Updated upstream
+<<<<<<< Updated upstream
           <button class="add-to-cart btn btn-primary" onclick='addToCart("{{ p.nombre|escapejs }}","{% if p.promocion_vigente %}{{ p.precio_con_descuento }}{% else %}{{ p.precio }}{% endif %}","{{ p.id }}","{{ p.stock }}")'>
             <i class="fas fa-shopping-cart"></i> Añadir al Carrito
           </button>
@@ -103,6 +105,55 @@
                     data-price="{{ p.precio }}"
                     data-image="{% static 'img/no-image.png' %}">Ver detalle</button>
           {% endif %}
+=======
+          <button class="add-to-cart btn btn-primary"
+                  onclick="handleAddToCart(this,
+                                            '{{ p.nombre|escapejs }}',
+                                            '{% if p.promocion_vigente %}{{ p.precio_con_descuento }}{% else %}{{ p.precio }}{% endif %}',
+                                            '{{ p.id }}',
+                                            '{{ p.stock }}')">
+            <i class="fas fa-shopping-cart"></i> Añadir al Carrito
+=======
+          <button class="add-to-cart btn btn-primary"
+                  onclick="handleAddToCart(this,
+                                            '{{ p.nombre|escapejs }}',
+                                            '{% if p.promocion_vigente %}{{ p.precio_con_descuento }}{% else %}{{ p.precio }}{% endif %}',
+                                            '{{ p.id }}',
+                                            '{{ p.stock }}')">
+            <i class="fas fa-shopping-cart"></i> Añadir al Carrito
+=======
+          <button class="add-to-cart btn btn-primary"
+                  onclick="handleAddToCart(this,
+                                            '{{ p.nombre|escapejs }}',
+                                            '{% if p.promocion_vigente %}{{ p.precio_con_descuento }}{% else %}{{ p.precio }}{% endif %}',
+                                            '{{ p.id }}',
+                                            '{{ p.stock }}')">
+            <i class="fas fa-shopping-cart"></i> Añadir al Carrito
+          </button>
+          <button class="btn btn-outline-primary"
+                  onclick="showProductDetail('{{ p.nombre|escapejs }}',
+                                              '{{ p.descripcion|default_if_none:''|escapejs }}',
+                                              {{ p.precio }},
+                                              '{% if p.imagen %}{{ p.imagen.url }}{% else %}{% static 'img/no-image.png' %}{% endif %}')">
+            Ver detalle
+>>>>>>> Stashed changes
+          </button>
+          <button class="btn btn-outline-primary"
+                  onclick="showProductDetail('{{ p.nombre|escapejs }}',
+                                              '{{ p.descripcion|default_if_none:''|escapejs }}',
+                                              {{ p.precio }},
+                                              '{% if p.imagen %}{{ p.imagen.url }}{% else %}{% static 'img/no-image.png' %}{% endif %}')">
+            Ver detalle
+>>>>>>> Stashed changes
+          </button>
+          <button class="btn btn-outline-primary"
+                  onclick="showProductDetail('{{ p.nombre|escapejs }}',
+                                              '{{ p.descripcion|default_if_none:''|escapejs }}',
+                                              {{ p.precio }},
+                                              '{% if p.imagen %}{{ p.imagen.url }}{% else %}{% static 'img/no-image.png' %}{% endif %}')">
+            Ver detalle
+          </button>
+>>>>>>> Stashed changes
         </div>
       </div>
     </div>
@@ -128,6 +179,7 @@
           {% endif %}
         </div>
 
+<<<<<<< Updated upstream
         <div class="offer-content">
           <h3 class="product-title">{{ p.nombre }}</h3>
           <p class="product-description">{{ p.descripcion|truncatewords:20 }}</p>
@@ -155,6 +207,24 @@
         data-image="{% static 'img/no-image.png' %}">Ver detalle</button>
   {% endif %}
 </div>
+=======
+        <div class="product-actions">
+          <button class="btn btn-primary"
+                  onclick="handleAddToCart(this,
+                                            '{{ p.nombre|escapejs }}',
+                                            '{{ p.precio }}',
+                                            '{{ p.id }}',
+                                            '{{ p.stock }}')">
+            <i class="fas fa-shopping-cart"></i> Añadir al Carrito
+          </button>
+          <button class="btn btn-outline-primary"
+                  onclick="showProductDetail('{{ p.nombre|escapejs }}',
+                                              '{{ p.descripcion|default_if_none:''|escapejs }}',
+                                              {{ p.precio }},
+                                              '{% if p.imagen %}{{ p.imagen.url }}{% else %}{% static 'img/no-image.png' %}{% endif %}')">
+            Ver detalle
+          </button>
+>>>>>>> Stashed changes
         </div>
       </div>
     {% empty %}
@@ -171,5 +241,5 @@
   const carritoURL = "{% url 'carrito_compras' %}";
 </script>
 
-<script src="{% static 'js/main.js' %}?v=2"></script>
+<script src="{% static 'js/main.js' %}?v=3"></script>
 </html>

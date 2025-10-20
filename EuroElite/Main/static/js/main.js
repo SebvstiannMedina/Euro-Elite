@@ -88,6 +88,9 @@ function goToResumen() {
 
 async function addToCart(productName, price, productId, stock) {
   try {
+<<<<<<< Updated upstream
+<<<<<<< Updated upstream
+<<<<<<< Updated upstream
     await postForm('/carrito/agregar', { producto_id: productId, cantidad: 1 });
     showCartNotification(productName);
     await refreshCartBadge();
@@ -110,8 +113,71 @@ async function addToCart(productName, price, productId, stock) {
   } catch (e) {
     console.warn('No se pudo agregar al carrito', e);
     alert('Por favor, inicia sesión para agregar productos al carrito.');
+=======
+=======
+>>>>>>> Stashed changes
+=======
+>>>>>>> Stashed changes
+    const response = await fetch('/carrito/agregar', {
+      method: 'POST',
+      headers: { 'X-CSRFToken': getCSRFToken() },
+      body: new URLSearchParams({
+        producto_id: productId,
+        cantidad: 1
+      }),
+      credentials: 'same-origin'
+    });
+
+    const data = await response.json();
+
+    // Si la respuesta tiene error (status 400), mostramos el mensaje del servidor
+    if (!response.ok) {
+      if (data.msg) {
+        alert(data.msg);
+      } else {
+        alert('No se pudo agregar al carrito.');
+      }
+      return;
+    }
+
+    // Si todo va bien
+    if (data.ok) {
+      showCartNotification(productName);
+      await refreshCartBadge();
+    }
+  } catch (error) {
+    console.error('Error en addToCart:', error);
+    alert('Error al conectar con el servidor.');
+<<<<<<< Updated upstream
+<<<<<<< Updated upstream
+>>>>>>> Stashed changes
+=======
+>>>>>>> Stashed changes
+=======
+>>>>>>> Stashed changes
   }
 }
+
+
+async function handleAddToCart(button, name, price, id, stock) {
+  if (button.disabled) return;
+  button.disabled = true;
+
+  try {
+    await addToCart(name, price, id, stock);
+
+    // Feedback visual rápido
+    const originalText = button.innerHTML;
+    button.innerHTML = "✅ Agregado";
+    setTimeout(() => { button.innerHTML = originalText; }, 1500);
+  } catch (err) {
+    console.error("Error al agregar:", err);
+    alert("No se pudo agregar el producto.");
+  } finally {
+    setTimeout(() => { button.disabled = false; }, 800);
+  }
+}
+
 
 async function updateCartItem(itemId, cantidad) {
   try {
@@ -201,55 +267,84 @@ async function toggleCart(forceOpen = false) {
   }));
 
   let total = 0;
-  let cartHTML = '<h3>Carrito de Compras</h3><div style="max-height: 400px; overflow-y: auto;">';
+  let cartHTML = `
+    <h3 style="font-size:1.4rem; font-weight:700; margin-bottom:1rem;">🛒 Carrito de Compras</h3>
+    <div style="max-height: 360px; overflow-y: auto; border-bottom: 1px solid #ddd; padding-bottom: 1rem;">`;
+
   cart.forEach((item) => {
     const itemTotal = item.price * item.quantity;
     total += itemTotal;
     cartHTML += `
-      <div style="display:flex; justify-content:space-between; align-items:center; padding:10px 0; border-bottom:1px solid #eee;">
-        <div>
-          <strong>${item.name}</strong><br>
-          <small>$${item.price.toLocaleString()} x ${item.quantity}</small>
+      <div style="display:flex; justify-content:space-between; align-items:center; padding:10px 0; border-bottom:1px dashed #e0e0e0;">
+        <div style="flex:1;">
+          <div style="font-weight:600;">${item.name}</div>
+          <div style="font-size:0.9rem; color:#666;">$${item.price.toLocaleString()} × ${item.quantity}</div>
         </div>
         <div style="display:flex; align-items:center; gap:8px;">
-          <button style="padding:4px 8px;" onclick="updateCartItem(${item.item_id}, ${Math.max(0, item.quantity - 1)})">−</button>
+          <button onclick="updateCartItem(${item.item_id}, ${Math.max(1, item.quantity - 1)})"
+            style="padding:4px 8px; border:1px solid #ccc; background:#f8f8f8; border-radius:4px; cursor:pointer;">−</button>
           <span>${item.quantity}</span>
-          <button style="padding:4px 8px;" onclick="updateCartItem(${item.item_id}, ${item.quantity + 1})">+</button>
-          <strong style="margin-left:10px;">$${itemTotal.toLocaleString()}</strong>
-          <button onclick="removeCartItem(${item.item_id})" style="
-            margin-left: 10px; background: #dc3545; color: white;
-            border: none; border-radius: 4px; padding: 4px 8px; cursor: pointer;">
+          <button onclick="updateCartItem(${item.item_id}, ${item.quantity + 1})"
+            style="padding:4px 8px; border:1px solid #ccc; background:#f8f8f8; border-radius:4px; cursor:pointer;">+</button>
+          <strong style="width:80px; text-align:right;">$${itemTotal.toLocaleString()}</strong>
+          <button onclick="removeCartItem(${item.item_id})"
+            style="background:#dc3545; color:white; border:none; border-radius:6px; padding:6px 8px; cursor:pointer;">
             <i class="fas fa-trash"></i>
           </button>
         </div>
       </div>`;
   });
-  cartHTML += `</div>
-    <div style="margin-top:20px; padding-top:20px; border-top:2px solid var(--primary-dark); text-align:center;">
-      <h4>Total: $${(data.total || total).toLocaleString()}</h4>
-      <div style="display:flex; justify-content:center; gap:10px; flex-wrap:wrap;">
-        <button onclick="goToResumen()" style="
-          background: var(--primary-dark); color: white; border: none;
-          padding: 12px 30px; border-radius: 8px; font-weight: bold; cursor: pointer;">
-          Proceder al Pago
-        </button>
-      </div>
-    </div>`;
+
+  cartHTML += `
+    </div>
+    <div style="margin-top:1.2rem; text-align:right; font-size:1.2rem; font-weight:600;">
+      Total: <span style="color:#0d6efd;">$${(data.total || total).toLocaleString()}</span>
+    </div>
+
+    <div style="display:flex; justify-content:center; gap:12px; margin-top:1.5rem; flex-wrap:wrap;">
+      <button onclick="window.location.href='${carritoURL}'"
+        style="background:#6c757d; color:white; border:none; border-radius:8px; padding:10px 22px; font-weight:600; cursor:pointer;">
+        Ver Carrito Completo
+      </button>
+
+      <button onclick="goToResumen()"
+        style="background:#0d6efd; color:white; border:none; border-radius:8px; padding:10px 22px; font-weight:600; cursor:pointer;">
+        Proceder al Pago
+      </button>
+    </div>
+  `;
 
   const modal = document.createElement('div');
   modal.id = "cart-modal";
   modal.innerHTML = `
-    <div style="position: fixed; top:0; left:0; right:0; bottom:0; background: rgba(0,0,0,0.5);
-      display:flex; align-items:center; justify-content:center; z-index:10000;" onclick="this.remove()">
-      <div style="background:white; padding:30px; border-radius:12px; max-width:500px; width:90%;
-        max-height:80vh; overflow-y:auto; position:relative;" onclick="event.stopPropagation()">
+    <div style="
+      position: fixed; top:0; left:0; right:0; bottom:0;
+      background: rgba(0,0,0,0.45);
+      display:flex; align-items:center; justify-content:center;
+      z-index:10000;
+      animation: fadeInCart 0.25s ease;
+    " onclick="this.remove()">
+      <div style="
+        background:white;
+        padding:30px 25px;
+        border-radius:16px;
+        max-width:520px;
+        width:90%;
+        position:relative;
+        box-shadow:0 10px 25px rgba(0,0,0,0.2);
+        animation: slideUpCart 0.3s ease;
+      " onclick="event.stopPropagation()">
         <button onclick="this.closest('#cart-modal').remove()" style="
-          position:absolute; top:15px; right:15px; background:none; border:none; font-size:1.5rem; cursor:pointer;">×</button>
+          position:absolute; top:12px; right:15px;
+          background:none; border:none; font-size:1.6rem; color:#333; cursor:pointer;">×</button>
         ${cartHTML}
       </div>
     </div>`;
-  if (existingModal) existingModal.replaceWith(modal); else document.body.appendChild(modal);
+
+  if (existingModal) existingModal.replaceWith(modal);
+  else document.body.appendChild(modal);
 }
+
 
 function removeFromCart(indexOrItemId) {
   const itemId = (cart[indexOrItemId] && cart[indexOrItemId].item_id) || indexOrItemId;
