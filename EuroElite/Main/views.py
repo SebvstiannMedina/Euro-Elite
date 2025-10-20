@@ -22,6 +22,7 @@ from django.utils import timezone
 from analytics.utils import track
 from .forms import CitaForm, ProductoForm
 from .models import Cita, Producto, BloqueHorario
+from django.views.decorators.csrf import csrf_exempt
 
 # Local apps
 from .forms import CitaForm, DireccionForm, PerfilForm, RegistroForm, EmailLoginForm
@@ -467,6 +468,7 @@ def agregar_editar(request, pk=None):
 def prueba(request):
     return render(request, 'Taller/prueba.html')
 
+@csrf_exempt
 def compra_exitosa(request):
     return render(request, 'Taller/compra_exitosa.html')
 

@@ -1,11 +1,12 @@
+# payments/views.py
 import requests
 from django.apps import apps
 from django.conf import settings
-from django.http import HttpResponseRedirect, HttpResponseBadRequest, JsonResponse
+from django.http import JsonResponse, HttpResponseBadRequest, HttpResponseRedirect
 from django.views.decorators.csrf import csrf_exempt
 from django.shortcuts import get_object_or_404
-from .utils import flow_sign
 
+from .utils import flow_sign
 
 def _s(x):
     """strip seguro para strings; devuelve '' si viene None."""
@@ -14,13 +15,12 @@ def _s(x):
 
 @csrf_exempt
 def flow_crear_orden(request):
+    """
+    Crea la orden en Flow y redirige al usuario a la pasarela de pagos.
+    Exento de CSRF porque es solo redirección POST desde nuestro frontend.
+    """
     Pedido = apps.get_model('Main', 'Pedido')
     Pago   = apps.get_model('Main', 'Pago')
-
-    try:
-        print("FLOW crear | GET:", dict(request.GET), "| POST:", dict(request.POST))
-    except Exception:
-        pass
 
     pedido_id = (
         request.GET.get("pedido_id")
@@ -42,14 +42,13 @@ def flow_crear_orden(request):
             estado=Pago.Estado.PENDIENTE,
         )
 
-    # Credenciales/URLs saneadas
+    # Credenciales y URLs
     api_base = _s(settings.FLOW_API_BASE)
     api_key  = _s(settings.FLOW_API_KEY)
     secret   = _s(settings.FLOW_SECRET_KEY)
     url_conf = _s(settings.FLOW_URL_CONFIRMATION)
-    url_ret  = _s(settings.FLOW_URL_RETURN)   
+    url_ret  = _s(settings.FLOW_URL_RETURN)
 
-    # Parametros para crear orden
     body = {
         "apiKey": api_key,
         "commerceOrder": str(pedido.id),
@@ -62,29 +61,13 @@ def flow_crear_orden(request):
     }
     body["s"] = flow_sign(body, secret)
 
-    try:
-        print("FLOW crear | BASE:", api_base, "| apiKey.len:", len(api_key), "| secret.len:", len(secret))
-        print("FLOW crear | urlConfirmation:", url_conf, "| urlReturn:", url_ret)
-    except Exception:
-        pass
-
     # Llamada a Flow
     try:
         resp = requests.post(f"{api_base}/payment/create", data=body, timeout=20)
-    except requests.RequestException as e:
-        print("FLOW crear | network error:", repr(e))
-        return HttpResponseBadRequest(f"Error de red al llamar a Flow: {e}")
-
-    try:
-        print("FLOW crear | status:", resp.status_code, "| text:", resp.text)
-    except Exception:
-        pass
-
-    if resp.status_code != 200:
-        return HttpResponseBadRequest(f"Error Flow: {resp.text}")
-
-    try:
+        resp.raise_for_status()
         data = resp.json()
+    except requests.RequestException as e:
+        return HttpResponseBadRequest(f"Error de red al llamar a Flow: {e}")
     except ValueError:
         return HttpResponseBadRequest("Respuesta inválida de Flow (no JSON).")
 
@@ -98,6 +81,9 @@ def flow_crear_orden(request):
 
 @csrf_exempt
 def flow_confirmacion(request):
+    """
+    Endpoint seguro para recibir notificaciones de Flow (server-to-server).
+    """
     Pedido = apps.get_model('Main', 'Pedido')
     Pago   = apps.get_model('Main', 'Pago')
 
@@ -117,25 +103,15 @@ def flow_confirmacion(request):
 
     try:
         rs = requests.get(f"{api_base}/payment/getStatusExtended", params=params, timeout=20)
-    except requests.RequestException as e:
-        print("FLOW confirm | network error:", repr(e))
-        return HttpResponseBadRequest(f"Error de red al consultar estado en Flow: {e}")
-
-    try:
-        print("FLOW confirm | status:", rs.status_code, "| text:", rs.text)
-    except Exception:
-        pass
-
-    if rs.status_code != 200:
-        return HttpResponseBadRequest(f"Error Flow al consultar estado: {rs.text}")
-
-    try:
+        rs.raise_for_status()
         data = rs.json()
+    except requests.RequestException as e:
+        return HttpResponseBadRequest(f"Error de red al consultar estado en Flow: {e}")
     except ValueError:
         return HttpResponseBadRequest("Respuesta inválida de Flow (no JSON).")
 
     status_flow = str(data.get("status"))            # 1=pagado, 2=pendiente, 3=fallido
-    commerce_order = str(data.get("commerceOrder"))  # = Pedido.id
+    commerce_order = str(data.get("commerceOrder"))  # id del Pedido
 
     pedido = get_object_or_404(Pedido, id=commerce_order)
     pago = getattr(pedido, "pago", None)
@@ -152,7 +128,6 @@ def flow_confirmacion(request):
         pedido.estado = Pedido.Estado.PAGADO
     elif status_flow == "3":
         pago.estado = Pago.Estado.FALLIDO
-    # "2" = pendiente → no cambiamos pedido a pagado
 
     pago.save()
     pedido.save()
@@ -160,4 +135,7 @@ def flow_confirmacion(request):
 
 
 def flow_retorno(request):
+    """
+    Endpoint donde el usuario vuelve desde Flow.
+    """
     return JsonResponse({"mensaje": "Volviste desde Flow. Estamos procesando tu pago."})

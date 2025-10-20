@@ -28,12 +28,16 @@ SECRET_KEY = 'django-insecure-v*cnfx@yx!0icme_h4+w+&ununtjqgrpp*=(f@r$)7ij+0&vyw
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['localhost', '127.0.0.1']
+ALLOWED_HOSTS = ['localhost', '127.0.0.1','jehison.pythonanywhere.com','www.euroelite.cl']
 
 CSRF_TRUSTED_ORIGINS = [
-    'http://localhost',
+    "http://localhost",                       # para pruebas locales sin https
+    "https://jehison.pythonanywhere.com",     # pythonanywhere
+    "https://sandbox.flow.cl",                # sandbox de Flow (borrar en produccion)
+    "https://flow.cl",                        # Flow producción
+    "https://www.euroelite.cl",               # dominio
+    "https://euroelite.cl",                   # por si se usa sin www
 ]
-
 
 # Application definition
 
@@ -169,3 +173,9 @@ AUTHENTICATION_BACKENDS = [
 LOGIN_URL = "login"
 LOGIN_REDIRECT_URL = "home"
 LOGOUT_REDIRECT_URL = "login"
+
+FLOW_API_BASE = "https://sandbox.flow.cl/api"
+FLOW_API_KEY = "EXAMPLE".strip()
+FLOW_SECRET_KEY = "EXAMPLE".strip()
+FLOW_URL_CONFIRMATION = "https://www.euroelite.cl/pagos/flow/confirmacion/"
+FLOW_URL_RETURN       = "https://www.euroelite.cl/compra_exitosa"
