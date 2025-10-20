@@ -143,6 +143,7 @@
     const telefonoFeedback = document.getElementById('telefono-feedback');
     const rut = document.getElementById('rut');
     const rutFeedback = document.getElementById('rut-feedback');
+    
     const submitBtn = document.getElementById('perfilSubmit');
     const firstNameInput = document.querySelector('[name="first_name"]');
     const lastNameInput = document.querySelector('[name="last_name"]');
@@ -156,12 +157,14 @@
       telefonoFeedback.classList.remove('d-none');
       telefono.classList.add('is-invalid');
     }
+    
 
     function hideTelefonoError() {
       telefonoFeedback.textContent = '';
       telefonoFeedback.classList.add('d-none');
       telefono.classList.remove('is-invalid');
     }
+    
 
     function showNameError(input, message) {
       const fb = getFeedbackFor(input.name);
@@ -217,6 +220,7 @@
       hideTelefonoError();
       return true;
     }
+    
 
     if (telefono) {
       telefono.addEventListener('input', function () {
@@ -224,11 +228,13 @@
         validateTelefonoField();
         updateSubmitButton();
       });
+      
 
       telefono.addEventListener('blur', function () {
         validateTelefonoField();
         updateSubmitButton();
       });
+      
 
       telefono.addEventListener('paste', function (e) {
         setTimeout(function () {
@@ -237,6 +243,7 @@
           updateSubmitButton();
         }, 0);
       });
+      
 
       validateTelefonoField();
     }
@@ -255,6 +262,7 @@
       return allOk;
     }
 
+      
       function validateEmailField(input) {
         if (!input) return true;
         const value = input.value.trim();
@@ -304,6 +312,7 @@
         return true;
       }
 
+     
       const emailInput = document.querySelector('[name="email"]');
       if (emailInput) {
         emailInput.addEventListener('input', function() {
@@ -337,6 +346,7 @@
       lastNameInput.addEventListener('paste', function () { setTimeout(function () { validateNameInput(lastNameInput); updateSubmitButton(); }, 0); });
     }
 
+      
     if (rut) {
       rut.addEventListener('input', function() {
         const raw = rut.value;

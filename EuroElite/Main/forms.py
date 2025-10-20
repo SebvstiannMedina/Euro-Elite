@@ -206,6 +206,7 @@ class CitaForm(forms.ModelForm):
             .filter(cita__isnull=True)                
             .order_by("inicio")
         )
+
     def clean(self):
         cleaned_data = super().clean()
         bloque = cleaned_data.get("bloque")

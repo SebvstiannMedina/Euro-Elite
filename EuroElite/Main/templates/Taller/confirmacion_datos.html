@@ -1,20 +1,24 @@
-{% extends 'base.html' %}
+{% extends "base.html" %}
 {% load static %}
-{% block title %}Confirmación de datos - Euro Elite{% endblock %}
+
+{% block title %}Confirmación de datos{% endblock %}
 
 {% block content %}
-<br><br><br>
+<div class="container py-4">
 
-<div class="container my-5">
+  <nav aria-label="breadcrumb" class="mb-3">
+    <ol class="breadcrumb">
+      <li class="breadcrumb-item"><a href="{% url 'carrito_compras' %}">Carrito</a></li>
+      <li class="breadcrumb-item"><a href="{% url 'resumen_compra' %}">Resumen</a></li>
+      <li class="breadcrumb-item active" aria-current="page">Confirmación de datos</li>
+    </ol>
+  </nav>
+
+  <h1 class="h3 mb-4">Confirma tus datos para el envío y pago</h1>
+
   <div class="row g-4">
-    <!-- 🧾 Formulario de datos -->
     <div class="col-12 col-lg-8">
-      <div class="card shadow-sm p-4">
-        <h4 class="mb-4 text-center">Confirmar tus datos</h4>
 
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
       <!-- FORMULARIO -->
       <form method="post" id="confirmForm" action="{% url 'checkout_pagar' %}" novalidate>
         {% csrf_token %}
@@ -59,104 +63,79 @@
                        placeholder="12.345.678-9">
                 <div class="invalid-feedback">Ingresa un RUT válido.</div>
               </div>
-=======
-=======
->>>>>>> Stashed changes
-=======
->>>>>>> Stashed changes
-        <form id="confirm-form">
-          <div class="row g-3">
-            <div class="col-md-6">
-              <label for="nombre" class="form-label">Nombre completo</label>
-              <input type="text" id="nombre" class="form-control" placeholder="Ej: Juan Perez" required>
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
->>>>>>> Stashed changes
-=======
->>>>>>> Stashed changes
-=======
->>>>>>> Stashed changes
             </div>
 
-            <div class="col-md-6">
-              <label for="email" class="form-label">Correo electrónico</label>
-              <input type="email" id="email" class="form-control" placeholder="ejemplo@correo.com" required>
+            <hr class="my-4">
+
+            <h2 class="h5 mb-3">Dirección de envío</h2>
+            <div class="row g-3">
+              <div class="col-12">
+                <label for="direccion" class="form-label">Dirección</label>
+                <input id="direccion" name="direccion" type="text" class="form-control" required
+                       placeholder="Calle y número">
+                <div class="invalid-feedback">Ingresa tu dirección.</div>
+              </div>
+
+              <div class="col-12 col-md-6">
+                <label for="region" class="form-label">Región</label>
+                <input id="region" name="region" type="text" class="form-control" required
+                       placeholder="Región Metropolitana">
+                <div class="invalid-feedback">Ingresa tu región.</div>
+              </div>
+
+              <div class="col-12 col-md-6">
+                <label for="comuna" class="form-label">Comuna</label>
+                <input id="comuna" name="comuna" type="text" class="form-control" required
+                       placeholder="Santiago">
+                <div class="invalid-feedback">Ingresa tu comuna.</div>
+              </div>
+
+              <div class="col-12">
+                <label for="notas" class="form-label">Notas (opcional)</label>
+                <textarea id="notas" name="notas" class="form-control" rows="3"
+                          placeholder="Instrucciones para la entrega, referencias, etc."></textarea>
+              </div>
             </div>
 
-            <div class="col-md-6">
-              <label for="telefono" class="form-label">Teléfono</label>
-              <input type="tel" id="telefono" class="form-control" placeholder="+56 9 1234 5678" required>
+            <div class="d-flex justify-content-between align-items-center gap-2 mt-4 flex-wrap">
+              <a href="{% url 'resumen_compra' %}" class="btn btn-outline-secondary btn-lg">
+                ← Volver al resumen
+              </a>
+              <button type="submit" class="btn btn-primary btn-lg" style="min-width: 220px;">
+                Continuar y pagar
+              </button>
             </div>
 
-            <div class="col-md-6">
-              <label for="direccion" class="form-label">Dirección</label>
-              <input type="text" id="direccion" class="form-control" placeholder="Calle y número" required>
-            </div>
-
-            <div class="col-md-6">
-              <label for="ciudad" class="form-label">Ciudad</label>
-              <input type="text" id="ciudad" class="form-control" placeholder="Santiago, Antofagasta..." required>
-            </div>
-
-            <div class="col-md-6">
-              <label for="region" class="form-label">Región</label>
-              <select id="region" class="form-select" required>
-                <option value="" selected disabled>Seleccionar...</option>
-                <option value="RM">Región Metropolitana</option>
-                <option value="II">Antofagasta</option>
-                <option value="V">Valparaíso</option>
-                <option value="VIII">Biobío</option>
-                <option value="X">Los Lagos</option>
-              </select>
-            </div>
-
-            <div class="col-12">
-              <label for="metodo_pago" class="form-label">Método de pago</label>
-              <select id="metodo_pago" class="form-select" required>
-                <option value="" selected disabled>Seleccionar...</option>
-                <option value="tarjeta">Tarjeta de crédito / débito</option>
-                <option value="transferencia">Transferencia bancaria</option>
-                <option value="efectivo">Pago en efectivo al recibir</option>
-              </select>
-            </div>
-
-            <div class="col-12 text-center mt-4">
-              <a href="{% url 'resumen_compra' %}" class="btn btn-outline-secondary px-4 me-2">Volver</a>
-              <button type="submit" class="btn btn-primary px-5">Confirmar pedido</button>
-            </div>
           </div>
-        </form>
-      </div>
+        </div>
+      </form>
+      <!-- /FORMULARIO -->
+
     </div>
 
-    
+    <!-- RESUMEN  -->
     <div class="col-12 col-lg-4">
-      <div id="resumen-confirmacion" class="card shadow-sm p-3">
-        <h5 class="mb-3 text-center">Resumen de tu compra</h5>
-        <div id="resumen-items"></div>
-        <hr>
-        <div class="d-flex justify-content-between"><span>Subtotal</span><strong id="subtotal-text">$0</strong></div>
-        <div class="d-flex justify-content-between"><span>Envío</span><strong id="envio-text">$0</strong></div>
-        <hr>
-        <div class="d-flex justify-content-between fs-5"><span>Total</span><strong id="total-text" class="text-primary">$0</strong></div>
+      <div class="card shadow-sm">
+        <div class="card-body">
+          <h2 class="h6 text-uppercase mb-3">Resumen del pedido</h2>
+          <div class="d-flex justify-content-between">
+            <span>Subtotal</span><strong>{{ subtotal|default:"-" }}</strong>
+          </div>
+          <div class="d-flex justify-content-between">
+            <span>Envío</span><strong>{{ envio|default:"-" }}</strong>
+          </div>
+          <hr>
+          <div class="d-flex justify-content-between fs-5">
+            <span>Total</span><strong>{{ total|default:"-" }}</strong>
+          </div>
+          <p class="text-muted small mt-2">El total final se confirmará al crear el pedido.</p>
+        </div>
       </div>
     </div>
   </div>
 </div>
 
-<style>
-  .card { border: 0; border-radius: 12px; }
-  .btn { border-radius: 8px; }
-  #resumen-items .item-row { display:flex; justify-content:space-between; padding:6px 0; border-bottom:1px solid #eee; }
-  #resumen-items .item-row:last-child { border:0; }
-  #resumen-items strong { color:#333; }
-</style>
-
-
 <script>
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
   (function () {
   const form = document.getElementById('confirmForm');
   const telefono = document.getElementById('telefono');
@@ -342,81 +321,4 @@
       form.classList.add('was-validated');
     }, false);
   })();
-=======
-=======
->>>>>>> Stashed changes
-=======
->>>>>>> Stashed changes
-document.addEventListener("DOMContentLoaded", async () => {
-  const resumenItems = document.getElementById('resumen-items');
-  const subtotalText = document.getElementById('subtotal-text');
-  const envioText = document.getElementById('envio-text');
-  const totalText = document.getElementById('total-text');
-
-
-  const deliveryMethod = localStorage.getItem('delivery_method') || 'envio';
-  const shippingCost = (deliveryMethod === 'retiro') ? 0 : 4990;
-
-  let subtotal = 0;
-
-  try {
-    const response = await fetch("/carrito/json/");
-    if (!response.ok) throw new Error("No se pudo obtener el carrito");
-    const data = await response.json();
-
-    const items = data.items || [];
-    if (!items.length) {
-      resumenItems.innerHTML = `
-        <div class="text-center text-muted py-4">
-          <p>Tu carrito está vacío.</p>
-          <a href="{% url 'productos' %}" class="btn btn-primary btn-sm mt-2">Explorar productos</a>
-        </div>`;
-      subtotalText.textContent = "$0";
-      envioText.textContent = "$0";
-      totalText.textContent = "$0";
-      return;
-    }
-
-    
-    items.forEach(item => {
-      const sub = item.precio * item.cantidad;
-      subtotal += sub;
-      const div = document.createElement('div');
-      div.className = "item-row";
-      div.innerHTML = `
-        <div><strong>${item.nombre}</strong> <small>x${item.cantidad}</small></div>
-        <div>$${sub.toLocaleString()}</div>
-      `;
-      resumenItems.appendChild(div);
-    });
-
-
-    const total = subtotal + shippingCost;
-    subtotalText.textContent = "$" + subtotal.toLocaleString();
-    envioText.textContent = (shippingCost === 0)
-      ? "Gratis (Retiro en tienda)"
-      : "$" + shippingCost.toLocaleString();
-    totalText.textContent = "$" + total.toLocaleString();
-
-  } catch (error) {
-    console.error("❌ Error al cargar resumen:", error);
-    resumenItems.innerHTML = `<p class="text-danger text-center mt-3">Error al cargar el carrito.</p>`;
-  }
-
-  // Simula confirmación de pedido
-  document.getElementById('confirm-form').addEventListener('submit', (e) => {
-    e.preventDefault();
-    alert("✅ Pedido confirmado. ¡Gracias por comprar en Euro Elite!");
-    window.location.href = "{% url 'home' %}";
-  });
-});
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
->>>>>>> Stashed changes
-=======
->>>>>>> Stashed changes
-=======
->>>>>>> Stashed changes
 </script>
-
-{% endblock %}

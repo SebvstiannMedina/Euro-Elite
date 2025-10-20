@@ -120,9 +120,9 @@ document.addEventListener('DOMContentLoaded', () => {
         button.removeAttribute('aria-disabled');
         button.classList.remove('disabled');
       }
-  });
-
-  const updateSubmitState = () => {
+ 
+ 
+      const updateSubmitState = () => {
     setSubmitDisabled(hasVisibleErrors());
   };
 
@@ -460,16 +460,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (!value) {
       return '';
     }
-    const normalized = value.normalize('NFC').replace(/\s+/g, '');
-    let result = '';
-    for (const char of normalized) {
-      if (result.length >= 9) {
-        break;
-      }
-      if (/[0-9]/.test(char)) {
-        result += char;
-        continue;
-      }
+@@ -484,416 +473,384 @@
       if ((char === 'k' || char === 'K') && result.length === 8) {
         result += 'K';
       }
@@ -851,7 +842,7 @@ document.addEventListener('DOMContentLoaded', () => {
         return validateAddressField(field);
       }
     },
-    {
+     {
       ...getField('region'),
       prepare(field) {
         if (!field?.input) {

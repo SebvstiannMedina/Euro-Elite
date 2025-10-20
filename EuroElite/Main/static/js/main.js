@@ -84,13 +84,11 @@ function goToResumen() {
   window.location.href = '/resumen_compra';
 }
 
+
 // === Acciones de carrito (server) =========================================================================
 
 async function addToCart(productName, price, productId, stock) {
   try {
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
     await postForm('/carrito/agregar', { producto_id: productId, cantidad: 1 });
     showCartNotification(productName);
     await refreshCartBadge();
@@ -113,71 +111,8 @@ async function addToCart(productName, price, productId, stock) {
   } catch (e) {
     console.warn('No se pudo agregar al carrito', e);
     alert('Por favor, inicia sesión para agregar productos al carrito.');
-=======
-=======
->>>>>>> Stashed changes
-=======
->>>>>>> Stashed changes
-    const response = await fetch('/carrito/agregar', {
-      method: 'POST',
-      headers: { 'X-CSRFToken': getCSRFToken() },
-      body: new URLSearchParams({
-        producto_id: productId,
-        cantidad: 1
-      }),
-      credentials: 'same-origin'
-    });
-
-    const data = await response.json();
-
-    // Si la respuesta tiene error (status 400), mostramos el mensaje del servidor
-    if (!response.ok) {
-      if (data.msg) {
-        alert(data.msg);
-      } else {
-        alert('No se pudo agregar al carrito.');
-      }
-      return;
-    }
-
-    // Si todo va bien
-    if (data.ok) {
-      showCartNotification(productName);
-      await refreshCartBadge();
-    }
-  } catch (error) {
-    console.error('Error en addToCart:', error);
-    alert('Error al conectar con el servidor.');
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
->>>>>>> Stashed changes
-=======
->>>>>>> Stashed changes
-=======
->>>>>>> Stashed changes
   }
 }
-
-
-async function handleAddToCart(button, name, price, id, stock) {
-  if (button.disabled) return;
-  button.disabled = true;
-
-  try {
-    await addToCart(name, price, id, stock);
-
-    // Feedback visual rápido
-    const originalText = button.innerHTML;
-    button.innerHTML = "✅ Agregado";
-    setTimeout(() => { button.innerHTML = originalText; }, 1500);
-  } catch (err) {
-    console.error("Error al agregar:", err);
-    alert("No se pudo agregar el producto.");
-  } finally {
-    setTimeout(() => { button.disabled = false; }, 800);
-  }
-}
-
 
 async function updateCartItem(itemId, cantidad) {
   try {
