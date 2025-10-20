@@ -87,6 +87,8 @@
 
         <div class="product-actions">
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
+<<<<<<< Updated upstream
           <button class="add-to-cart btn btn-primary" onclick='addToCart("{{ p.nombre|escapejs }}","{% if p.promocion_vigente %}{{ p.precio_con_descuento }}{% else %}{{ p.precio }}{% endif %}","{{ p.id }}","{{ p.stock }}")'>
             <i class="fas fa-shopping-cart"></i> Añadir al Carrito
           </button>
@@ -111,6 +113,38 @@
                                             '{{ p.id }}',
                                             '{{ p.stock }}')">
             <i class="fas fa-shopping-cart"></i> Añadir al Carrito
+=======
+          <button class="add-to-cart btn btn-primary"
+                  onclick="handleAddToCart(this,
+                                            '{{ p.nombre|escapejs }}',
+                                            '{% if p.promocion_vigente %}{{ p.precio_con_descuento }}{% else %}{{ p.precio }}{% endif %}',
+                                            '{{ p.id }}',
+                                            '{{ p.stock }}')">
+            <i class="fas fa-shopping-cart"></i> Añadir al Carrito
+=======
+          <button class="add-to-cart btn btn-primary"
+                  onclick="handleAddToCart(this,
+                                            '{{ p.nombre|escapejs }}',
+                                            '{% if p.promocion_vigente %}{{ p.precio_con_descuento }}{% else %}{{ p.precio }}{% endif %}',
+                                            '{{ p.id }}',
+                                            '{{ p.stock }}')">
+            <i class="fas fa-shopping-cart"></i> Añadir al Carrito
+          </button>
+          <button class="btn btn-outline-primary"
+                  onclick="showProductDetail('{{ p.nombre|escapejs }}',
+                                              '{{ p.descripcion|default_if_none:''|escapejs }}',
+                                              {{ p.precio }},
+                                              '{% if p.imagen %}{{ p.imagen.url }}{% else %}{% static 'img/no-image.png' %}{% endif %}')">
+            Ver detalle
+>>>>>>> Stashed changes
+          </button>
+          <button class="btn btn-outline-primary"
+                  onclick="showProductDetail('{{ p.nombre|escapejs }}',
+                                              '{{ p.descripcion|default_if_none:''|escapejs }}',
+                                              {{ p.precio }},
+                                              '{% if p.imagen %}{{ p.imagen.url }}{% else %}{% static 'img/no-image.png' %}{% endif %}')">
+            Ver detalle
+>>>>>>> Stashed changes
           </button>
           <button class="btn btn-outline-primary"
                   onclick="showProductDetail('{{ p.nombre|escapejs }}',

@@ -89,6 +89,8 @@ function goToResumen() {
 async function addToCart(productName, price, productId, stock) {
   try {
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
+<<<<<<< Updated upstream
     await postForm('/carrito/agregar', { producto_id: productId, cantidad: 1 });
     showCartNotification(productName);
     await refreshCartBadge();
@@ -112,6 +114,10 @@ async function addToCart(productName, price, productId, stock) {
     console.warn('No se pudo agregar al carrito', e);
     alert('Por favor, inicia sesión para agregar productos al carrito.');
 =======
+=======
+>>>>>>> Stashed changes
+=======
+>>>>>>> Stashed changes
     const response = await fetch('/carrito/agregar', {
       method: 'POST',
       headers: { 'X-CSRFToken': getCSRFToken() },
@@ -142,6 +148,12 @@ async function addToCart(productName, price, productId, stock) {
   } catch (error) {
     console.error('Error en addToCart:', error);
     alert('Error al conectar con el servidor.');
+<<<<<<< Updated upstream
+<<<<<<< Updated upstream
+>>>>>>> Stashed changes
+=======
+>>>>>>> Stashed changes
+=======
 >>>>>>> Stashed changes
   }
 }
