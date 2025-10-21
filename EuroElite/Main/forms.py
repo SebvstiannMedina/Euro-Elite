@@ -41,11 +41,29 @@ class PerfilForm(forms.ModelForm):
         email = (self.cleaned_data.get('email', '') or '').strip()
         if not email:
             raise forms.ValidationError('El correo electrónico es obligatorio.')
+        
+        # Remove all whitespace
+        email = ''.join(email.split())
+        
+        # Remove dangerous characters for XSS/injection prevention
+        dangerous_chars = ['<', '>', '"', "'", ';', '\\', '\r', '\n', '\t']
+        for char in dangerous_chars:
+            email = email.replace(char, '')
+        
+        # Convert to lowercase
+        email = email.lower()
+        
+        # Length validation
         if len(email) < 5:
             raise forms.ValidationError('El correo electrónico debe tener al menos 5 caracteres.')
-        if len(email) > 100:
-            raise forms.ValidationError('El correo electrónico no puede tener más de 100 caracteres.')
-        email = ''.join(ch for ch in email if ch not in '\r\n\t')
+        if len(email) > 120:
+            raise forms.ValidationError('El correo electrónico no puede tener más de 120 caracteres.')
+        
+        # Basic email format validation (Django's EmailField will also validate)
+        import re
+        if not re.match(r'^[a-z0-9._+%-]+@[a-z0-9.-]+\.[a-z]{2,}$', email):
+            raise forms.ValidationError('Formato de correo electrónico inválido.')
+        
         return email
 
     """Formulario para que el usuario edite su perfil básico."""
@@ -69,8 +87,8 @@ class PerfilForm(forms.ModelForm):
                 'class': 'form-control',
                 'required': True,
                 'minlength': '5',
-                'maxlength': '100',
-                'oninput': "this.value=this.value.trim().replace(/[\r\n\t]/g,'')"
+                'maxlength': '120',
+                'oninput': "this.value=this.value.replace(/[\\s<>\"';]/g,'').toLowerCase().slice(0,120)"
             }),
             'telefono': forms.TextInput(attrs={
                 'class': 'form-control',
@@ -357,15 +375,37 @@ class DireccionForm(forms.ModelForm):
 
         # Si no encontramos mapeo, devolvemos lo recibido (se guardará tal cual)
         return region
+    
+    def clean_linea1(self):
+        linea1 = (self.cleaned_data.get('linea1') or '').strip()
+        if len(linea1) < 3:
+            raise forms.ValidationError('La dirección debe tener al menos 3 caracteres.')
+        if len(linea1) > 65:
+            raise forms.ValidationError('La dirección no puede tener más de 65 caracteres.')
+        return linea1
+    
+    def clean_linea2(self):
+        linea2 = (self.cleaned_data.get('linea2') or '').strip()
+        if linea2 and len(linea2) < 3:
+            raise forms.ValidationError('El departamento/oficina debe tener al menos 3 caracteres.')
+        if len(linea2) > 65:
+            raise forms.ValidationError('El departamento/oficina no puede tener más de 65 caracteres.')
+        return linea2
+    
         widgets = {
             'linea1': forms.TextInput(attrs={
                 'class': 'form-control',
-                # allow letters (incl. tildes/ñ), digits, spaces and common punctuation for addresses
-                'oninput': "this.value=this.value.replace(/[^A-Za-zÁÉÍÓÚÜÑáéíóúüñ0-9 #.,'\\\/\-]/g,'');"
+                # Only allow letters (incl. tildes/ñ), digits, spaces and # symbol
+                'oninput': "this.value=this.value.replace(/[^A-Za-zÁÉÍÓÚÜÑáéíóúüñ0-9# ]/g,'');",
+                'minlength': '3',
+                'maxlength': '65'
             }),
             'linea2': forms.TextInput(attrs={
                 'class': 'form-control',
-                'oninput': "this.value=this.value.replace(/[^A-Za-zÁÉÍÓÚÜÑáéíóúüñ0-9 #.,'\\\/\-]/g,'');"
+                # Only allow letters (incl. tildes/ñ), digits and spaces
+                'oninput': "this.value=this.value.replace(/[^A-Za-zÁÉÍÓÚÜÑáéíóúüñ0-9 ]/g,'');",
+                'minlength': '3',
+                'maxlength': '65'
             }),
             # Render region as a select with choices from the model
             'region': forms.Select(attrs={'class': 'form-select', 'required': True}),
