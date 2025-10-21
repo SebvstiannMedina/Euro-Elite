@@ -65,7 +65,7 @@
             </div>
             <div class="col-12 col-md-6">
               <label for="rut" class="form-label fw-semibold text-muted">RUT</label>
-              <input id="rut" name="rut" type="text" class="form-control" required value="{{ form.rut.value|default:'' }}" placeholder="Ej: 12.345.678-9">
+              <input id="rut" name="rut" type="text" class="form-control" value="{{ form.rut.value|default:'' }}" placeholder="Ej: 12.345.678-9">
               <div id="rut-feedback" class="text-danger small d-none"></div>
               {% if form.rut.errors %}
                 <div class="text-danger small">{{ form.rut.errors }}</div>
@@ -87,45 +87,42 @@
             <hr class="mt-4 mb-2">
             <h5 class="mb-3">Dirección</h5>
             <div class="col-12 col-md-6">
-              <label for="{{ direccion_form.linea1.id_for_label }}" class="form-label fw-semibold text-muted">Calle / Dirección</label>
-              {{ direccion_form.linea1 }}
+              <label for="linea1" class="form-label fw-semibold text-muted">Calle / Dirección</label>
+              <input type="text" name="linea1" id="linea1" 
+                     class="form-control" required minlength="5" maxlength="120"
+                     value="{{ direccion_form.linea1.value|default:'' }}"
+                     placeholder="Ej: Av. Libertador 123, Depto 45">
               <div class="text-danger small d-none" data-feedback="linea1"></div>
               {% if direccion_form.linea1.errors %}
                 <div class="text-danger small">{{ direccion_form.linea1.errors }}</div>
               {% endif %}
             </div>
             <div class="col-12 col-md-6">
-              <label for="{{ direccion_form.linea2.id_for_label }}" class="form-label fw-semibold text-muted">Departamento / Oficina <span class="text-muted small">(opcional)</span></label>
-              <input type="text" name="{{ direccion_form.linea2.name }}" id="{{ direccion_form.linea2.id_for_label }}" class="form-control" maxlength="45" pattern="[A-Za-zÁÉÍÓÚÜÑáéíóúüñ0-9 ]{0,45}" placeholder="Ej: Depto 101" value="{{ direccion_form.linea2.value|default:'' }}" autocomplete="address-line2" inputmode="text" oninput="this.value=this.value.replace(/[^A-Za-zÁÉÍÓÚÜÑáéíóúüñ0-9 ]/g,'');">
+              <label for="linea2" class="form-label fw-semibold text-muted">Departamento / Oficina <span class="text-muted small">(opcional)</span></label>
+              <input type="text" name="linea2" id="linea2" class="form-control" maxlength="120" 
+                     placeholder="Ej: Depto 101" value="{{ direccion_form.linea2.value|default:'' }}">
               <div class="text-danger small d-none" data-feedback="linea2"></div>
               {% if direccion_form.linea2.errors %}
                 <div class="text-danger small">{{ direccion_form.linea2.errors }}</div>
               {% endif %}
             </div>
             <div class="col-12 col-md-6">
-              <label for="{{ direccion_form.comuna.id_for_label }}" class="form-label fw-semibold text-muted">Comuna</label>
-              {{ direccion_form.comuna }}
-              {% if direccion_form.comuna.errors %}
-                <div class="text-danger small">{{ direccion_form.comuna.errors }}</div>
-              {% endif %}
-            </div>
-            <div class="col-12 col-md-6">
-              <label for="{{ direccion_form.region.id_for_label }}" class="form-label fw-semibold text-muted">Región</label>
+              <label for="{{ direccion_form.region.id_for_label }}" class="form-label fw-semibold text-muted">Región *</label>
               {{ direccion_form.region }}
+              <div class="text-danger small d-none" data-feedback="region"></div>
               {% if direccion_form.region.errors %}
                 <div class="text-danger small">{{ direccion_form.region.errors }}</div>
               {% endif %}
             </div>
             <div class="col-12 col-md-6">
-              <label for="{{ direccion_form.codigo_postal.id_for_label }}" class="form-label fw-semibold text-muted">Código Postal</label>
-              {{ direccion_form.codigo_postal }}
-              <div class="text-danger small d-none" data-feedback="codigo_postal"></div>
-              {% if direccion_form.codigo_postal.errors %}
-                <div class="text-danger small">{{ direccion_form.codigo_postal.errors }}</div>
+              <label for="{{ direccion_form.comuna.id_for_label }}" class="form-label fw-semibold text-muted">Comuna *</label>
+              {{ direccion_form.comuna }}
+              <div class="text-danger small d-none" data-feedback="comuna"></div>
+              {% if direccion_form.comuna.errors %}
+                <div class="text-danger small">{{ direccion_form.comuna.errors }}</div>
               {% endif %}
             </div>
           </div>
-
           <!-- Botones -->
           <div class="mt-4 d-flex gap-2">
             <button id="perfilSubmit" type="submit" class="btn btn-success" disabled>Guardar cambios</button>
@@ -138,379 +135,99 @@
 </div>
 
 <script>
-  document.addEventListener('DOMContentLoaded', function () {
-    const telefono = document.getElementById('telefono');
-    const telefonoFeedback = document.getElementById('telefono-feedback');
-    const rut = document.getElementById('rut');
-    const rutFeedback = document.getElementById('rut-feedback');
-    
-    const submitBtn = document.getElementById('perfilSubmit');
-    const firstNameInput = document.querySelector('[name="first_name"]');
-    const lastNameInput = document.querySelector('[name="last_name"]');
+// Single, minimal validator for the profile form. External js/perfil.js only populates comunas.
+document.addEventListener('DOMContentLoaded', () => {
+  const form = document.getElementById('perfilForm');
+  const submitBtn = document.getElementById('perfilSubmit');
+  if (!form || !submitBtn) return;
 
-    function getFeedbackFor(name) {
-      return document.querySelector(`[data-feedback="${name}"]`);
-    }
+  const $ = (sel) => document.querySelector(sel);
+  const fields = {
+    first_name: { input: $('[name="first_name"]'), fb: document.querySelector('[data-feedback="first_name"]') },
+    last_name:  { input: $('[name="last_name"]'),  fb: document.querySelector('[data-feedback="last_name"]') },
+    email:      { input: $('[name="email"]'),      fb: document.querySelector('[data-feedback="email"]') },
+    telefono:   { input: $('#telefono'),            fb: document.getElementById('telefono-feedback') },
+    rut:        { input: $('#rut'),                 fb: document.getElementById('rut-feedback') },
+    linea1:     { input: $('#linea1'),              fb: document.querySelector('[data-feedback="linea1"]') },
+    region:     { input: $('[name="region"]'),     fb: document.querySelector('[data-feedback="region"]') },
+    comuna:     { input: $('[name="comuna"]'),     fb: document.querySelector('[data-feedback="comuna"]') },
+  };
 
-    function showTelefonoError(message) {
-      telefonoFeedback.textContent = message;
-      telefonoFeedback.classList.remove('d-none');
-      telefono.classList.add('is-invalid');
-    }
-    
+  const txt = (s) => (s||'').toString().trim();
+  const onlyDigits = (s) => (s||'').replace(/\D/g,'');
 
-    function hideTelefonoError() {
-      telefonoFeedback.textContent = '';
-      telefonoFeedback.classList.add('d-none');
-      telefono.classList.remove('is-invalid');
-    }
-    
+  function cleanRut(s){
+    return (s||'').replace(/\./g,'').replace(/-/g,'').toUpperCase();
+  }
+  function computeDV(body){
+    let sum=0, mul=2; for(let i=body.length-1;i>=0;i--){ sum += parseInt(body[i],10)*mul; mul = mul===7?2:mul+1; }
+    const r = 11 - (sum % 11); return r===11?'0': r===10?'K': String(r);
+  }
+  function validRut(value){
+    const c = cleanRut(value); if(c.length<2) return false; const body=c.slice(0,-1), dv=c.slice(-1);
+    if(!/^[0-9]+$/.test(body)) return false; return computeDV(body)===dv;
+  }
 
-    function showNameError(input, message) {
-      const fb = getFeedbackFor(input.name);
-      if (fb) {
-        fb.textContent = message;
-        fb.classList.remove('d-none');
-      }
-      input.classList.add('is-invalid');
-    }
+  function setError(fieldKey, message){
+    const f = fields[fieldKey]; if(!f || !f.input) return true;
+    const ok = !message; f.input.classList.toggle('is-invalid', !ok);
+    if (f.fb) { f.fb.textContent = message||''; f.fb.classList.toggle('d-none', ok); }
+    return ok;
+  }
 
-    function hideNameError(input) {
-      const fb = getFeedbackFor(input.name);
-      if (fb) {
-        fb.textContent = '';
-        fb.classList.add('d-none');
-      }
-      input.classList.remove('is-invalid');
-    }
+  function validate(){
+    let ok = true;
+    // Nombres
+    const fn = txt(fields.first_name.input?.value); ok &&= setError('first_name', fn.length<3 ? 'Debes ingresar al menos 3 caracteres' : '');
+    const ln = txt(fields.last_name.input?.value);  ok &&= setError('last_name',  ln.length<3 ? 'Debes ingresar al menos 3 caracteres' : '');
+    // Email
+    const em = txt(fields.email.input?.value).toLowerCase();
+    ok &&= setError('email', (/^[^@\s]+@[^@\s]+\.[^@\s]{2,}$/.test(em) ? '' : 'Correo inválido'));
+    // Teléfono (8 dígitos)
+    const tel = onlyDigits(fields.telefono.input?.value); ok &&= setError('telefono', (tel.length===8?'':'Teléfono debe contener 8 dígitos'));
+    // Dirección línea 1 (>=5)
+    const l1 = txt(fields.linea1.input?.value); ok &&= setError('linea1', l1.length<5 ? 'La dirección debe tener al menos 5 caracteres' : '');
+    // Región/Comuna
+    const rg = txt(fields.region.input?.value); ok &&= setError('region', rg? '':'Debes seleccionar una región');
+    const cm = txt(fields.comuna.input?.value); ok &&= setError('comuna', cm? '':'Debes seleccionar una comuna');
+    // RUT requerido y válido
+    const rutVal = txt(fields.rut.input?.value); ok &&= setError('rut', rutVal? (validRut(rutVal)?'':'RUT inválido') : 'Debes ingresar tu RUT');
+    return ok;
+  }
 
-    function validateNameInput(input) {
-      if (!input) return true;
-      const value = (input.value || '').trim();
-      if (!value) {
-        showNameError(input, 'Debes rellenar este campo');
-        return false;
-      }
-      if (/[0-9]/.test(value)) {
-        showNameError(input, 'No puede contener números');
-        return false;
-      }
-      if (value.length < 3) {
-        showNameError(input, 'Debe tener al menos 3 caracteres');
-        return false;
-      }
-      if (value.length > 25) {
-        showNameError(input, 'No puede tener más de 25 caracteres');
-        return false;
-      }
-      hideNameError(input);
-      return true;
-    }
+  function update(){
+    const ok = validate();
+    submitBtn.disabled = !ok;
+    return ok;
+  }
 
-    function validateTelefonoField() {
-      const value = telefono.value.replace(/\D/g, '');
-      if (!value) {
-        showTelefonoError('Por favor ingresa tu número de teléfono para continuar.');
-        return false;
-      }
-      if (value.length < 8) {
-        showTelefonoError('El teléfono debe tener 8 dígitos.');
-        return false;
-      }
-      hideTelefonoError();
-      return true;
-    }
-    
-
-    if (telefono) {
-      telefono.addEventListener('input', function () {
-        telefono.value = telefono.value.replace(/\D/g, '').slice(0, 8);
-        validateTelefonoField();
-        updateSubmitButton();
-      });
-      
-
-      telefono.addEventListener('blur', function () {
-        validateTelefonoField();
-        updateSubmitButton();
-      });
-      
-
-      telefono.addEventListener('paste', function (e) {
-        setTimeout(function () {
-          telefono.value = telefono.value.replace(/\D/g, '').slice(0, 8);
-          validateTelefonoField();
-          updateSubmitButton();
-        }, 0);
-      });
-      
-
-      validateTelefonoField();
-    }
-
-    function updateSubmitButton() {
-      if (!submitBtn) return false;
-      const firstOk = validateNameInput(firstNameInput);
-      const lastOk = validateNameInput(lastNameInput);
-      const telOk = validateTelefonoField();
-      const rutOk = validateRut(rut);
-        const emailField = document.querySelector('[name="email"]');
-        const emailOk = validateEmailField(emailField);
-        const allOk = firstOk && lastOk && telOk && rutOk && emailOk;
-      submitBtn.disabled = !allOk;
-      submitBtn.setAttribute('aria-disabled', String(!allOk));
-      return allOk;
-    }
-
-      
-      function validateEmailField(input) {
-        if (!input) return true;
-        const value = input.value.trim();
-        const feedback = getFeedbackFor('email');
-      
-        if (!value) {
-          if (feedback) {
-            feedback.textContent = 'El correo electrónico es obligatorio';
-            feedback.classList.remove('d-none');
-          }
-          input.classList.add('is-invalid');
-          return false;
-        }
-      
-        if (value.length < 5) {
-          if (feedback) {
-            feedback.textContent = 'El correo electrónico debe tener al menos 5 caracteres';
-            feedback.classList.remove('d-none');
-          }
-          input.classList.add('is-invalid');
-          return false;
-        }
-      
-        if (value.length > 100) {
-          if (feedback) {
-            feedback.textContent = 'El correo electrónico no puede tener más de 100 caracteres';
-            feedback.classList.remove('d-none');
-          }
-          input.classList.add('is-invalid');
-          return false;
-        }
-      
-        if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) {
-          if (feedback) {
-            feedback.textContent = 'Por favor ingrese un correo electrónico válido';
-            feedback.classList.remove('d-none');
-          }
-          input.classList.add('is-invalid');
-          return false;
-        }
-      
-        if (feedback) {
-          feedback.textContent = '';
-          feedback.classList.add('d-none');
-        }
-        input.classList.remove('is-invalid');
-        return true;
-      }
-
-     
-      const emailInput = document.querySelector('[name="email"]');
-      if (emailInput) {
-        emailInput.addEventListener('input', function() {
-          this.value = this.value.trim().replace(/[\r\n\t]/g,'');
-          validateEmailField(this);
-          updateSubmitButton();
-        });
-      
-        emailInput.addEventListener('blur', function() {
-          this.value = this.value.trim();
-          validateEmailField(this);
-          updateSubmitButton();
-        });
-      
-        emailInput.addEventListener('paste', function() {
-          setTimeout(() => {
-            this.value = this.value.trim().replace(/[\r\n\t]/g,'');
-            validateEmailField(this);
-            updateSubmitButton();
-          }, 0);
-        });
-      }
-    if (firstNameInput) {
-      firstNameInput.addEventListener('input', function () { validateNameInput(firstNameInput); updateSubmitButton(); });
-      firstNameInput.addEventListener('blur', function () { validateNameInput(firstNameInput); updateSubmitButton(); });
-      firstNameInput.addEventListener('paste', function () { setTimeout(function () { validateNameInput(firstNameInput); updateSubmitButton(); }, 0); });
-    }
-    if (lastNameInput) {
-      lastNameInput.addEventListener('input', function () { validateNameInput(lastNameInput); updateSubmitButton(); });
-      lastNameInput.addEventListener('blur', function () { validateNameInput(lastNameInput); updateSubmitButton(); });
-      lastNameInput.addEventListener('paste', function () { setTimeout(function () { validateNameInput(lastNameInput); updateSubmitButton(); }, 0); });
-    }
-
-      
-    if (rut) {
-      rut.addEventListener('input', function() {
-        const raw = rut.value;
-        const cleaned = cleanRut(raw);
-        const formatted = formatRut(cleaned);
-        if (rut.value !== formatted) {
-          rut.value = formatted;
-          if (typeof rut.setSelectionRange === 'function') {
-            const caret = formatted.length;
-            rut.setSelectionRange(caret, caret);
-          }
-        }
-        validateRut(rut);
-        updateSubmitButton();
-      });
-
-      rut.addEventListener('blur', function() {
-        const raw = rut.value;
-        const cleaned = cleanRut(raw);
-        const formatted = formatRut(cleaned);
-        rut.value = formatted;
-        validateRut(rut);
-        updateSubmitButton();
-      });
-
-      rut.addEventListener('paste', function(e) {
-        setTimeout(function() {
-          const cleaned = cleanRut(rut.value);
-          const formatted = formatRut(cleaned);
-          rut.value = formatted;
-          validateRut(rut);
-          updateSubmitButton();
-        }, 0);
-      });
-
-      validateRut(rut);
-    }
-
-    // initial enable/disable
-    updateSubmitButton();
-
-    function validateForm(event) {
-      // final guard: prevent submit if invalid
-      if (!updateSubmitButton()) {
-        event.preventDefault();
-        return false;
-      }
-      return true;
-    }
-
-    function sanitizeRutValue(value) {
-      if (!value) return '';
-      const normalized = value.normalize('NFC').replace(/\s+/g, '');
-      let result = '';
-      for (const char of normalized) {
-        if (result.length >= 9) break;
-        if (/[0-9]/.test(char)) { result += char; continue; }
-        if ((char === 'k' || char === 'K') && result.length === 8) { result += 'K'; }
-      }
-      return result;
-    }
-
-    function cleanRut(value) { 
-      return sanitizeRutValue(value); 
-    }
-
-    function formatRut(value) {
-      const cleaned = cleanRut(value);
-      if (cleaned.length <= 1) return cleaned;
-      const body = cleaned.slice(0, -1);
-      const dv = cleaned.slice(-1);
-      const reversed = body.split('').reverse();
-      const chunks = [];
-      for (let i = 0; i < reversed.length; i += 3) {
-        chunks.push(reversed.slice(i, i + 3).reverse().join(''));
-      }
-      return chunks.reverse().join('.') + '-' + dv;
-    }
-
-    function computeDV(body) {
-      let sum = 0;
-      let multiplier = 2;
-      for (let i = body.length - 1; i >= 0; i--) {
-        sum += parseInt(body[i], 10) * multiplier;
-        multiplier = multiplier === 7 ? 2 : multiplier + 1;
-      }
-      const remainder = 11 - (sum % 11);
-      if (remainder === 11) return '0';
-      if (remainder === 10) return 'K';
-      return String(remainder);
-    }
-
-    function isValidRut(value) {
-      const cleaned = cleanRut(value);
-      if (cleaned.length < 2) return false;
-      const body = cleaned.slice(0, -1);
-      const dv = cleaned.slice(-1);
-      if (!/^[0-9]+$/.test(body)) return false;
-      return computeDV(body) === dv;
-    }
-
-    function showRutError(message) {
-      rutFeedback.textContent = message;
-      rutFeedback.classList.remove('d-none');
-      rut.classList.add('is-invalid');
-    }
-
-    function hideRutError() {
-      rutFeedback.textContent = '';
-      rutFeedback.classList.add('d-none');
-      rut.classList.remove('is-invalid');
-    }
-
-    function validateRut(input) {
-      const cleaned = cleanRut(input.value);
-      if (!cleaned) {
-        showRutError('Debes rellenar este campo');
-        return false;
-      }
-      if (!isValidRut(cleaned)) {
-        showRutError('RUT inválido');
-        return false;
-      }
-      hideRutError();
-      return true;
-    }
-
-    if (rut) {
-      rut.addEventListener('input', function() {
-        const raw = rut.value;
-        const cleaned = cleanRut(raw);
-        const formatted = formatRut(cleaned);
-        if (rut.value !== formatted) {
-          rut.value = formatted;
-          if (typeof rut.setSelectionRange === 'function') {
-            const caret = formatted.length;
-            rut.setSelectionRange(caret, caret);
-          }
-        }
-        validateRut(rut);
-      });
-
-      rut.addEventListener('blur', function() {
-        const raw = rut.value;
-        const cleaned = cleanRut(raw);
-        const formatted = formatRut(cleaned);
-        rut.value = formatted;
-        validateRut(rut);
-      });
-
-      rut.addEventListener('paste', function(e) {
-        setTimeout(function() {
-          const cleaned = cleanRut(rut.value);
-          const formatted = formatRut(cleaned);
-          rut.value = formatted;
-          validateRut(rut);
-        }, 0);
-      });
-
-      validateRut(rut);
-    }
+  // Wire listeners
+  ['first_name','last_name','email','telefono','linea1','rut'].forEach(k=>{
+    const i = fields[k].input; if(!i) return;
+    i.addEventListener('input', update);
+    i.addEventListener('blur', update);
   });
+  ['region','comuna'].forEach(k=>{
+    const i = fields[k].input; if(!i) return;
+    i.addEventListener('change', update);
+    i.addEventListener('blur', update);
+  });
+
+  // Initial validation (delayed to allow JS to populate comuna)
+  setTimeout(update, 100);
+
+  // Expose for onsubmit handler
+  window.validateForm = function(e){
+    const ok = update();
+    if (!ok && e){ e.preventDefault(); e.stopPropagation(); }
+    return ok;
+  }
+  
+  // Make update function available globally for region.js
+  window.updateSubmitButton = update;
+});
 </script>
-<script src="{% static 'js/perfil.js' %}" defer></script>
+<script src="{% static 'js/perfil.region.js' %}" defer></script>
 <style>
   .profile-wrapper .card {
     border: 0;

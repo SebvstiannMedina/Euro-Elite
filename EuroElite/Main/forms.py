@@ -1,4 +1,5 @@
 from django import forms
+import unicodedata
 from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth import get_user_model, authenticate
 from django.utils import timezone
@@ -79,11 +80,7 @@ class PerfilForm(forms.ModelForm):
             'rut': forms.TextInput(attrs={'class': 'form-control'}),
         }
 
-
 # ================= REGISTRO =================
-from django import forms
-from django.contrib.auth.forms import UserCreationForm
-from .models import Usuario
 
 class RegistroForm(UserCreationForm):
 
@@ -265,33 +262,113 @@ class ProductoForm(forms.ModelForm):
 
 # ================= DIRECCION =================
 class DireccionForm(forms.ModelForm):
-    """Formulario para editar o agregar dirección del usuario."""
-    def clean_codigo_postal(self):
-        codigo = self.cleaned_data.get('codigo_postal', '')
-        codigo_digits = ''.join(filter(str.isdigit, str(codigo)))
-        if len(codigo_digits) != 7:
-            raise forms.ValidationError('El código postal debe tener exactamente 7 dígitos.')
-        return codigo_digits
+    """Formulario para editar o agregar dirección del usuario (sin código postal)."""
+    
+    # Override comuna to accept any text value (populated by JS)
+    comuna = forms.CharField(
+        max_length=100,
+        required=True,
+        widget=forms.Select(attrs={'class': 'form-select', 'required': True})
+    )
+    
     class Meta:
         model = Direccion
-        fields = ['linea1', 'linea2', 'comuna', 'region', 'codigo_postal']
+        fields = ['linea1', 'linea2', 'comuna', 'region']
+
+    # --- Helpers para normalizar y mapear regiones antiguas a valores canónicos ---
+    @staticmethod
+    def _normalize_text(value: str) -> str:
+        s = (value or '').strip()
+        s = unicodedata.normalize('NFD', s)
+        s = ''.join(ch for ch in s if unicodedata.category(ch) != 'Mn')
+        return ''.join(ch for ch in s if ch.isalnum()).lower()
+
+    @classmethod
+    def _region_aliases(cls):
+        # Mapeos conocidos desde nombres antiguos a los canónicos que existen en el modelo
+        return {
+            "Aysén del Gral. Carlos Ibáñez del Campo": "Aysén",
+            "Aysen del Gral. Carlos Ibanez del Campo": "Aysén",
+            "Magallanes y de la Antártica Chilena": "Magallanes y la Antártica Chilena",
+            "Magallanes y de la Antartica Chilena": "Magallanes y la Antártica Chilena",
+        }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        # Asegurar estilo bootstrap consistente para región
+        self.fields['region'].widget.attrs.setdefault('class', 'form-select')
+        self.fields['comuna'].widget.attrs.setdefault('class', 'form-select')
+
+        # Si existe una región guardada que no coincide exactamente con las choices actuales,
+        # ajustamos el initial a un valor canónico o agregamos temporalmente la opción guardada
+        saved_region = None
+        if self.instance and getattr(self.instance, 'region', None):
+            saved_region = self.instance.region
+        elif 'initial' in kwargs and kwargs['initial'].get('region'):
+            saved_region = kwargs['initial']['region']
+
+        if saved_region:
+            allowed_values = [val for (val, _label) in self.fields['region'].choices]
+            aliases = self._region_aliases()
+            canonical = aliases.get(saved_region, saved_region)
+
+            if canonical in allowed_values:
+                # Preferimos mostrar el valor canónico vigente
+                self.initial['region'] = canonical
+            elif saved_region not in allowed_values:
+                # Agregamos la región antigua al select para que se vea seleccionada
+                self.fields['region'].choices = [(saved_region, saved_region)] + list(self.fields['region'].choices)
+                self.initial['region'] = saved_region
+
+        # Inyectar la comuna guardada como opción temporal para que el select muestre el valor correcto
+        saved_comuna = None
+        if self.instance and getattr(self.instance, 'comuna', None):
+            saved_comuna = self.instance.comuna
+        elif 'initial' in kwargs and kwargs['initial'].get('comuna'):
+            saved_comuna = kwargs['initial']['comuna']
+
+        if saved_comuna:
+            # Establecer una opción inicial con la comuna guardada
+            current_choices = list(getattr(self.fields['comuna'].widget, 'choices', []))
+            if not any(val == saved_comuna for val, _ in current_choices):
+                self.fields['comuna'].widget.choices = [(saved_comuna, saved_comuna)] + current_choices
+            self.initial['comuna'] = saved_comuna
+
+    def clean_region(self):
+        region = (self.cleaned_data.get('region') or '').strip()
+        if not region:
+            return region
+
+        allowed_values = [val for (val, _label) in self.fields['region'].choices]
+        if region in allowed_values:
+            return region
+
+        # Intentar mapear alias conocidos
+        aliases = self._region_aliases()
+        if region in aliases:
+            return aliases[region]
+
+        # Fallback: comparar de forma insensible a tildes y mayúsculas
+        norm = self._normalize_text
+        for val in allowed_values:
+            if norm(val) == norm(region):
+                return val
+
+        # Si no encontramos mapeo, devolvemos lo recibido (se guardará tal cual)
+        return region
         widgets = {
             'linea1': forms.TextInput(attrs={
                 'class': 'form-control',
-                'oninput': "this.value=this.value.replace(/[^A-Za-zÁÉÍÓÚÜÑáéíóúüñ0-9 ]/g,'');"
+                # allow letters (incl. tildes/ñ), digits, spaces and common punctuation for addresses
+                'oninput': "this.value=this.value.replace(/[^A-Za-zÁÉÍÓÚÜÑáéíóúüñ0-9 #.,'\\\/\-]/g,'');"
             }),
             'linea2': forms.TextInput(attrs={
                 'class': 'form-control',
-                'oninput': "this.value=this.value.replace(/[^A-Za-zÁÉÍÓÚÜÑáéíóúüñ0-9 ]/g,'');"
+                'oninput': "this.value=this.value.replace(/[^A-Za-zÁÉÍÓÚÜÑáéíóúüñ0-9 #.,'\\\/\-]/g,'');"
             }),
-            'comuna': forms.TextInput(attrs={'class': 'form-control'}),
-            'region': forms.Select(attrs={"class": "form-control"}),
-            'codigo_postal': forms.TextInput(attrs={
-                'class': 'form-control',
-                'oninput': "this.value=this.value.replace(/[^0-9]/g,'');",
-                'maxlength': '7',
-                'pattern': '[0-9]{7}'
-            }),
+            # Render region as a select with choices from the model
+            'region': forms.Select(attrs={'class': 'form-select', 'required': True}),
         }
 
 # ================= Login Con correo =================
@@ -321,9 +398,7 @@ class EmailLoginForm(forms.Form):
     def get_user(self):
         return getattr(self, "user_cache", None)
 
-from django import forms
 from django.contrib.auth.forms import AuthenticationForm
-from .models import Usuario
 
 class EmailAuthenticationForm(AuthenticationForm):
     username = forms.EmailField(
@@ -335,7 +410,6 @@ class EmailAuthenticationForm(AuthenticationForm):
         })
     )
 
-from django import forms
 from .models import VehiculoEnVenta
 
 class VehiculoForm(forms.ModelForm):

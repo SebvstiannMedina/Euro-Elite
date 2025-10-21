@@ -336,17 +336,33 @@ def perfil(request):
         direccion_form = DireccionForm(request.POST, instance=addr)
 
         if perfil_form.is_valid() and direccion_form.is_valid():
+            # Guardar perfil del usuario
             perfil_form.save()
 
+            # Guardar dirección (crear o actualizar)
             direccion = direccion_form.save(commit=False)
             direccion.usuario = usuario
+            
+            # Rellenar campos requeridos de Direccion desde Usuario
+            direccion.nombre_completo = f"{usuario.first_name} {usuario.last_name}".strip()
+            direccion.telefono = usuario.telefono or ""
+            
+            # Si no hay dirección existente, marcar como predeterminada
+            if not addr:
+                direccion.predeterminada = True
+            
             direccion.save()
-
-            messages.success(request, "Perfil actualizado correctamente ✅")
+            
+            messages.success(request, "Perfil actualizado correctamente ✔")
             return redirect("perfil")
     else:
         perfil_form = PerfilForm(instance=usuario)
-        direccion_form = DireccionForm(instance=addr)
+        
+        # Si no existe dirección, crear un formulario vacío
+        if addr:
+            direccion_form = DireccionForm(instance=addr)
+        else:
+            direccion_form = DireccionForm()
 
     return render(request, "taller/perfil.html", {
         "form": perfil_form,
