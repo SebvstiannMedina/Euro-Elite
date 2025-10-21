@@ -540,8 +540,12 @@ def admin_configuracion(request):
 def admin_dashboard(request):
     return render(request, 'taller/admin_agendamientos.html')
 
+@staff_member_required
 def admin_pedidos(request):
-    return render(request, 'taller/admin_agendamientos.html')
+    pedidos = Pedido.objects.select_related('usuario').prefetch_related('items__producto').order_by('-creado')
+    return render(request, 'taller/admin_pedidos.html', {
+        'pedidos': pedidos,
+    })
 
 def admin_reportes(request):
     return render(request, 'taller/admin_reportes.html')

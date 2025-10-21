@@ -1,6 +1,773 @@
 {% extends 'base.html' %}
-{% load static %}
-{% block title %}Inicio - Euro Elite{% endblock %}
+{% load static humanize %}
+{% block title %}Administrar Pedidos - Euro Elite{% endblock %}
 {% block content %}
+
+<br><br><br><br><br><br>
+
+<div class="container my-4">
+  <h3 class="mb-4">Administrar Pedidos</h3>
+
+  {% if messages %}
+    <div class="mb-3">
+      {% for message in messages %}
+        <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+          {{ message }}
+          <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+      {% endfor %}
+    </div>
+  {% endif %}
+
+  {% with pedidos_grouped=pedidos_por_usuario %}
+    {% if pedidos %}
+      {% regroup pedidos by usuario.email as pedidos_grouped %}
+    {% endif %}
+
+    {% if pedidos_grouped %}
+      <div class="accordion pedidos-accordion" id="usuariosPedidos">
+        {% for grupo in pedidos_grouped %}
+          {% with email=grupo.grouper|default:"Correo no disponible" pedidos_usuario=grupo.list %}
+                <div class="card pedidos-card mb-3">
+                  <div class="card-header">
+                    <div>
+                      <div class="fw-semibold text-dark">{{ email }}</div>
+                      {% with primer_pedido=pedidos_usuario|first %}
+                        {% if primer_pedido and primer_pedido.usuario and primer_pedido.usuario.get_full_name %}
+                          <div class="text-muted small">{{ primer_pedido.usuario.get_full_name }}</div>
+                        {% endif %}
+                      {% endwith %}
+                      <div class="text-muted small mt-1">Pedidos realizados: {{ pedidos_usuario|length }}</div>
+                    </div>
+                    <button class="btn btn-outline-secondary btn-sm rounded-circle pedido-toggle" type="button"
+                            data-bs-toggle="collapse"
+                            data-bs-target="#pedidosCliente{{ forloop.counter }}"
+                            aria-expanded="{% if forloop.first %}true{% else %}false{% endif %}"
+                            aria-controls="pedidosCliente{{ forloop.counter }}">
+                      <i class="fas fa-chevron-down toggle-icon"></i>
+                    </button>
+                  </div>
+                  <div id="pedidosCliente{{ forloop.counter }}" class="collapse{% if forloop.first %} show{% endif %}"
+                       data-bs-parent="#usuariosPedidos">
+                    <div class="card-body">
+                      {% for pedido in pedidos_usuario %}
+                        <div class="pedido-resumen">
+                          <div class="d-flex flex-wrap align-items-center justify-content-between gap-3">
+                            <div>
+                              <span class="fw-semibold">Pedido #{{ pedido.id }}</span>
+                              {% if pedido.creado %}
+                                <span class="text-muted small ms-2">{{ pedido.creado|date:"d/m/Y H:i" }}</span>
+                              {% endif %}
+                              {% if pedido.metodo_pago %}
+                                <div class="text-muted small mt-1">Pago: {{ pedido.get_metodo_pago_display|default:pedido.metodo_pago }}</div>
+                              {% endif %}
+                            </div>
+                            <div class="d-flex align-items-center gap-3 ms-auto">
+                              {% with estado_slug=pedido.estado|default:""|lower %}
+                                {% if estado_slug == 'enviado' %}
+                                  <span class="badge pedido-estado estado-enviado">Enviado</span>
+                                {% elif estado_slug == 'entregado' %}
+                                  <span class="badge pedido-estado estado-entregado">Entregado</span>
+                                {% elif estado_slug == 'preparacion' %}
+                                  {% if pedido.metodo_entrega == 'RETIRO' %}
+                                    <span class="badge pedido-estado estado-esperando-retiro">Esperando retiro</span>
+                                  {% else %}
+                                    <span class="badge pedido-estado estado-pendiente-de-envio">Pendiente de envio</span>
+                                  {% endif %}
+                                {% elif estado_slug == 'cancelado' %}
+                                  <span class="badge pedido-estado estado-retirado">Retirado</span>
+                                {% else %}
+                                  <span class="badge pedido-estado estado-pendiente-de-envio">Pendiente de envio</span>
+                                {% endif %}
+                              {% endwith %}
+                              <div class="text-end">
+                                <span class="text-muted small d-block">Total</span>
+                                <span class="fw-semibold">${{ pedido.total|default_if_none:pedido.subtotal|floatformat:0|intcomma }}</span>
+                              </div>
+                            </div>
+                          </div>
+
+                          {% with estado_slug=pedido.estado|default:""|lower %}
+                            {% if estado_slug == 'enviado' or estado_slug == 'entregado' or estado_slug == 'pendiente de envio' or estado_slug == 'pendiente_de_envio' or estado_slug == 'pendiente' %}
+                              {% with direccion=pedido.direccion_envio %}
+                                <div class="direccion-envio mt-3 d-flex flex-column flex-md-row align-items-md-center gap-3">
+                                  <div class="direccion-label-badge">Direccion de entrega</div>
+                                  <div class="direccion-text">
+                                    <i class="fas fa-map-marker-alt direccion-icon"></i>
+                                    <span>
+                                      {% if direccion %}
+                                        {{ direccion.direccion|default:"Sin direccion" }}
+                                        {% if direccion.comuna %}, {{ direccion.comuna }}{% endif %}
+                                        {% if direccion.region %}, {{ direccion.region }}{% endif %}
+                                      {% else %}
+                                        Av. Central 123, Ciudad Simulada
+                                      {% endif %}
+                                    </span>
+                                  </div>
+                                </div>
+                              {% endwith %}
+                            {% endif %}
+                          {% endwith %}
+
+                          <div class="table-responsive mt-3">
+                            <table class="table table-sm table-borderless pedido-items-table mb-0">
+                              <thead class="table-light">
+                                <tr>
+                                  <th class="text-start">Producto</th>
+                                  <th class="text-start">Cantidad</th>
+                                  <th class="text-start">Precio</th>
+                                  <th class="text-start">Subtotal</th>
+                                </tr>
+                              </thead>
+                              <tbody>
+                                {% for item in pedido.items.all %}
+                                  <tr>
+                                    <td class="text-start">{{ item.nombre_producto|default:item.producto.nombre }}</td>
+                                    <td class="text-start">{{ item.cantidad }}</td>
+                                    <td class="text-start">${{ item.precio_unitario|floatformat:0|intcomma }}</td>
+                                    <td class="text-start">${{ item.subtotal|floatformat:0|intcomma }}</td>
+                                  </tr>
+                                {% empty %}
+                                  <tr>
+                                    <td colspan="4" class="text-center text-muted small">Este pedido no tiene productos registrados.</td>
+                                  </tr>
+                                {% endfor %}
+                              </tbody>
+                            </table>
+                          </div>
+                        </div>
+
+                        {% if not forloop.last %}
+                          <hr class="pedido-divider">
+                        {% endif %}
+                      {% empty %}
+                        <p class="text-muted mb-0">Este cliente aun no tiene productos registrados.</p>
+                      {% endfor %}
+                    </div>
+                  </div>
+                </div>
+            {% endwith %}
+        {% endfor %}
+      </div>
+    {% else %}
+      <div class="text-center text-muted py-5" id="pedidoSinDatosPlaceholder">
+        <h5 class="fw-semibold mb-2">Aun no hay pedidos registrados</h5>
+        <p class="mb-0">Cuando los clientes compren, veras sus pedidos listados aqui.</p>
+      </div>
+    {% endif %}
+    <div class="accordion pedidos-accordion mt-4 d-none" id="usuariosPedidosDemo"></div>
+  {% endwith %}
+</div>
+
+<script>
+  document.addEventListener('DOMContentLoaded', function () {
+    const demoContainer = document.getElementById('usuariosPedidosDemo');
+    if (!demoContainer) {
+      return;
+    }
+
+    const demoData = [
+      {
+        email: 'ana.torres@example.com',
+        nombre: 'Ana Torres',
+        pedidos: [
+          {
+            id: 1284,
+            fecha: '12/09/2024 10:45',
+            estado: 'Pendiente de envio',
+            metodoPago: 'Tarjeta de credito',
+            total: 189900,
+            direccion: 'Av. El Bosque 123, Las Condes, RM',
+            items: [
+              { nombre: 'Kit frenos delantero', cantidad: 1, precio: 129900 },
+              { nombre: 'Liquido de frenos DOT 4', cantidad: 2, precio: 15000 }
+            ]
+          },
+          {
+            id: 1192,
+            fecha: '03/08/2024 16:20',
+            estado: 'Enviado',
+            metodoPago: 'Transferencia',
+            total: 94900,
+            direccion: 'Av. El Bosque 123, Las Condes, RM',
+            items: [
+              { nombre: 'Pastillas de freno ceramicas', cantidad: 1, precio: 54900 },
+              { nombre: 'Sensor ABS delantero', cantidad: 1, precio: 40000 }
+            ]
+          },
+          {
+            id: 1108,
+            fecha: '28/06/2024 18:40',
+            estado: 'Entregado',
+            metodoPago: 'Pasarela WebPay',
+            total: 45990,
+            direccion: 'Av. El Bosque 123, Las Condes, RM',
+            items: [
+              { nombre: 'Bujias iridio pack x4', cantidad: 1, precio: 45990 }
+            ]
+          }
+        ]
+      },
+      {
+        email: 'marco.vidal@example.com',
+        nombre: 'Marco Vidal',
+        pedidos: [
+          {
+            id: 1350,
+            fecha: '08/10/2024 09:15',
+            estado: 'Pendiente de envio',
+            metodoPago: 'Pasarela WebPay',
+            total: 234500,
+            direccion: 'Los Trapenses 2310, Lo Barnechea, RM',
+            items: [
+              { nombre: 'Juego amortiguadores deportivos', cantidad: 2, precio: 85000 },
+              { nombre: 'Montajes superiores reforzados', cantidad: 2, precio: 32000 },
+              { nombre: 'Alineacion premium', cantidad: 1, precio: 20500 }
+            ]
+          },
+          {
+            id: 1227,
+            fecha: '19/08/2024 13:05',
+            estado: 'Pendiente de envio',
+            metodoPago: 'Tarjeta de credito',
+            total: 119990,
+            direccion: 'Los Trapenses 2310, Lo Barnechea, RM',
+            items: [
+              { nombre: 'Kit frenos trasero ventilado', cantidad: 1, precio: 95990 },
+              { nombre: 'Liquido de frenos DOT 5.1', cantidad: 1, precio: 24000 }
+            ]
+          }
+        ]
+      },
+      {
+        email: 'carla.munoz@example.com',
+        nombre: 'Carla Munoz',
+        pedidos: [
+          {
+            id: 1075,
+            fecha: '22/07/2024 14:10',
+            estado: 'Entregado',
+            metodoPago: 'Efectivo',
+            total: 65990,
+            direccion: 'Av. Vicuna Mackenna 3100, Nunoa, RM',
+            items: [
+              { nombre: 'Filtro de aceite sintesis', cantidad: 1, precio: 15990 },
+              { nombre: 'Aceite sintetico 5W30 (4L)', cantidad: 1, precio: 50000 }
+            ]
+          },
+          {
+            id: 1019,
+            fecha: '10/06/2024 11:05',
+            estado: 'Retirado',
+            metodoPago: 'Transferencia',
+            total: 0,
+            items: [
+              { nombre: 'Kit distribucion completo', cantidad: 1, precio: 0 }
+            ]
+          },
+          {
+            id: 990,
+            fecha: '28/05/2024 09:30',
+            estado: 'Enviado',
+            metodoPago: 'Pasarela WebPay',
+            total: 88490,
+            direccion: 'Av. Vicuna Mackenna 3100, Nunoa, RM',
+            items: [
+              { nombre: 'Juego plumillas silicona', cantidad: 1, precio: 18990 },
+              { nombre: 'Kit luz led alta intensidad', cantidad: 1, precio: 69500 }
+            ]
+          }
+        ]
+      },
+      {
+        email: 'ricardo.loyola@example.com',
+        nombre: 'Ricardo Loyola',
+        pedidos: [
+          {
+            id: 1301,
+            fecha: '25/09/2024 19:25',
+            estado: 'Pendiente de envio',
+            metodoPago: 'Transferencia',
+            total: 154990,
+            direccion: 'Camino El Alba 6700, Las Condes, RM',
+            items: [
+              { nombre: 'Kit embrague reforzado', cantidad: 1, precio: 154990 }
+            ]
+          },
+          {
+            id: 1266,
+            fecha: '07/09/2024 10:55',
+            estado: 'Entregado',
+            metodoPago: 'Tarjeta de credito',
+            total: 32990,
+            direccion: 'Camino El Alba 6700, Las Condes, RM',
+            items: [
+              { nombre: 'Filtro aire alto flujo', cantidad: 1, precio: 32990 }
+            ]
+          }
+        ]
+      },
+      {
+        email: 'valentina.ruiz@example.com',
+        nombre: 'Valentina Ruiz',
+        pedidos: [
+          {
+            id: 1320,
+            fecha: '02/10/2024 12:05',
+            estado: 'Pendiente de envio',
+            metodoPago: 'Pasarela WebPay',
+            total: 99900,
+            direccion: 'Av. Apoquindo 4800, Las Condes, RM',
+            items: [
+              { nombre: 'Scanner diagnostico OBD-II', cantidad: 1, precio: 99900 }
+            ]
+          },
+          {
+            id: 1184,
+            fecha: '15/08/2024 17:45',
+            estado: 'Entregado',
+            metodoPago: 'Transferencia',
+            total: 75990,
+            direccion: 'Av. Apoquindo 4800, Las Condes, RM',
+            items: [
+              { nombre: 'Set limpiaparabrisas premium', cantidad: 1, precio: 25990 },
+              { nombre: 'Protector ceramico pintura', cantidad: 1, precio: 50000 }
+            ]
+          },
+          {
+            id: 970,
+            fecha: '12/05/2024 10:15',
+            estado: 'Entregado',
+            metodoPago: 'Tarjeta de credito',
+            total: 52990,
+            direccion: 'Av. Apoquindo 4800, Las Condes, RM',
+            items: [
+              { nombre: 'Juego alfombrillas climatizadas', cantidad: 1, precio: 52990 }
+            ]
+          }
+        ]
+      },
+      {
+        email: 'jorge.cisternas@example.com',
+        nombre: 'Jorge Cisternas',
+        pedidos: [
+          {
+            id: 1337,
+            fecha: '05/10/2024 08:55',
+            estado: 'Esperando retiro',
+            metodoPago: 'Pasarela WebPay',
+            total: 205000,
+            items: [
+              { nombre: 'Pack detailing profesional', cantidad: 1, precio: 125000 },
+              { nombre: 'Pulidora orbital', cantidad: 1, precio: 80000 }
+            ]
+          },
+          {
+            id: 1211,
+            fecha: '21/08/2024 19:10',
+            estado: 'Pendiente de envio',
+            metodoPago: 'Transferencia',
+            total: 64890,
+            direccion: 'Av. La Florida 9200, La Florida, RM',
+            items: [
+              { nombre: 'Set limpieza cuero premium', cantidad: 1, precio: 38990 },
+              { nombre: 'Ambientador lujo', cantidad: 2, precio: 12950 }
+            ]
+          }
+        ]
+      },
+      {
+        email: 'mauricio.gomez@example.com',
+        nombre: 'Mauricio Gomez',
+        pedidos: [
+          {
+            id: 1299,
+            fecha: '18/09/2024 15:20',
+            estado: 'Enviado',
+            metodoPago: 'Tarjeta de credito',
+            total: 178500,
+            direccion: 'Av. Providencia 2200, Providencia, RM',
+            items: [
+              { nombre: 'Barra estabilizadora delantera', cantidad: 1, precio: 89900 },
+              { nombre: 'Bieletas performance', cantidad: 2, precio: 44250 }
+            ]
+          },
+          {
+            id: 1170,
+            fecha: '11/08/2024 09:40',
+            estado: 'Entregado',
+            metodoPago: 'Transferencia',
+            total: 82990,
+            direccion: 'Av. Providencia 2200, Providencia, RM',
+            items: [
+              { nombre: 'Set frenos competicion', cantidad: 1, precio: 82990 }
+            ]
+          },
+          {
+            id: 955,
+            fecha: '25/04/2024 16:35',
+            estado: 'Pendiente de envio',
+            metodoPago: 'Pasarela WebPay',
+            total: 67990,
+            direccion: 'Av. Providencia 2200, Providencia, RM',
+            items: [
+              { nombre: 'Kit mantenimiento basico', cantidad: 1, precio: 39990 },
+              { nombre: 'Balanceo dinamico 4 ruedas', cantidad: 1, precio: 28000 }
+            ]
+          }
+        ]
+      },
+      {
+        email: 'pamela.navarro@example.com',
+        nombre: 'Pamela Navarro',
+        pedidos: [
+          {
+            id: 1312,
+            fecha: '27/09/2024 11:30',
+            estado: 'Pendiente de envio',
+            metodoPago: 'Transferencia',
+            total: 114990,
+            direccion: 'Camino Chicureo 3200, Colina, RM',
+            items: [
+              { nombre: 'Skit suspension roscada', cantidad: 1, precio: 114990 }
+            ]
+          },
+          {
+            id: 1244,
+            fecha: '30/08/2024 14:25',
+            estado: 'Enviado',
+            metodoPago: 'Pasarela WebPay',
+            total: 96990,
+            direccion: 'Camino Chicureo 3200, Colina, RM',
+            items: [
+              { nombre: 'Fenders fibra carbono', cantidad: 1, precio: 96990 }
+            ]
+          }
+        ]
+      },
+      {
+        email: 'ignacio.rojas@example.com',
+        nombre: 'Ignacio Rojas',
+        pedidos: [
+          {
+            id: 1341,
+            fecha: '06/10/2024 17:05',
+            estado: 'Pendiente de envio',
+            metodoPago: 'Pasarela WebPay',
+            total: 59890,
+            direccion: 'Av. Italia 1120, Providencia, RM',
+            items: [
+              { nombre: 'Sistema bluetooth carplay', cantidad: 1, precio: 59890 }
+            ]
+          },
+          {
+            id: 1203,
+            fecha: '17/08/2024 12:50',
+            estado: 'Entregado',
+            metodoPago: 'Tarjeta de credito',
+            total: 52490,
+            direccion: 'Av. Italia 1120, Providencia, RM',
+            items: [
+              { nombre: 'Camara retroceso HD', cantidad: 1, precio: 52490 }
+            ]
+          },
+          {
+            id: 982,
+            fecha: '19/05/2024 09:20',
+            estado: 'Entregado',
+            metodoPago: 'Transferencia',
+            total: 32990,
+            direccion: 'Av. Italia 1120, Providencia, RM',
+            items: [
+              { nombre: 'Cargador inalambrico integrado', cantidad: 1, precio: 32990 }
+            ]
+          }
+        ]
+      }
+    ];
+
+    if (!demoData.length) {
+      return;
+    }
+
+    const emptyPlaceholder = document.getElementById('pedidoSinDatosPlaceholder');
+    if (emptyPlaceholder) {
+      emptyPlaceholder.classList.add('d-none');
+    }
+
+    demoContainer.classList.remove('d-none');
+
+    const currency = new Intl.NumberFormat('es-CL');
+
+    const slugifyEstado = (estado) => {
+      return (estado || '')
+        .toString()
+        .toLowerCase()
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '')
+        .replace(/\s+/g, '-')
+        .replace(/[^a-z-]/g, '');
+    };
+
+    demoData.forEach((cliente, clienteIndex) => {
+      const card = document.createElement('div');
+      card.className = 'card pedidos-card mb-3';
+      const collapseId = `demoPedido${clienteIndex + 1}`;
+      const isFirst = clienteIndex === 0;
+
+      const pedidosHtml = cliente.pedidos.map((pedido, pedidoIndex) => {
+        const estadoClase = slugifyEstado(pedido.estado || '');
+        const itemsRows = pedido.items.map((item) => {
+          const subtotal = item.precio * item.cantidad;
+          return `
+            <tr>
+              <td class="text-start">${item.nombre}</td>
+              <td class="text-start">${item.cantidad}</td>
+              <td class="text-start">$${currency.format(item.precio)}</td>
+              <td class="text-start">$${currency.format(subtotal)}</td>
+            </tr>
+          `;
+        }).join('');
+
+        return `
+          <div class="pedido-resumen">
+            <div class="d-flex flex-wrap align-items-center justify-content-between gap-3">
+              <div>
+                <span class="fw-semibold">Pedido #${pedido.id}</span>
+                <span class="text-muted small ms-2">${pedido.fecha}</span>
+                <div class="text-muted small mt-1">Pago: ${pedido.metodoPago}</div>
+              </div>
+              <div class="d-flex align-items-center gap-3 ms-auto">
+                <span class="badge pedido-estado estado-${estadoClase}">${pedido.estado}</span>
+                <div class="text-end">
+                  <span class="text-muted small d-block">Total</span>
+                  <span class="fw-semibold">$${currency.format(pedido.total)}</span>
+                </div>
+              </div>
+            </div>
+
+            ${(() => {
+              const estadoLower = (pedido.estado || '').toLowerCase();
+              const muestraDireccion = ['pendiente de envio', 'pendiente-de-envio', 'pendiente_de_envio', 'pendiente', 'enviado', 'entregado'].includes(estadoLower);
+              if (!muestraDireccion) {
+                return '';
+              }
+              const direccionTexto = pedido.direccion || 'Av. Central 123, Ciudad Simulada';
+              return `
+                <div class="direccion-envio mt-3 d-flex flex-column flex-md-row align-items-md-center gap-3">
+                  <div class="direccion-label-badge">Direccion de entrega</div>
+                  <div class="direccion-text">
+                    <i class="fas fa-map-marker-alt direccion-icon"></i>
+                    <span>${direccionTexto}</span>
+                  </div>
+                </div>
+              `;
+            })()}
+
+            <div class="table-responsive mt-3">
+              <table class="table table-sm table-borderless pedido-items-table mb-0">
+                <thead class="table-light">
+                  <tr>
+                    <th class="text-start">Producto</th>
+                    <th class="text-start">Cantidad</th>
+                    <th class="text-start">Precio</th>
+                    <th class="text-start">Subtotal</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  ${itemsRows}
+                </tbody>
+              </table>
+            </div>
+          </div>
+          ${pedidoIndex < cliente.pedidos.length - 1 ? '<hr class="pedido-divider">' : ''}
+        `;
+      }).join('');
+
+      card.innerHTML = `
+        <div class="card-header">
+          <div>
+            <div class="fw-semibold text-dark">${cliente.email}</div>
+            ${cliente.nombre ? `<div class="text-muted small">${cliente.nombre}</div>` : ''}
+            <div class="text-muted small mt-1">Pedidos realizados: ${cliente.pedidos.length}</div>
+          </div>
+          <button class="btn btn-outline-secondary btn-sm rounded-circle pedido-toggle" type="button"
+                  data-bs-toggle="collapse"
+                  data-bs-target="#${collapseId}"
+                  aria-expanded="${isFirst ? 'true' : 'false'}"
+                  aria-controls="${collapseId}">
+            <i class="fas fa-chevron-down toggle-icon"></i>
+          </button>
+        </div>
+        <div id="${collapseId}" class="collapse${isFirst ? ' show' : ''}" data-bs-parent="#usuariosPedidosDemo">
+          <div class="card-body">
+            ${pedidosHtml}
+          </div>
+        </div>
+      `;
+
+      demoContainer.appendChild(card);
+    });
+  });
+</script>
+
+<style>
+  .pedidos-card {
+    border: 0;
+    border-radius: 16px;
+    box-shadow: var(--shadow, 0 12px 30px rgba(15, 23, 42, 0.08));
+    background: #fff;
+  }
+  .pedidos-card .card-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: #fff;
+    border-bottom: 0;
+    padding: 1.25rem 1.5rem;
+  }
+  .pedidos-card .card-body {
+    padding: 1.25rem 1.5rem 1.5rem;
+    background: #ffffff;
+    border-top: 1px solid rgba(148, 163, 184, 0.12);
+  }
+  .pedido-toggle {
+    width: 40px;
+    height: 40px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    transition: all 0.2s ease;
+  }
+  .pedido-toggle .toggle-icon {
+    transition: transform 0.2s ease;
+  }
+  .pedido-toggle[aria-expanded="true"] .toggle-icon {
+    transform: rotate(180deg);
+  }
+  .pedido-resumen {
+    background: #f0f4ff;
+    border-radius: 16px;
+    padding: 1.35rem;
+    box-shadow: 0 20px 45px rgba(79, 70, 229, 0.08), inset 0 0 0 1px rgba(79, 70, 229, 0.12);
+    border-left: 6px solid rgba(79, 70, 229, 0.65);
+  }
+  .pedido-divider {
+    margin: 1.75rem 0;
+    border-color: rgba(148, 163, 184, 0.2);
+  }
+  .pedido-items-table th {
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: #475569;
+    text-align: left;
+  }
+  .pedido-items-table td {
+    font-size: 0.92rem;
+    color: #1f2937;
+    text-align: left;
+  }
+  .pedido-items-table {
+    table-layout: fixed;
+  }
+  .pedido-items-table th:nth-child(1),
+  .pedido-items-table td:nth-child(1) {
+    width: 46%;
+  }
+  .pedido-items-table th:nth-child(2),
+  .pedido-items-table td:nth-child(2) {
+    width: 16%;
+  }
+  .pedido-items-table th:nth-child(3),
+  .pedido-items-table td:nth-child(3) {
+    width: 19%;
+  }
+  .pedido-items-table th:nth-child(4),
+  .pedido-items-table td:nth-child(4) {
+    width: 19%;
+  }
+  .pedido-items-table tbody tr:not(:last-child) td {
+    border-bottom: 1px solid rgba(148, 163, 184, 0.15);
+  }
+  .direccion-envio {
+    background: rgba(79, 70, 229, 0.08);
+    border-radius: 14px;
+    padding: 0.9rem 1.2rem;
+    border-left: 4px solid rgba(79, 70, 229, 0.4);
+  }
+  .direccion-label-badge {
+    background: rgba(79, 70, 229, 0.18);
+    color: #3b34a5;
+    letter-spacing: 0.14em;
+    font-size: 0.68rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    border-radius: 999px;
+    padding: 0.35rem 0.85rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 180px;
+  }
+  .direccion-text {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    font-size: 1.05rem;
+    font-weight: 600;
+    color: #111827;
+  }
+  .direccion-text span {
+    display: block;
+    line-height: 1.35;
+  }
+  .direccion-icon {
+    color: #4f46e5;
+    font-size: 1.25rem;
+  }
+  .pedido-estado {
+    font-size: 0.7rem;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    padding: 0.4rem 0.65rem;
+    border-radius: 999px;
+  }
+  .estado-pendiente-de-envio {
+    background: rgba(255, 193, 7, 0.18);
+    color: #8c6d1f;
+  }
+  .estado-enviado {
+    background: rgba(59, 130, 246, 0.16);
+    color: #1d4ed8;
+  }
+  .estado-entregado {
+    background: rgba(16, 185, 129, 0.16);
+    color: #059669;
+  }
+  .estado-esperando-retiro {
+    background: rgba(56, 189, 248, 0.18);
+    color: #0e7490;
+  }
+  .estado-retirado {
+    background: rgba(129, 140, 248, 0.18);
+    color: #4338ca;
+  }
+  .pedidos-accordion .card + .card {
+    margin-top: 1.25rem;
+  }
+  @media (max-width: 575.98px) {
+    .pedidos-card .card-header {
+      padding: 1rem 1.25rem;
+    }
+    .pedidos-card .card-body {
+      padding: 1rem 1.25rem 1.25rem;
+    }
+    .pedido-resumen {
+      padding: 1rem;
+    }
+  }
+</style>
 
 {% endblock %}
