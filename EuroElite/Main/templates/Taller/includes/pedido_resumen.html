@@ -1,0 +1,74 @@
+{% load humanize %}
+{% with estado_slug=estado_data|default:''|slugify metodo_slug=pedido.metodo_entrega|default:''|slugify %}
+<div class="pedido-resumen"
+     data-pedido-estado="{{ estado_slug }}"
+     data-metodo-entrega="{{ metodo_slug }}">
+  <div class="d-flex flex-wrap align-items-center justify-content-between gap-3">
+    <div>
+      <span class="fw-semibold">Pedido #{{ pedido.id }}</span>
+      {% if pedido.creado %}
+        <span class="text-muted small ms-2">{{ pedido.creado|date:'DATETIME_FORMAT' }}</span>
+      {% endif %}
+      {% if pedido.metodo_pago %}
+        <div class="text-muted small mt-1">Pago: {{ pedido.get_metodo_pago_display|default:pedido.metodo_pago }}</div>
+      {% endif %}
+    </div>
+    <div class="d-flex align-items-center gap-3 ms-auto">
+      <span class="badge pedido-estado {{ estado_class }}">{{ estado_display }}</span>
+      <div class="text-end">
+        <span class="text-muted small d-block">Total</span>
+        {% with total_mostrado=pedido.total|default_if_none:pedido.subtotal %}
+          <span class="fw-semibold">${{ total_mostrado|floatformat:0|intcomma }}</span>
+        {% endwith %}
+      </div>
+    </div>
+  </div>
+
+  {% if estado_slug == 'pendiente-de-envio' or estado_slug == 'enviado' or estado_slug == 'entregado' %}
+      {% with direccion=pedido.direccion_envio %}
+        <div class="direccion-envio mt-3 d-flex flex-column flex-md-row align-items-md-center gap-3">
+          <div class="direccion-label-badge">Direccion de entrega</div>
+          <div class="direccion-text">
+            <i class="fas fa-map-marker-alt direccion-icon"></i>
+            <span>
+              {% if direccion %}
+                {{ direccion.direccion|default:"Sin direccion" }}
+                {% if direccion.comuna %}, {{ direccion.comuna }}{% endif %}
+                {% if direccion.region %}, {{ direccion.region }}{% endif %}
+              {% else %}
+                Av. Central 123, Ciudad Simulada
+              {% endif %}
+            </span>
+          </div>
+        </div>
+      {% endwith %}
+  {% endif %}
+
+  <div class="table-responsive mt-3">
+    <table class="table table-sm table-borderless pedido-items-table mb-0">
+      <thead class="table-light">
+        <tr>
+          <th class="text-start">Producto</th>
+          <th class="text-start">Cantidad</th>
+          <th class="text-start">Precio</th>
+          <th class="text-start">Subtotal</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for item in pedido.items.all %}
+          <tr>
+            <td class="text-start">{{ item.nombre_producto|default:item.producto.nombre }}</td>
+            <td class="text-start">{{ item.cantidad }}</td>
+            <td class="text-start">${{ item.precio_unitario|floatformat:0|intcomma }}</td>
+            <td class="text-start">${{ item.subtotal|floatformat:0|intcomma }}</td>
+          </tr>
+        {% empty %}
+          <tr>
+            <td colspan="4" class="text-center text-muted small">Este pedido no tiene productos registrados.</td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endwith %}
