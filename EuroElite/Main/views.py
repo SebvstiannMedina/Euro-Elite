@@ -615,27 +615,59 @@ def confirmacion_datos(request):
     addr = Direccion.objects.filter(usuario=user).order_by('-predeterminada', '-id').first()
 
     if request.method == 'POST':
+        # Extract and validate form data
         rut = request.POST.get('rut', '').strip()
-        nombre_completo = request.POST.get('nombre_completo', '').strip()
+        nombre = request.POST.get('nombre', '').strip()
+        apellido = request.POST.get('apellido', '').strip()
+        email = request.POST.get('email', '').strip()
         telefono = request.POST.get('telefono', '').strip()
         direccion_txt = request.POST.get('direccion', '').strip()
+        direccion2_txt = request.POST.get('direccion2', '').strip()
+        region = request.POST.get('region', '').strip()
+        comuna = request.POST.get('comuna', '').strip()
+        notas = request.POST.get('notas', '').strip()
 
+        # Update user fields
+        if nombre:
+            user.first_name = nombre[:25]  # Limit to 25 chars
+        if apellido:
+            user.last_name = apellido[:25]  # Limit to 25 chars
+        if email:
+            # Sanitize email (remove spaces and dangerous chars)
+            email_clean = email.replace(' ', '').lower()
+            for char in ['<', '>', '"', "'", ';', '\r', '\n', '\t']:
+                email_clean = email_clean.replace(char, '')
+            if len(email_clean) <= 120:
+                user.email = email_clean
         if telefono:
-            user.telefono = telefono
+            # Extract only digits
+            telefono_digits = ''.join(filter(str.isdigit, telefono))
+            if len(telefono_digits) == 8:
+                user.telefono = telefono_digits
         if rut:
             user.rut = rut
-        user.save(update_fields=['telefono', 'rut'])
+        
+        user.save(update_fields=['first_name', 'last_name', 'email', 'telefono', 'rut'])
 
+        # Update or create address
         if not addr:
             addr = Direccion(usuario=user, tipo=Direccion.Tipo.ENVIO)
-        if nombre_completo:
-            addr.nombre_completo = nombre_completo
-        if telefono:
-            addr.telefono = telefono
+        
         if direccion_txt:
-            addr.linea1 = direccion_txt
+            addr.linea1 = direccion_txt[:65]  # Limit to 65 chars
+        if direccion2_txt:
+            addr.linea2 = direccion2_txt[:65]  # Limit to 65 chars (optional)
+        if telefono:
+            telefono_digits = ''.join(filter(str.isdigit, telefono))
+            if len(telefono_digits) == 8:
+                addr.telefono = telefono_digits
+        if region:
+            addr.region = region
+        if comuna:
+            addr.comuna = comuna
         if not addr.ciudad:
             addr.ciudad = 'Santiago'
+        
         addr.predeterminada = True
         addr.save()
 

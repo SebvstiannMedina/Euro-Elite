@@ -30,29 +30,35 @@
             <div class="row g-3">
               <div class="col-12 col-md-6">
                 <label for="nombre" class="form-label">Nombre</label>
-                <input id="nombre" name="nombre" type="text" class="form-control" required
+                <input id="nombre" name="nombre" type="text" class="form-control" required minlength="3" maxlength="25"
+                       oninput="this.value=this.value.replace(/[^A-Za-zÁÉÍÓÚÜÑáéíóúüñ ]/g,'');"
                        value="{{ request.user.first_name|default_if_none:'' }}">
-                <div class="invalid-feedback">Ingresa tu nombre.</div>
+                <div class="text-danger small d-none" data-feedback="nombre"></div>
               </div>
 
               <div class="col-12 col-md-6">
                 <label for="apellido" class="form-label">Apellido</label>
-                <input id="apellido" name="apellido" type="text" class="form-control"
+                <input id="apellido" name="apellido" type="text" class="form-control" required minlength="3" maxlength="25"
+                       oninput="this.value=this.value.replace(/[^A-Za-zÁÉÍÓÚÜÑáéíóúüñ ]/g,'');"
                        value="{{ request.user.last_name|default_if_none:'' }}">
+                <div class="text-danger small d-none" data-feedback="apellido"></div>
               </div>
 
               <div class="col-12 col-md-6">
                 <label for="email" class="form-label">Email</label>
-                <input id="email" name="email" type="email" class="form-control" required
+                <input id="email" name="email" type="email" class="form-control" required minlength="5" maxlength="120"
+                       oninput="this.value=this.value.replace(/[\s&lt;&gt;&quot;&apos;;]/g,'').toLowerCase().slice(0,120)"
                        value="{{ request.user.email|default_if_none:'' }}">
-                <div class="invalid-feedback">Ingresa un email válido.</div>
+                <div class="text-danger small d-none" data-feedback="email"></div>
               </div>
 
               <div class="col-12 col-md-6">
                 <label for="telefono" class="form-label fw-semibold text-muted">Teléfono</label>
                 <div class="input-group">
                   <span class="input-group-text">+56 9</span>
-                  <input id="telefono" name="telefono" type="tel" class="form-control" required placeholder="12345678">
+                  <input id="telefono" name="telefono" type="tel" class="form-control" required maxlength="8" pattern="[0-9]{8}" 
+                         inputmode="numeric" oninput="this.value=this.value.replace(/[^0-9]/g,'');" placeholder="12345678"
+                         value="{{ user.telefono|default_if_none:'' }}">
                 </div>
                 <div id="telefono-feedback" class="text-danger small d-none"></div>
               </div>
@@ -60,7 +66,8 @@
               <div class="col-12 col-md-6">
                 <label for="rut" class="form-label">RUT</label>
                 <input id="rut" name="rut" type="text" class="form-control" required
-                       placeholder="12.345.678-9">
+                       placeholder="12.345.678-9"
+                       value="{{ user.rut|default:rut|default_if_none:'' }}">
                 <div class="invalid-feedback">Ingresa un RUT válido.</div>
               </div>
             </div>
@@ -69,25 +76,57 @@
 
             <h2 class="h5 mb-3">Dirección de envío</h2>
             <div class="row g-3">
-              <div class="col-12">
-                <label for="direccion" class="form-label">Dirección</label>
-                <input id="direccion" name="direccion" type="text" class="form-control" required
-                       placeholder="Calle y número">
-                <div class="invalid-feedback">Ingresa tu dirección.</div>
+              <div class="col-12 col-md-6">
+                <label for="direccion" class="form-label">Calle / Dirección</label>
+                <input id="direccion" name="direccion" type="text" class="form-control" required minlength="3" maxlength="65"
+                       oninput="this.value=this.value.replace(/[^A-Za-zÁÉÍÓÚÜÑáéíóúüñ0-9# ]/g,'');"
+                       placeholder="Ej: Av. Libertador 123"
+                       value="{{ addr.linea1|default:'' }}">
+                <div class="text-danger small d-none" data-feedback="direccion"></div>
+              </div>
+
+              <div class="col-12 col-md-6">
+                <label for="direccion2" class="form-label">Departamento / Oficina <span class="text-muted small">(opcional)</span></label>
+                <input id="direccion2" name="direccion2" type="text" class="form-control" minlength="3" maxlength="65"
+                       oninput="this.value=this.value.replace(/[^A-Za-zÁÉÍÓÚÜÑáéíóúüñ0-9 ]/g,'');"
+                       placeholder="Ej: Depto 101"
+                       value="{{ addr.linea2|default:'' }}">
+                <div class="text-danger small d-none" data-feedback="direccion2"></div>
               </div>
 
               <div class="col-12 col-md-6">
                 <label for="region" class="form-label">Región</label>
-                <input id="region" name="region" type="text" class="form-control" required
-                       placeholder="Región Metropolitana">
-                <div class="invalid-feedback">Ingresa tu región.</div>
+                <select id="region" name="region" class="form-select" required>
+                  <option value="" disabled {% if not addr.region %}selected{% endif %} hidden>Selecciona una región</option>
+                  <option value="Arica y Parinacota" {% if addr.region == "Arica y Parinacota" %}selected{% endif %}>Arica y Parinacota</option>
+                  <option value="Tarapacá" {% if addr.region == "Tarapacá" %}selected{% endif %}>Tarapacá</option>
+                  <option value="Antofagasta" {% if addr.region == "Antofagasta" %}selected{% endif %}>Antofagasta</option>
+                  <option value="Atacama" {% if addr.region == "Atacama" %}selected{% endif %}>Atacama</option>
+                  <option value="Coquimbo" {% if addr.region == "Coquimbo" %}selected{% endif %}>Coquimbo</option>
+                  <option value="Valparaíso" {% if addr.region == "Valparaíso" %}selected{% endif %}>Valparaíso</option>
+                  <option value="Metropolitana de Santiago" {% if addr.region == "Metropolitana de Santiago" %}selected{% endif %}>Metropolitana de Santiago</option>
+                  <option value="O'Higgins" {% if addr.region == "O'Higgins" %}selected{% endif %}>O'Higgins</option>
+                  <option value="Maule" {% if addr.region == "Maule" %}selected{% endif %}>Maule</option>
+                  <option value="Ñuble" {% if addr.region == "Ñuble" %}selected{% endif %}>Ñuble</option>
+                  <option value="Biobío" {% if addr.region == "Biobío" %}selected{% endif %}>Biobío</option>
+                  <option value="La Araucanía" {% if addr.region == "La Araucanía" %}selected{% endif %}>La Araucanía</option>
+                  <option value="Los Ríos" {% if addr.region == "Los Ríos" %}selected{% endif %}>Los Ríos</option>
+                  <option value="Los Lagos" {% if addr.region == "Los Lagos" %}selected{% endif %}>Los Lagos</option>
+                  <option value="Aysén" {% if addr.region == "Aysén" %}selected{% endif %}>Aysén</option>
+                  <option value="Magallanes y la Antártica Chilena" {% if addr.region == "Magallanes y la Antártica Chilena" %}selected{% endif %}>Magallanes y la Antártica Chilena</option>
+                </select>
+                <div class="text-danger small d-none" data-feedback="region"></div>
               </div>
 
               <div class="col-12 col-md-6">
                 <label for="comuna" class="form-label">Comuna</label>
-                <input id="comuna" name="comuna" type="text" class="form-control" required
-                       placeholder="Santiago">
-                <div class="invalid-feedback">Ingresa tu comuna.</div>
+                <select id="comuna" name="comuna" class="form-select" required>
+                  <option value="" disabled selected hidden>Selecciona una región primero</option>
+                  {% if addr.comuna %}
+                    <option value="{{ addr.comuna }}" selected>{{ addr.comuna }}</option>
+                  {% endif %}
+                </select>
+                <div class="text-danger small d-none" data-feedback="comuna"></div>
               </div>
 
               <div class="col-12">
@@ -142,6 +181,211 @@
   const telefonoHelper = document.getElementById('telefono-helper');
   const rut = document.getElementById('rut');
 
+    // ==========================================
+    // FIELD DEFINITIONS & HELPERS
+    // ==========================================
+    const fields = {
+      nombre: {
+        input: document.getElementById('nombre'),
+        feedback: document.querySelector('[data-feedback="nombre"]')
+      },
+      apellido: {
+        input: document.getElementById('apellido'),
+        feedback: document.querySelector('[data-feedback="apellido"]')
+      },
+      email: {
+        input: document.getElementById('email'),
+        feedback: document.querySelector('[data-feedback="email"]')
+      },
+      telefono: {
+        input: document.getElementById('telefono'),
+        feedback: document.getElementById('telefono-feedback')
+      },
+      direccion: {
+        input: document.getElementById('direccion'),
+        feedback: document.querySelector('[data-feedback="direccion"]')
+      },
+      direccion2: {
+        input: document.getElementById('direccion2'),
+        feedback: document.querySelector('[data-feedback="direccion2"]')
+      },
+      region: {
+        input: document.querySelector('select[name="region"]'),
+        feedback: document.querySelector('[data-feedback="region"]')
+      },
+      comuna: {
+        input: document.querySelector('select[name="comuna"]'),
+        feedback: document.querySelector('[data-feedback="comuna"]')
+      }
+    };
+
+    // Helper: Show/hide error messages
+    function setError(field, message) {
+      if (field && field.feedback) {
+        if (message) {
+          field.feedback.textContent = message;
+          field.feedback.classList.remove('d-none');
+          field.input.classList.add('is-invalid');
+        } else {
+          field.feedback.textContent = '';
+          field.feedback.classList.add('d-none');
+          field.input.classList.remove('is-invalid');
+        }
+      }
+    }
+
+    // Email sanitization function
+    function sanitizeEmailValue(value) {
+      return value.replace(/[\s<>"';]/g, '').toLowerCase().slice(0, 120);
+    }
+
+    // ==========================================
+    // MAIN VALIDATION FUNCTION
+    // ==========================================
+    function validateAllFields() {
+      let isValid = true;
+
+      // Validate nombre (first name)
+      const nombre = fields.nombre.input.value.trim();
+      if (!nombre) {
+        setError(fields.nombre, 'El nombre es obligatorio.');
+        isValid = false;
+      } else if (/\d/.test(nombre)) {
+        setError(fields.nombre, 'El nombre no debe contener números.');
+        isValid = false;
+      } else if (nombre.length < 3) {
+        setError(fields.nombre, 'El nombre debe tener al menos 3 caracteres.');
+        isValid = false;
+      } else if (nombre.length === 25) {
+        setError(fields.nombre, 'Has alcanzado el máximo (25 caracteres)');
+      } else if (nombre.length > 25) {
+        setError(fields.nombre, 'Máximo 25 caracteres');
+        isValid = false;
+      } else {
+        setError(fields.nombre, null);
+      }
+
+      // Validate apellido (last name)
+      const apellido = fields.apellido.input.value.trim();
+      if (!apellido) {
+        setError(fields.apellido, 'El apellido es obligatorio.');
+        isValid = false;
+      } else if (/\d/.test(apellido)) {
+        setError(fields.apellido, 'El apellido no debe contener números.');
+        isValid = false;
+      } else if (apellido.length < 3) {
+        setError(fields.apellido, 'El apellido debe tener al menos 3 caracteres.');
+        isValid = false;
+      } else if (apellido.length === 25) {
+        setError(fields.apellido, 'Has alcanzado el máximo (25 caracteres)');
+      } else if (apellido.length > 25) {
+        setError(fields.apellido, 'Máximo 25 caracteres');
+        isValid = false;
+      } else {
+        setError(fields.apellido, null);
+      }
+
+      // Validate email
+      const email = sanitizeEmailValue(fields.email.input.value);
+      fields.email.input.value = email;
+      const emailRegex = /^[a-z0-9._%-]+@[a-z0-9.-]+\.[a-z]{2,}$/;
+      if (!email) {
+        setError(fields.email, 'El correo es obligatorio.');
+        isValid = false;
+      } else if (email.length < 5) {
+        setError(fields.email, 'El correo debe tener al menos 5 caracteres.');
+        isValid = false;
+      } else if (email.length === 120) {
+        setError(fields.email, 'Has alcanzado el máximo (120 caracteres)');
+      } else if (email.length > 120) {
+        setError(fields.email, 'Máximo 120 caracteres');
+        isValid = false;
+      } else if (!emailRegex.test(email)) {
+        setError(fields.email, 'Ingresa un correo válido (ej: usuario@dominio.com).');
+        isValid = false;
+      } else {
+        setError(fields.email, null);
+      }
+
+      // Validate direccion (address line 1)
+      const direccion = fields.direccion.input.value.trim();
+      if (!direccion) {
+        setError(fields.direccion, 'La dirección es obligatoria.');
+        isValid = false;
+      } else if (direccion.length < 3) {
+        setError(fields.direccion, 'La dirección debe tener al menos 3 caracteres.');
+        isValid = false;
+      } else if (direccion.length === 65) {
+        setError(fields.direccion, 'Has alcanzado el máximo (65 caracteres)');
+      } else if (direccion.length > 65) {
+        setError(fields.direccion, 'Máximo 65 caracteres');
+        isValid = false;
+      } else {
+        setError(fields.direccion, null);
+      }
+
+      // Validate direccion2 (address line 2 - optional)
+      const direccion2 = fields.direccion2.input.value.trim();
+      let d2Msg = '';
+      if (direccion2.length > 0 && direccion2.length < 3) {
+        d2Msg = 'Debe tener al menos 3 caracteres';
+        isValid = false;
+      } else if (direccion2.length === 65) {
+        d2Msg = 'Has alcanzado el máximo (65 caracteres)';
+      } else if (direccion2.length > 65) {
+        d2Msg = 'Máximo 65 caracteres';
+        isValid = false;
+      }
+      setError(fields.direccion2, d2Msg);
+
+      // Validate region
+      const region = fields.region.input.value.trim();
+      if (!region) {
+        setError(fields.region, 'Debes seleccionar una región.');
+        isValid = false;
+      } else {
+        setError(fields.region, null);
+      }
+
+      // Validate comuna
+      const comuna = fields.comuna.input.value.trim();
+      if (!comuna) {
+        setError(fields.comuna, 'Debes seleccionar una comuna.');
+        isValid = false;
+      } else {
+        setError(fields.comuna, null);
+      }
+
+      // Validate telefono (phone) - using existing validation function
+      const telefonoValid = validatePhone(telefono);
+      if (!telefonoValid) {
+        isValid = false;
+      }
+
+      return isValid;
+    }
+
+    // ==========================================
+    // EVENT LISTENERS FOR REAL-TIME VALIDATION
+    // ==========================================
+    ['input', 'blur'].forEach(eventType => {
+      fields.nombre.input.addEventListener(eventType, validateAllFields);
+      fields.apellido.input.addEventListener(eventType, validateAllFields);
+      fields.email.input.addEventListener(eventType, validateAllFields);
+      fields.direccion.input.addEventListener(eventType, validateAllFields);
+      fields.direccion2.input.addEventListener(eventType, validateAllFields);
+    });
+
+    // Region and comuna use 'change' event for selects
+    ['change', 'blur'].forEach(eventType => {
+      fields.region.input.addEventListener(eventType, validateAllFields);
+      fields.comuna.input.addEventListener(eventType, validateAllFields);
+    });
+
+    // ==========================================
+    // PHONE VALIDATION (EXISTING)
+    // ==========================================
+
     function sanitizePhoneValue(value) {
       const digits = (value || '').replace(/\D/g, '');
       return digits.slice(0, 8);
@@ -162,15 +406,29 @@
     function validatePhone(input) {
       const digits = sanitizePhoneValue(input.value);
       input.value = digits;
+      const feedback = document.getElementById('telefono-feedback');
+      
       if (!digits) {
-        input.setCustomValidity('Debes rellenar este campo');
+        if (feedback) {
+          feedback.textContent = 'El teléfono es obligatorio.';
+          feedback.classList.remove('d-none');
+        }
+        input.classList.add('is-invalid');
         return false;
       }
       if (digits.length < 8) {
-        input.setCustomValidity('Teléfono debe contener 8 dígitos');
+        if (feedback) {
+          feedback.textContent = 'El teléfono debe contener 8 dígitos.';
+          feedback.classList.remove('d-none');
+        }
+        input.classList.add('is-invalid');
         return false;
       }
-      input.setCustomValidity('');
+      if (feedback) {
+        feedback.textContent = '';
+        feedback.classList.add('d-none');
+      }
+      input.classList.remove('is-invalid');
       return true;
     }
 
@@ -246,44 +504,19 @@
     }
 
     if (telefono) {
-      const telefonoFeedback = document.getElementById('telefono-feedback');
-      function showTelefonoError(message) {
-        telefonoFeedback.textContent = message;
-        telefonoFeedback.classList.remove('d-none');
-        telefono.classList.add('is-invalid');
-      }
-      function hideTelefonoError() {
-        telefonoFeedback.textContent = '';
-        telefonoFeedback.classList.add('d-none');
-        telefono.classList.remove('is-invalid');
-      }
-      function validateTelefonoField() {
-        const value = telefono.value.replace(/\D/g, '');
-        if (!value) {
-          showTelefonoError('Por favor ingresa tu número de teléfono para continuar.');
-          return false;
-        }
-        if (value.length < 8) {
-          showTelefonoError('El teléfono debe tener 8 dígitos.');
-          return false;
-        }
-        hideTelefonoError();
-        return true;
-      }
       telefono.addEventListener('input', function () {
-        telefono.value = telefono.value.replace(/\D/g, '').slice(0, 8);
-        validateTelefonoField();
+        sanitizePhoneInput(telefono);
+        validateAllFields();
       });
       telefono.addEventListener('blur', function () {
-        validateTelefonoField();
+        validateAllFields();
       });
       telefono.addEventListener('paste', function (e) {
         setTimeout(function () {
-          telefono.value = telefono.value.replace(/\D/g, '').slice(0, 8);
-          validateTelefonoField();
+          sanitizePhoneInput(telefono);
+          validateAllFields();
         }, 0);
       });
-      validateTelefonoField();
     }
     if (rut) {
       rut.addEventListener('input', function () {
@@ -312,14 +545,112 @@
 
     form.addEventListener('submit', function (e) {
       let valid = true;
-      if (telefono && !validatePhone(telefono)) valid = false;
+      
+      // Run all field validations
+      if (!validateAllFields()) valid = false;
+      
+      // Validate RUT (keep existing validation)
       if (rut && !validateRut(rut)) valid = false;
+      
       if (!form.checkValidity() || !valid) {
         e.preventDefault();
         e.stopPropagation();
       }
       form.classList.add('was-validated');
     }, false);
+
+    // ==========================================
+    // REGION → COMUNA POPULATION
+    // ==========================================
+    const REGION_COMMUNES = [
+      { name: "Arica y Parinacota", comunas: ["Arica","Camarones","Putre","General Lagos"] },
+      { name: "Tarapacá", comunas: ["Iquique","Alto Hospicio","Pozo Almonte","Camiña","Colchane","Huara","Pica"] },
+      { name: "Antofagasta", comunas: ["Antofagasta","Mejillones","Sierra Gorda","Taltal","Calama","Ollagüe","San Pedro de Atacama","Tocopilla","María Elena"] },
+      { name: "Atacama", comunas: ["Copiapó","Caldera","Tierra Amarilla","Chañaral","Diego de Almagro","Vallenar","Freirina","Huasco","Alto del Carmen"] },
+      { name: "Coquimbo", comunas: ["La Serena","Coquimbo","Andacollo","La Higuera","Paihuano","Vicuña","Illapel","Canela","Los Vilos","Salamanca","Ovalle","Combarbalá","Monte Patria","Punitaqui","Río Hurtado"] },
+      { name: "Valparaíso", comunas: ["Valparaíso","Casablanca","Concón","Juan Fernández","Puchuncaví","Quilpué","Quintero","Villa Alemana","Viña del Mar","Rapa Nui (Isla de Pascua)","Los Andes","Calle Larga","Rinconada","San Esteban","La Ligua","Cabildo","Papudo","Petorca","Zapallar","Quillota","La Calera","Hijuelas","La Cruz","Nogales","Limache","Olmué","San Antonio","Algarrobo","Cartagena","El Quisco","El Tabo","Santo Domingo","San Felipe","Catemu","Llay-Llay","Panquehue","Putaendo","Santa María"] },
+      { name: "Metropolitana de Santiago", comunas: ["Cerrillos","Cerro Navia","Conchalí","El Bosque","Estación Central","Huechuraba","Independencia","La Cisterna","La Florida","La Granja","La Pintana","La Reina","Las Condes","Lo Barnechea","Lo Espejo","Lo Prado","Macul","Maipú","Ñuñoa","Pedro Aguirre Cerda","Peñalolén","Providencia","Pudahuel","Quilicura","Quinta Normal","Recoleta","Renca","San Joaquín","San Miguel","San Ramón","Santiago","Vitacura","Colina","Lampa","Tiltil","Puente Alto","Pirque","San José de Maipo","San Bernardo","Buin","Calera de Tango","Paine","Melipilla","Alhué","Curacaví","María Pinto","San Pedro","Talagante","El Monte","Isla de Maipo","Padre Hurtado","Peñaflor"] },
+      { name: "O'Higgins", comunas: ["Rancagua","Codegua","Coinco","Coltauco","Doñihue","Graneros","Las Cabras","Machalí","Malloa","Mostazal","Olivar","Peumo","Pichidegua","Quinta de Tilcoco","Rengo","Requínoa","San Vicente","Pichilemu","La Estrella","Litueche","Marchihue","Navidad","Paredones","San Fernando","Chépica","Chimbarongo","Lolol","Nancagua","Palmilla","Peralillo","Placilla","Pumanque","Santa Cruz"] },
+      { name: "Maule", comunas: ["Talca","Constitución","Curepto","Empedrado","Maule","Pelarco","Pencahue","Río Claro","San Clemente","San Rafael","Cauquenes","Chanco","Pelluhue","Curicó","Hualañé","Licantén","Molina","Rauco","Romeral","Sagrada Familia","Teno","Vichuquén","Linares","Colbún","Longaví","Parral","Retiro","San Javier","Villa Alegre","Yerbas Buenas"] },
+      { name: "Ñuble", comunas: ["Bulnes","Chillán","Chillán Viejo","El Carmen","Pemuco","Pinto","Quillón","San Ignacio","Yungay","Cobquecura","Coelemu","Ninhue","Portezuelo","Quirihue","Ránquil","Trehuaco","Coihueco","Ñiquén","San Carlos","San Fabián","San Nicolás"] },
+      { name: "Biobío", comunas: ["Concepción","Coronel","Chiguayante","Florida","Hualpén","Hualqui","Lota","Penco","San Pedro de la Paz","Santa Juana","Talcahuano","Tomé","Arauco","Cañete","Contulmo","Curanilahue","Lebu","Los Álamos","Tirúa","Los Ángeles","Alto Biobío","Antuco","Cabrero","Laja","Mulchén","Nacimiento","Negrete","Quilaco","Quilleco","San Rosendo","Santa Bárbara","Tucapel","Yumbel"] },
+      { name: "La Araucanía", comunas: ["Temuco","Carahue","Cholchol","Cunco","Curarrehue","Freire","Galvarino","Gorbea","Lautaro","Loncoche","Melipeuco","Nueva Imperial","Padre Las Casas","Perquenco","Pitrufquén","Pucón","Saavedra","Teodoro Schmidt","Toltén","Vilcún","Villarrica","Angol","Collipulli","Curacautín","Ercilla","Lonquimay","Los Sauces","Lumaco","Purén","Renaico","Traiguén","Victoria"] },
+      { name: "Los Ríos", comunas: ["Valdivia","Corral","Lanco","Los Lagos","Máfil","Mariquina","Paillaco","Panguipulli","La Unión","Futrono","Lago Ranco","Río Bueno"] },
+      { name: "Los Lagos", comunas: ["Ancud","Castro","Chonchi","Curaco de Vélez","Dalcahue","Puqueldón","Queilén","Quemchi","Quellón","Quinchao","Calbuco","Cochamó","Fresia","Frutillar","Llanquihue","Los Muermos","Maullín","Puerto Montt","Puerto Varas","Osorno","Puerto Octay","Purranque","Puyehue","Río Negro","San Juan de la Costa","San Pablo","Chaitén","Futaleufú","Hualaihué","Palena"] },
+      { name: "Aysén", comunas: ["Coyhaique","Lago Verde","Aysén","Cisnes","Guaitecas","Cochrane","O'Higgins","Tortel","Chile Chico","Río Ibáñez"] },
+      { name: "Magallanes y la Antártica Chilena", comunas: ["Punta Arenas","Laguna Blanca","Río Verde","San Gregorio","Porvenir","Primavera","Timaukel","Cabo de Hornos (Puerto Williams)","Antártica","Natales","Torres del Paine"] }
+    ];
+
+    function normalizeText(v){
+      return (v||'').toString().trim().normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().replace(/[^a-z0-9]/g,'');
+    }
+
+    function populateRegionComuna(){
+      const regionSelect = document.querySelector('select[name="region"]');
+      const comunaSelect = document.querySelector('select[name="comuna"]');
+      if(!regionSelect || !comunaSelect) return;
+      
+      const map = new Map(REGION_COMMUNES.map(r=>[normalizeText(r.name), r.comunas]));
+      
+      // Capture the server-rendered comuna value
+      const initialComunaValue = comunaSelect.value;
+
+      function fillComunas(regionValue, preserveSelection = false){
+        const comunaToSelect = preserveSelection ? comunaSelect.value : '';
+        const comunas = map.get(normalizeText(regionValue)) || [];
+        
+        comunaSelect.innerHTML = '';
+        
+        // Add placeholder
+        const ph = document.createElement('option');
+        ph.value = '';
+        ph.textContent = comunas.length ? 'Selecciona una comuna' : 'Selecciona una región primero';
+        ph.disabled = true; 
+        ph.hidden = true;
+        comunaSelect.appendChild(ph);
+        
+        // Add comuna options
+        let hasSelection = false;
+        comunas.forEach(c=>{
+          const opt = document.createElement('option');
+          opt.value = c; 
+          opt.textContent = c;
+          if (comunaToSelect && c === comunaToSelect) {
+            opt.selected = true;
+            hasSelection = true;
+          }
+          comunaSelect.appendChild(opt);
+        });
+        
+        // Try to restore initial value if no selection was made
+        if (!hasSelection && preserveSelection && initialComunaValue) {
+          const opts = comunaSelect.querySelectorAll('option');
+          opts.forEach(opt => {
+            if (opt.value === initialComunaValue) {
+              opt.selected = true;
+              hasSelection = true;
+            }
+          });
+        }
+        
+        comunaSelect.disabled = comunas.length === 0;
+        
+        // Trigger validation update
+        comunaSelect.dispatchEvent(new Event('change', { bubbles: true }));
+        validateAllFields();
+      }
+
+      // Initial population - preserve server-rendered value
+      fillComunas(regionSelect.value, true);
+      
+      // When region changes, clear comuna
+      regionSelect.addEventListener('change', e=> {
+        fillComunas(e.target.value, false);
+      });
+    }
+
+    populateRegionComuna();
+
   })();
 </script>
 {% endblock %}
