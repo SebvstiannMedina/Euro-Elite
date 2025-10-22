@@ -612,6 +612,72 @@ def compra_exitosa(request, pedido_id=None):
     })
 
 
+@csrf_exempt
+def compra_rechazada(request, pedido_id=None):
+    """
+    Muestra la página de compra rechazada cuando el pago falla.
+    """
+    print(f"[COMPRA_RECHAZADA] ========== INICIO ==========")
+    print(f"[COMPRA_RECHAZADA] pedido_id recibido: {pedido_id}")
+    print(f"[COMPRA_RECHAZADA] Usuario autenticado: {request.user.is_authenticated}")
+    
+    pedido = None
+    pago = None
+    motivo_rechazo = None
+    
+    # Intentar obtener pedido_id de sesión si no se proporciona
+    if not pedido_id:
+        pedido_id = request.session.get('last_order_id')
+        print(f"[COMPRA_RECHAZADA] pedido_id desde sesión: {pedido_id}")
+    
+    # Cargar el pedido
+    if pedido_id:
+        try:
+            pedido = Pedido.objects.select_related('usuario').prefetch_related('items__producto').get(id=pedido_id)
+            pago = getattr(pedido, 'pago', None)
+            print(f"[COMPRA_RECHAZADA] ✅ Pedido {pedido.id} encontrado, estado: {pedido.estado}")
+            
+            # Intentar obtener el motivo del rechazo desde la respuesta de Flow
+            if pago and hasattr(pago, 'flow_response') and pago.flow_response:
+                try:
+                    import json
+                    flow_data = json.loads(pago.flow_response.replace("'", '"'))
+                    last_error = flow_data.get('lastError', {})
+                    if last_error and last_error.get('message'):
+                        motivo_rechazo = last_error.get('message')
+                except:
+                    pass
+                    
+        except Pedido.DoesNotExist:
+            print(f"[COMPRA_RECHAZADA] ❌ Pedido {pedido_id} NO existe")
+    
+    # Si no hay pedido y el usuario está autenticado, buscar el más reciente cancelado
+    if not pedido and request.user.is_authenticated:
+        pedido = Pedido.objects.filter(
+            usuario=request.user,
+            estado=Pedido.Estado.CANCELADO
+        ).order_by('-creado').first()
+        
+        if pedido:
+            pago = getattr(pedido, 'pago', None)
+            print(f"[COMPRA_RECHAZADA] ✅ Pedido cancelado más reciente: {pedido.id}")
+    
+    numero_pedido = getattr(pedido, 'id', None) if pedido else None
+    total = getattr(pedido, 'total', None) if pedido else None
+    template_user = request.user if request.user.is_authenticated else (pedido.usuario if pedido else None)
+    
+    print(f"[COMPRA_RECHAZADA] Renderizando template con pedido_id={numero_pedido}")
+    print(f"[COMPRA_RECHAZADA] ========== FIN ==========")
+    
+    return render(request, 'taller/compra_rechazada.html', {
+        'user': template_user,
+        'pedido': pedido,
+        'numero_pedido': numero_pedido,
+        'total': total,
+        'motivo_rechazo': motivo_rechazo or 'El pago fue rechazado por el medio de pago.',
+    })
+
+
 def ofertas(request):
     return render(request, 'taller/ofertas.html')
 

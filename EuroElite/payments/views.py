@@ -265,6 +265,13 @@ def flow_confirmacion(request):
     elif status_flow == "3":
         print(f"[FLOW_CONFIRMACION] ❌ Pago FALLIDO - status_flow = 3")
         pago.estado = Pago.Estado.FALLIDO
+        pedido.estado = Pedido.Estado.CANCELADO
+        
+        # Opcional: Registrar el motivo del rechazo si Flow lo proporciona
+        last_error = data.get('lastError', {})
+        if last_error and last_error.get('message'):
+            print(f"[FLOW_CONFIRMACION] Motivo del rechazo: {last_error.get('message')}")
+        
     else:
         print(f"[FLOW_CONFIRMACION] ⏳ Pago PENDIENTE - status_flow = {status_flow}, sin paymentData")
         pago.estado = Pago.Estado.PENDIENTE
@@ -348,6 +355,19 @@ def flow_retorno(request):
             print(f"[FLOW_RETORNO] Error buscando último pedido: {e}")
     
     if pedido_id:
+        # Verificar el estado del pedido antes de redirigir
+        try:
+            pedido = Pedido.objects.get(id=pedido_id)
+            print(f"[FLOW_RETORNO] Estado del pedido: {pedido.estado}")
+            
+            # Si el pedido fue cancelado (pago rechazado), redirigir a página de rechazo
+            if pedido.estado == Pedido.Estado.CANCELADO:
+                print(f"[FLOW_RETORNO] 🚫 Pedido CANCELADO - redirigiendo a compra_rechazada")
+                print(f"[FLOW_RETORNO] ========== FIN ==========")
+                return redirect('compra_rechazada', pedido_id=pedido_id)
+        except Pedido.DoesNotExist:
+            print(f"[FLOW_RETORNO] ⚠️ Pedido {pedido_id} no existe")
+        
         print(f"[FLOW_RETORNO] 🎯 Redirigiendo a compra_exitosa_detalle con pedido_id={pedido_id}")
         print(f"[FLOW_RETORNO] ========== FIN ==========")
         return redirect('compra_exitosa_detalle', pedido_id=pedido_id)
