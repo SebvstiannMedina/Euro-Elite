@@ -5,6 +5,9 @@ from django.conf import settings
 from django.http import JsonResponse, HttpResponseBadRequest, HttpResponseRedirect
 from django.views.decorators.csrf import csrf_exempt
 from django.shortcuts import get_object_or_404
+import time
+import uuid
+
 
 from .utils import flow_sign
 
@@ -32,7 +35,7 @@ def flow_crear_orden(request):
 
     pedido = get_object_or_404(Pedido, id=pedido_id)
 
-    # Asegurar Pago PENDIENTE
+    # Asegurar Pago PENDIENTE (crea uno si no existe)
     pago = getattr(pedido, "pago", None)
     if not pago:
         pago = Pago.objects.create(
@@ -49,25 +52,69 @@ def flow_crear_orden(request):
     url_conf = _s(settings.FLOW_URL_CONFIRMATION)
     url_ret  = _s(settings.FLOW_URL_RETURN)
 
+    # Validaciones básicas
+    if not api_base or not api_key or not secret:
+        return HttpResponseBadRequest("Configuración Flow incompleta (FLOW_API_BASE / FLOW_API_KEY / FLOW_SECRET_KEY).")
+    if not (url_conf.startswith("http://") or url_conf.startswith("https://")):
+        return HttpResponseBadRequest("FLOW_URL_CONFIRMATION debe ser una URL completa con http(s).")
+    if not (url_ret.startswith("http://") or url_ret.startswith("https://")):
+        return HttpResponseBadRequest("FLOW_URL_RETURN debe ser una URL completa con http(s).")
+
+    # Asegurar amount entero (CLP)
+    try:
+        amount_int = int(round(float(pedido.total)))
+    except Exception:
+        return HttpResponseBadRequest("Monto inválido para Flow (debe ser número entero en CLP).")
+
+    # Generar commerceOrder único: "<pedido_id>-<timestamp>"
+    commerce_order = f"{pedido.id}-{int(time.time())}"
+
     body = {
         "apiKey": api_key,
-        "commerceOrder": str(pedido.id),
-        "subject": f"Pedido #{pedido.id}",
+        "commerceOrder": commerce_order,
+        "subject": f"Pedido #{pedido.id} - Intento {commerce_order}",
         "currency": "CLP",
-        "amount": str(pedido.total),
+        "amount": str(amount_int),
         "email": getattr(pedido.usuario, "email", "") or "cliente@ejemplo.cl",
         "urlConfirmation": url_conf,
         "urlReturn": url_ret,
     }
     body["s"] = flow_sign(body, secret)
 
-    # Llamada a Flow
+    # Intentar guardar commerce_order en Pago para trazabilidad si existe el campo
     try:
+        if hasattr(pago, "commerce_order"):
+            pago.commerce_order = commerce_order
+            pago.save()
+    except Exception:
+        # no crítico si el campo no existe o hay error
+        pass
+
+    # Llamada a Flow (mejor manejo de errores y logging para depuración)
+    try:
+        # Logs de depuración (puedes eliminarlos en producción)
+        print("FLOW -> POST:", f"{api_base}/payment/create")
+        print("FLOW -> BODY:", body)
+        print("FLOW -> s:", body.get("s"))
+
         resp = requests.post(f"{api_base}/payment/create", data=body, timeout=20)
-        resp.raise_for_status()
+
+        # Si no es 2xx, mostramos el body de respuesta para entender el 400
+        if resp.status_code != 200:
+            texto = resp.text
+            try:
+                texto_json = resp.json()
+            except ValueError:
+                texto_json = None
+            return HttpResponseBadRequest(
+                f"Flow devolvió status {resp.status_code}. Texto: {texto}. JSON: {texto_json}"
+            )
+
         data = resp.json()
+
     except requests.RequestException as e:
-        return HttpResponseBadRequest(f"Error de red al llamar a Flow: {e}")
+        resp_text = getattr(e, "response", None) and getattr(e.response, "text", None)
+        return HttpResponseBadRequest(f"Error de red al llamar a Flow: {e}. Resp: {resp_text}")
     except ValueError:
         return HttpResponseBadRequest("Respuesta inválida de Flow (no JSON).")
 
@@ -76,8 +123,15 @@ def flow_crear_orden(request):
     if not url or not token:
         return HttpResponseBadRequest(f"Respuesta inesperada de Flow: {data}")
 
-    return HttpResponseRedirect(f"{url}?token={token}")
+    # Guardar token en Pago para poder relacionar confirmaciones (si el campo existe)
+    try:
+        if hasattr(pago, "flow_token"):
+            pago.flow_token = token
+            pago.save()
+    except Exception:
+        pass
 
+    return HttpResponseRedirect(f"{url}?token={token}")
 
 @csrf_exempt
 def flow_confirmacion(request):
@@ -111,10 +165,39 @@ def flow_confirmacion(request):
         return HttpResponseBadRequest("Respuesta inválida de Flow (no JSON).")
 
     status_flow = str(data.get("status"))            # 1=pagado, 2=pendiente, 3=fallido
-    commerce_order = str(data.get("commerceOrder"))  # id del Pedido
+    commerce_order = str(data.get("commerceOrder"))  # ej: "9-1700000000" o "9"
 
-    pedido = get_object_or_404(Pedido, id=commerce_order)
-    pago = getattr(pedido, "pago", None)
+    # Extraer pedido_id desde commerceOrder (antes del primer '-')
+    if "-" in commerce_order:
+        pedido_id = commerce_order.split("-", 1)[0]
+    else:
+        pedido_id = commerce_order
+
+    # Obtener Pedido
+    pedido = get_object_or_404(Pedido, id=pedido_id)
+
+    # Intentar encontrar el Pago asociado:
+    pago = None
+    # 1) intentar por token (si lo guardaste)
+    token_from_flow = _s(request.POST.get("token")) or _s(data.get("token") or "")
+    if token_from_flow:
+        try:
+            pago = Pago.objects.filter(pedido=pedido, flow_token=token_from_flow).first()
+        except Exception:
+            pago = None
+
+    # 2) intentar por commerce_order si lo guardaste
+    if not pago:
+        try:
+            pago = Pago.objects.filter(pedido=pedido, commerce_order=commerce_order).first()
+        except Exception:
+            pago = None
+
+    # 3) fallback: usar el último Pago creado para ese pedido
+    if not pago:
+        pago = Pago.objects.filter(pedido=pedido).order_by("-id").first()
+
+    # 4) si no existe ninguno, crear uno
     if not pago:
         pago = Pago.objects.create(
             pedido=pedido,
@@ -123,11 +206,23 @@ def flow_confirmacion(request):
             estado=Pago.Estado.PENDIENTE,
         )
 
+    # Actualizar estados según status_flow
     if status_flow == "1":
         pago.estado = Pago.Estado.COMPLETADO
         pedido.estado = Pedido.Estado.PAGADO
     elif status_flow == "3":
         pago.estado = Pago.Estado.FALLIDO
+    else:
+        pago.estado = Pago.Estado.PENDIENTE
+
+    # Guardar respuesta cruda y token en Pago si existen los campos
+    try:
+        if hasattr(pago, "flow_response"):
+            pago.flow_response = str(data)
+        if token_from_flow and hasattr(pago, "flow_token"):
+            pago.flow_token = token_from_flow
+    except Exception:
+        pass
 
     pago.save()
     pedido.save()

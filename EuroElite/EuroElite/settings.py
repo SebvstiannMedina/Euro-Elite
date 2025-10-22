@@ -26,7 +26,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = 'django-insecure-v*cnfx@yx!0icme_h4+w+&ununtjqgrpp*=(f@r$)7ij+0&vyw'
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = False
+DEBUG = True
 
 ALLOWED_HOSTS = ['localhost', '127.0.0.1','jehison.pythonanywhere.com','www.euroelite.cl']
 
@@ -175,7 +175,7 @@ LOGIN_REDIRECT_URL = "home"
 LOGOUT_REDIRECT_URL = "login"
 
 FLOW_API_BASE = "https://sandbox.flow.cl/api"
-FLOW_API_KEY = "4426F16C-1880-404C-A66D-6D9E24L18B4B".strip()
-FLOW_SECRET_KEY = "9bcd2031597da37a5a48d0fa0b4cd31291c7596c".strip()
+FLOW_API_KEY = "".strip()
+FLOW_SECRET_KEY = "".strip()
 FLOW_URL_CONFIRMATION = "https://www.euroelite.cl/pagos/flow/confirmacion/"
 FLOW_URL_RETURN       = "https://www.euroelite.cl/compra_exitosa"
