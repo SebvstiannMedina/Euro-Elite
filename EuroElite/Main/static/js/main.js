@@ -89,50 +89,102 @@ function goToResumen() {
 
 async function addToCart(productName, price, productId, stock) {
   try {
-    await postForm('/carrito/agregar', { producto_id: productId, cantidad: 1 });
-    showCartNotification(productName);
-    await refreshCartBadge();
+    const fd = new FormData();
+    fd.append('producto_id', productId);
+    fd.append('cantidad', 1);
+    
+    const res = await fetch('/carrito/agregar', {
+      method: 'POST',
+      headers: { 'X-CSRFToken': getCSRFToken() },
+      body: fd,
+      credentials: 'same-origin'
+    });
+    
+    const response = await res.json();
+    
+    if (res.ok && response.ok) {
+      showCartNotification(productName);
+      await refreshCartBadge();
 
-    try {
-      const raw = localStorage.getItem('cart');
-      const clientCart = raw ? JSON.parse(raw) : [];
-      const priceNum = parsePriceStringGlobal(price);
-      const existing = clientCart.find(it => (it.product_id && it.product_id.toString() === productId.toString()));
-      if (existing) {
-        existing.quantity = Number(existing.quantity || 0) + 1;
-        existing.price = priceNum;
-      } else {
-        clientCart.push({ name: productName, price: priceNum, quantity: 1, sku: null, product_id: productId });
+      try {
+        const raw = localStorage.getItem('cart');
+        const clientCart = raw ? JSON.parse(raw) : [];
+        const priceNum = parsePriceStringGlobal(price);
+        const existing = clientCart.find(it => (it.product_id && it.product_id.toString() === productId.toString()));
+        if (existing) {
+          existing.quantity = Number(existing.quantity || 0) + 1;
+          existing.price = priceNum;
+        } else {
+          clientCart.push({ name: productName, price: priceNum, quantity: 1, sku: null, product_id: productId });
+        }
+        localStorage.setItem('cart', JSON.stringify(clientCart));
+      } catch (e) {
+        console.warn('Could not update localStorage cart', e);
       }
-      localStorage.setItem('cart', JSON.stringify(clientCart));
-    } catch (e) {
-      console.warn('Could not update localStorage cart', e);
+    } else {
+      // Mostrar mensaje específico del servidor (stock límite, sin stock, etc.)
+      showErrorNotification(response.msg || 'No se pudo agregar el producto al carrito.');
     }
   } catch (e) {
     console.warn('No se pudo agregar al carrito', e);
-    alert('Por favor, inicia sesión para agregar productos al carrito.');
+    showErrorNotification('Por favor, inicia sesión para agregar productos al carrito.');
   }
 }
 
 async function updateCartItem(itemId, cantidad) {
   try {
-    await postForm('/carrito/actualizar', { item_id: itemId, cantidad });
-    await refreshCartBadge();
-    const existingModal = document.getElementById('cart-modal');
-    if (existingModal) await toggleCart(true);
+    const fd = new FormData();
+    fd.append('item_id', itemId);
+    fd.append('cantidad', cantidad);
+    
+    const res = await fetch('/carrito/actualizar', {
+      method: 'POST',
+      headers: { 'X-CSRFToken': getCSRFToken() },
+      body: fd,
+      credentials: 'same-origin'
+    });
+    
+    const response = await res.json();
+    
+    if (res.ok && response.ok) {
+      await refreshCartBadge();
+      const existingModal = document.getElementById('cart-modal');
+      if (existingModal) await toggleCart(true);
+      showSuccessNotification('Cantidad actualizada correctamente');
+    } else {
+      showErrorNotification(response.msg || 'No se pudo actualizar la cantidad');
+    }
   } catch (e) {
     console.warn('No se pudo actualizar el item', e);
+    showErrorNotification('Error al actualizar el producto en el carrito');
   }
 }
 
 async function removeCartItem(itemId) {
   try {
-    await postForm('/carrito/eliminar', { item_id: itemId });
-    await refreshCartBadge();
-    const existingModal = document.getElementById('cart-modal');
-    if (existingModal) await toggleCart(true);
+    const fd = new FormData();
+    fd.append('item_id', itemId);
+    
+    const res = await fetch('/carrito/eliminar', {
+      method: 'POST',
+      headers: { 'X-CSRFToken': getCSRFToken() },
+      body: fd,
+      credentials: 'same-origin'
+    });
+    
+    const response = await res.json();
+    
+    if (res.ok && response.ok) {
+      await refreshCartBadge();
+      const existingModal = document.getElementById('cart-modal');
+      if (existingModal) await toggleCart(true);
+      showSuccessNotification('Producto eliminado del carrito');
+    } else {
+      showErrorNotification(response.msg || 'No se pudo eliminar el producto');
+    }
   } catch (e) {
     console.warn('No se pudo eliminar el item', e);
+    showErrorNotification('Error al eliminar el producto del carrito');
   }
 }
 
@@ -169,6 +221,51 @@ function showCartNotification(productName) {
   setTimeout(() => { notification.remove(); }, 3000);
 }
 
+function showErrorNotification(message) {
+  const notification = document.createElement('div');
+  notification.innerHTML = `
+    <div style="
+      position: fixed; top: 100px; right: 20px;
+      background: #dc3545; color: white;
+      padding: 15px 20px; border-radius: 8px;
+      box-shadow: 0 4px 12px rgba(220, 53, 69, 0.3); z-index: 9999;
+      animation: slideInRight 0.3s ease;">
+      <i class="fas fa-exclamation-circle"></i> ${message}
+    </div>`;
+  document.body.appendChild(notification);
+  setTimeout(() => { notification.remove(); }, 4000);
+}
+
+function showSuccessNotification(message) {
+  const notification = document.createElement('div');
+  notification.innerHTML = `
+    <div style="
+      position: fixed; top: 100px; right: 20px;
+      background: #28a745; color: white;
+      padding: 15px 20px; border-radius: 8px;
+      box-shadow: 0 4px 12px rgba(40, 167, 69, 0.3); z-index: 9999;
+      animation: slideInRight 0.3s ease;">
+      <i class="fas fa-check-circle"></i> ${message}
+    </div>`;
+  document.body.appendChild(notification);
+  setTimeout(() => { notification.remove(); }, 3000);
+}
+
+function showWarningNotification(message) {
+  const notification = document.createElement('div');
+  notification.innerHTML = `
+    <div style="
+      position: fixed; top: 100px; right: 20px;
+      background: #ffc107; color: #000;
+      padding: 15px 20px; border-radius: 8px;
+      box-shadow: 0 4px 12px rgba(255, 193, 7, 0.3); z-index: 9999;
+      animation: slideInRight 0.3s ease;">
+      <i class="fas fa-exclamation-triangle"></i> ${message}
+    </div>`;
+  document.body.appendChild(notification);
+  setTimeout(() => { notification.remove(); }, 3500);
+}
+
 async function toggleCart(forceOpen = false) {
   const existingModal = document.getElementById('cart-modal');
   if (existingModal && !forceOpen) {
@@ -181,13 +278,13 @@ async function toggleCart(forceOpen = false) {
   try {
     data = await fetchCartJSON();
   } catch (e) {
-    alert('No se pudo cargar el carrito');
+    showErrorNotification('No se pudo cargar el carrito. Por favor, inicia sesión.');
     return;
   }
 
   const items = data.items || [];
   if (items.length === 0) {
-    alert('Tu carrito está vacío 🛒');
+    showWarningNotification('Tu carrito está vacío 🛒');
     if (existingModal) existingModal.remove();
     return;
   }
@@ -483,3 +580,33 @@ function showProductDetailFromButton(btn) {
     console.warn('Error showing product detail', e);
   }
 }
+
+// Add CSS animations for notifications
+const style = document.createElement('style');
+style.textContent = `
+  @keyframes slideInRight {
+    from {
+      transform: translateX(400px);
+      opacity: 0;
+    }
+    to {
+      transform: translateX(0);
+      opacity: 1;
+    }
+  }
+  @keyframes fadeInCart {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+  @keyframes slideUpCart {
+    from {
+      transform: translateY(50px);
+      opacity: 0;
+    }
+    to {
+      transform: translateY(0);
+      opacity: 1;
+    }
+  }
+`;
+document.head.appendChild(style);

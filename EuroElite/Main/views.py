@@ -120,6 +120,16 @@ def cart_update(request):
     if qty == 0:
         item.delete()
     else:
+        # Verificar stock disponible
+        stock_disponible = item.producto.stock if item.producto.stock is not None else 0
+        
+        # Si se intenta agregar más del stock disponible, limitar al máximo
+        if qty > stock_disponible:
+            return JsonResponse({
+                "ok": False,
+                "msg": f"Solo hay {stock_disponible} unidades disponibles de este producto."
+            }, status=400)
+        
         item.cantidad = qty
         item.save(update_fields=['cantidad'])
 
@@ -792,7 +802,8 @@ def mis_pedidos(request):
         imagen_url = ''
         titulo = 'Detalle de compra'
         descripcion = ''
-        cantidad_total = p.items.count()
+        cantidad_total = sum(item.cantidad for item in p.items.all())
+        num_items_diferentes = p.items.count()
         
         if primer_item:
             # Imagen del primer producto - primero intentar la imagen directa del producto
@@ -805,12 +816,12 @@ def mis_pedidos(request):
                     imagen_url = primera_imagen.imagen.url
             
             # Título y descripción
-            if cantidad_total == 1:
+            if num_items_diferentes == 1:
                 titulo = primer_item.nombre_producto
                 descripcion = f"SKU: {primer_item.sku_producto}"
             else:
-                titulo = f"{primer_item.nombre_producto} y {cantidad_total - 1} producto(s) más"
-                descripcion = f"Pedido con {cantidad_total} productos"
+                titulo = f"{primer_item.nombre_producto} y {num_items_diferentes - 1} producto(s) más"
+                descripcion = f"Pedido con {num_items_diferentes} productos"
         
         # Calcular fecha de entrega estimada (7 días después de creado si es despacho)
         fecha_entrega = None

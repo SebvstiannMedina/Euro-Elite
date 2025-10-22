@@ -71,7 +71,7 @@
                 <div class="fw-medium">{{ item.nombre_producto }}</div>
                 <small class="text-muted">Cantidad: {{ item.cantidad }} × ${{ item.precio_unitario|floatformat:0 }}</small>
               </div>
-              <span class="badge bg-primary rounded-pill">${{ item.precio_unitario|floatformat:0 }}</span>
+              <span class="badge bg-primary rounded-pill">${{ item.subtotal|floatformat:0 }}</span>
             </div>
             {% endfor %}
           </div>

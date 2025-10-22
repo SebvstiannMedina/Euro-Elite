@@ -45,8 +45,8 @@
                     <div class="orders-wrapper">
                     {% if pedidos %}
                         {% for p in pedidos %}
-                            {% ifchanged p.fecha|date:"j \\de F \\de Y" %}
-                                <div class="date-separator">{{ p.fecha|date:"j \\de F \\de Y" }}</div>
+                            {% ifchanged p.fecha|date:"d/m/Y" %}
+                                <div class="date-separator">{{ p.fecha|date:"d/m/Y" }}</div>
                             {% endifchanged %}
 
                             <div class="order-card shadow-sm">
@@ -66,11 +66,7 @@
                                                     {{ estado }}
                                                 </div>
                                             {% endwith %}
-                                            {% if p.fecha_entrega %}
-                                                <div class="order-title">Llega el {{ p.fecha_entrega|date:"j \\de F" }}</div>
-                                            {% else %}
-                                                <div class="order-title">{{ p.titulo|default:"Detalle de compra" }}</div>
-                                            {% endif %}
+                                            <div class="order-title">{{ p.titulo|default:"Detalle de compra" }}</div>
                                             <div class="order-subtitle">{{ p.descripcion|default:"" }}</div>
                                             <div class="order-subtitle">{{ p.cantidad|default:1 }} unidad{% if p.cantidad > 1 %}es{% endif %}</div>
                                         </div>
