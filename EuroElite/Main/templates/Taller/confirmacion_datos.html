@@ -22,6 +22,8 @@
       <!-- FORMULARIO -->
       <form method="post" id="confirmForm" action="{% url 'checkout_pagar' %}" novalidate>
         {% csrf_token %}
+        <!-- Método de entrega elegido en el paso anterior (envio | retiro) -->
+        <input type="hidden" name="metodo_entrega" id="metodo_entrega" value="envio">
 
         <div class="card shadow-sm">
           <div class="card-body p-4">
@@ -158,14 +160,14 @@
         <div class="card-body">
           <h2 class="h6 text-uppercase mb-3">Resumen del pedido</h2>
           <div class="d-flex justify-content-between">
-            <span>Subtotal</span><strong>{{ subtotal|default:"-" }}</strong>
+            <span>Subtotal</span><strong id="summary-subtotal-text">{{ subtotal|default:"-" }}</strong>
           </div>
           <div class="d-flex justify-content-between">
-            <span>Envío</span><strong>{{ envio|default:"-" }}</strong>
+            <span>Envío</span><strong id="summary-envio-text">{{ envio|default:"-" }}</strong>
           </div>
           <hr>
           <div class="d-flex justify-content-between fs-5">
-            <span>Total</span><strong>{{ total|default:"-" }}</strong>
+            <span>Total</span><strong id="summary-total-text">{{ total|default:"-" }}</strong>
           </div>
           <p class="text-muted small mt-2">El total final se confirmará al crear el pedido.</p>
         </div>
@@ -650,6 +652,41 @@
     }
 
     populateRegionComuna();
+
+    // ==========================================
+    // MÉTODO DE ENTREGA ← desde Resumen (localStorage)
+    // ==========================================
+    try {
+      const metodoInput = document.getElementById('metodo_entrega');
+      const subtotalEl = document.getElementById('summary-subtotal-text');
+      const envioEl = document.getElementById('summary-envio-text');
+      const totalEl = document.getElementById('summary-total-text');
+
+      // Lee la preferencia guardada en el paso anterior
+      const stored = (localStorage.getItem('delivery_method') === 'retiro') ? 'retiro' : 'envio';
+      if (metodoInput) metodoInput.value = stored;
+
+      // Si el usuario eligió "retiro en tienda", reflejar envío = $0 y recalcular total
+      if (stored === 'retiro' && subtotalEl && envioEl && totalEl) {
+        // Parsear valores mostrados por el servidor
+        const parseCLP = (txt) => {
+          if (!txt) return 0;
+          const n = parseInt(String(txt).replace(/[^0-9]/g, ''), 10);
+          return Number.isFinite(n) ? n : 0;
+        };
+        const formatCLP = (n) => n.toLocaleString('es-CL', { style: 'currency', currency: 'CLP' });
+
+        const subtotalVal = parseCLP(subtotalEl.textContent);
+        // En retiro, envío es 0
+        const envioVal = 0;
+        const totalVal = subtotalVal + envioVal;
+
+        envioEl.textContent = formatCLP(envioVal);
+        totalEl.textContent = formatCLP(totalVal);
+      }
+    } catch (e) {
+      console.warn('No se pudo sincronizar el método de entrega desde el resumen:', e);
+    }
 
   })();
 </script>

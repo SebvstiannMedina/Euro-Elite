@@ -23,6 +23,7 @@ from analytics.utils import track
 from .forms import CitaForm, ProductoForm
 from .models import Cita, Producto, BloqueHorario
 from django.views.decorators.csrf import csrf_exempt
+from decimal import Decimal
 
 # Local apps
 from .forms import CitaForm, DireccionForm, PerfilForm, RegistroForm, EmailLoginForm
@@ -679,11 +680,51 @@ def confirmacion_datos(request):
 
         return redirect('pago')
 
-    return render(request, 'taller/confirmacion_datos.html', {
+    # ==== Compute order summary (subtotal, shipping, total) ====
+    try:
+        cart = _get_active_cart(user)
+    except Exception:
+        cart = None
+
+    subtotal_dec = Decimal(0)
+    if cart:
+        try:
+            for it in cart.items.all():
+                # precio_unitario is Decimal, cantidad is int
+                price = it.precio_unitario or Decimal(0)
+                qty = int(getattr(it, 'cantidad', 0) or 0)
+                subtotal_dec += (price * qty)
+        except Exception:
+            pass
+
+    # Shipping cost from config (fallback 4990)
+    shipping_cost_int = 4990
+    try:
+        cfg = ConfigSitio.objects.first()
+        if cfg and getattr(cfg, 'costo_envio_base', None) is not None:
+            shipping_cost_int = int(cfg.costo_envio_base)
+    except Exception:
+        pass
+
+    envio_dec = Decimal(shipping_cost_int)
+    total_dec = (subtotal_dec or Decimal(0)) + envio_dec
+
+    def _format_clp(amount: Decimal) -> str:
+        try:
+            return "$" + f"{int(amount):,}".replace(",", ".")
+        except Exception:
+            return "-"
+
+    context = {
         'rut': rut,
         'addr': addr,
         'user': user,
-    })
+        'subtotal': _format_clp(subtotal_dec),
+        'envio': _format_clp(envio_dec),
+        'total': _format_clp(total_dec),
+    }
+
+    return render(request, 'taller/confirmacion_datos.html', context)
 
 def olvide_contra(request):
     return render(request, 'taller/olvide_contra.html')
