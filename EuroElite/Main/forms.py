@@ -241,7 +241,8 @@ class ProductoForm(forms.ModelForm):
         queryset=Promocion.objects.filter(activa=True),
         required=False,
         label="Promoción",
-        help_text="Selecciona una promoción o deja vacío si no aplica."
+        help_text="Selecciona una promoción o deja vacío si no aplica.",
+        widget=forms.Select(attrs={'class': 'form-control'})
     )
 
     class Meta:
@@ -252,11 +253,24 @@ class ProductoForm(forms.ModelForm):
             'activo', 'categoria', 'imagen'
         ]
         widgets = {
-            'descripcion': forms.Textarea(attrs={'rows': 3}),
+            'descripcion': forms.Textarea(attrs={'rows': 3, 'class': 'form-control'}),
+            'nombre': forms.TextInput(attrs={'class': 'form-control'}),
+            'sku': forms.TextInput(attrs={'class': 'form-control'}),
+            'marca': forms.TextInput(attrs={'class': 'form-control'}),
+            'precio': forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01'}),
+            'costo': forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01'}),
+            'stock': forms.NumberInput(attrs={'class': 'form-control'}),
+            'stock_minimo': forms.NumberInput(attrs={'class': 'form-control'}),
+            'activo': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
+            'categoria': forms.Select(attrs={'class': 'form-control'}),
+            'imagen': forms.FileInput(attrs={'class': 'form-control'}),
         }
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        # Agregar opción vacía al select de promoción
+        self.fields['promocion'].empty_label = "Sin promoción"
+        
         # inicializa con la primera promo asignada si existe
         if self.instance.pk:
             promo = self.instance.promociones.first()

@@ -36,6 +36,7 @@ urlpatterns = [
     path('privacidad', main_views.privacidad, name='privacidad'),
     path('agregar_editar', main_views.agregar_editar, name='agregar_editar'),
     path('agregar_editar/<int:pk>/editar/', main_views.agregar_editar, name='editar_producto'),
+    path('crear_promocion/', main_views.crear_promocion, name='crear_promocion'),
     path('prueba', main_views.prueba, name='prueba'),
     path('compra_exitosa/', main_views.compra_exitosa, name='compra_exitosa'),
     path('compra_exitosa/<int:pedido_id>/', main_views.compra_exitosa, name='compra_exitosa_detalle'),

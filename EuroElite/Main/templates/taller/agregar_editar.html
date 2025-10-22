@@ -259,8 +259,33 @@
 
             <!-- FORMULARIO -->
             <h1 class="mb-4">{% if editando %}Editar{% else %}Agregar{% endif %} Producto</h1>
+            
+            {% if messages %}
+            <div class="messages">
+                {% for message in messages %}
+                <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                    {{ message }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+                {% endfor %}
+            </div>
+            {% endif %}
+            
             <form method="post" enctype="multipart/form-data" class="mb-4">
                 {% csrf_token %}
+                
+                {% if form.errors %}
+                <div class="alert alert-danger">
+                    <strong>Error al guardar el producto:</strong>
+                    <ul>
+                        {% for field, errors in form.errors.items %}
+                            {% for error in errors %}
+                                <li>{{ field }}: {{ error }}</li>
+                            {% endfor %}
+                        {% endfor %}
+                    </ul>
+                </div>
+                {% endif %}
 
                 <div class="row">
                     <div class="col-md-6">{{ form.nombre.label_tag }} {{ form.nombre }}</div>
@@ -286,10 +311,15 @@
 
                 <!-- Campo de promoción -->
                 <div class="row mt-3">
-                    <div class="col-md-12">
+                    <div class="col-md-10">
                         {{ form.promocion.label_tag }}
                         {{ form.promocion }}
                         <small class="text-muted">Selecciona una promoción o deja en blanco si no aplica.</small>
+                    </div>
+                    <div class="col-md-2 d-flex align-items-end">
+                        <button type="button" class="btn btn-success w-100" data-bs-toggle="modal" data-bs-target="#nuevaPromocionModal">
+                            <i class="fas fa-plus"></i> Nueva
+                        </button>
                     </div>
                 </div>
 
@@ -341,6 +371,139 @@
                                 {% endif %}
                                 {% else %}
                                 -
+                                            <!-- Modal para crear nueva promoción -->
+                                            <div class="modal fade" id="nuevaPromocionModal" tabindex="-1" aria-labelledby="nuevaPromocionModalLabel" aria-hidden="true">
+                                                <div class="modal-dialog">
+                                                    <div class="modal-content">
+                                                        <div class="modal-header">
+                                                            <h5 class="modal-title" id="nuevaPromocionModalLabel">Nueva Promoción</h5>
+                                                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                                        </div>
+                                                        <div class="modal-body">
+                                                            <form id="promocionForm">
+                                                                {% csrf_token %}
+                                                                <div class="mb-3">
+                                                                    <label for="promo_nombre" class="form-label">Nombre de la promoción</label>
+                                                                    <input type="text" class="form-control" id="promo_nombre" name="nombre" required placeholder="Ej: Descuento Navidad 2025">
+                                                                </div>
+                                
+                                                                <div class="mb-3">
+                                                                    <label for="promo_tipo" class="form-label">Tipo de descuento</label>
+                                                                    <select class="form-select" id="promo_tipo" name="tipo" required>
+                                                                        <option value="PORCENTAJE">Porcentaje (%)</option>
+                                                                        <option value="MONTO">Monto fijo ($)</option>
+                                                                    </select>
+                                                                </div>
+                                
+                                                                <div class="mb-3">
+                                                                    <label for="promo_valor" class="form-label">Valor</label>
+                                                                    <div class="input-group">
+                                                                        <span class="input-group-text" id="valor-prefix">%</span>
+                                                                        <input type="number" class="form-control" id="promo_valor" name="valor" required min="0" step="0.01" placeholder="20">
+                                                                    </div>
+                                                                    <small class="text-muted" id="valor-help">Ingresa el porcentaje de descuento (ej: 20 para 20%)</small>
+                                                                </div>
+                                
+                                                                <div class="mb-3">
+                                                                    <label for="promo_inicio" class="form-label">Fecha de inicio (opcional)</label>
+                                                                    <input type="datetime-local" class="form-control" id="promo_inicio" name="inicio">
+                                                                    <small class="text-muted">Dejar vacío si la promoción es permanente</small>
+                                                                </div>
+                                
+                                                                <div class="mb-3">
+                                                                    <label for="promo_fin" class="form-label">Fecha de fin (opcional)</label>
+                                                                    <input type="datetime-local" class="form-control" id="promo_fin" name="fin">
+                                                                    <small class="text-muted">Dejar vacío si no tiene fecha de expiración</small>
+                                                                </div>
+                                
+                                                                <div class="mb-3 form-check">
+                                                                    <input type="checkbox" class="form-check-input" id="promo_activa" name="activa" checked>
+                                                                    <label class="form-check-label" for="promo_activa">
+                                                                        Promoción activa
+                                                                    </label>
+                                                                </div>
+                                                            </form>
+                                                            <div id="promo-error" class="alert alert-danger d-none"></div>
+                                                            <div id="promo-success" class="alert alert-success d-none"></div>
+                                                        </div>
+                                                        <div class="modal-footer">
+                                                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                                                            <button type="button" class="btn btn-primary" id="guardarPromocion">Guardar Promoción</button>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            <script>
+                                                // Cambiar el prefijo y texto de ayuda según el tipo de descuento
+                                                document.getElementById('promo_tipo').addEventListener('change', function() {
+                                                    const prefix = document.getElementById('valor-prefix');
+                                                    const help = document.getElementById('valor-help');
+                                                    const valorInput = document.getElementById('promo_valor');
+                    
+                                                    if (this.value === 'PORCENTAJE') {
+                                                        prefix.textContent = '%';
+                                                        help.textContent = 'Ingresa el porcentaje de descuento (ej: 20 para 20%)';
+                                                        valorInput.placeholder = '20';
+                                                        valorInput.max = '100';
+                                                    } else {
+                                                        prefix.textContent = '$';
+                                                        help.textContent = 'Ingresa el monto fijo de descuento en pesos (ej: 5000)';
+                                                        valorInput.placeholder = '5000';
+                                                        valorInput.removeAttribute('max');
+                                                    }
+                                                });
+
+                                                // Guardar promoción via AJAX
+                                                document.getElementById('guardarPromocion').addEventListener('click', function() {
+                                                    const form = document.getElementById('promocionForm');
+                                                    const formData = new FormData(form);
+                                                    const errorDiv = document.getElementById('promo-error');
+                                                    const successDiv = document.getElementById('promo-success');
+                    
+                                                    errorDiv.classList.add('d-none');
+                                                    successDiv.classList.add('d-none');
+                    
+                                                    fetch('{% url "crear_promocion" %}', {
+                                                        method: 'POST',
+                                                        body: formData,
+                                                        headers: {
+                                                            'X-CSRFToken': formData.get('csrfmiddlewaretoken')
+                                                        }
+                                                    })
+                                                    .then(response => response.json())
+                                                    .then(data => {
+                                                        if (data.success) {
+                                                            // Agregar la nueva promoción al select
+                                                            const select = document.getElementById('id_promocion');
+                                                            const option = new Option(data.promocion.nombre, data.promocion.id, true, true);
+                                                            select.add(option);
+                            
+                                                            // Mostrar mensaje de éxito
+                                                            successDiv.textContent = '¡Promoción creada exitosamente!';
+                                                            successDiv.classList.remove('d-none');
+                            
+                                                            // Limpiar formulario
+                                                            form.reset();
+                                                            document.getElementById('promo_activa').checked = true;
+                            
+                                                            // Cerrar modal después de 1 segundo
+                                                            setTimeout(() => {
+                                                                const modal = bootstrap.Modal.getInstance(document.getElementById('nuevaPromocionModal'));
+                                                                modal.hide();
+                                                                successDiv.classList.add('d-none');
+                                                            }, 1000);
+                                                        } else {
+                                                            errorDiv.textContent = data.error || 'Error al crear la promoción';
+                                                            errorDiv.classList.remove('d-none');
+                                                        }
+                                                    })
+                                                    .catch(error => {
+                                                        errorDiv.textContent = 'Error de conexión: ' + error.message;
+                                                        errorDiv.classList.remove('d-none');
+                                                    });
+                                                });
+                                            </script>
                                 {% endif %}
                             </td>
 

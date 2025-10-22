@@ -210,7 +210,10 @@ class Promocion(MarcaTiempo):
     productos = models.ManyToManyField("Producto", related_name="promociones", blank=True)
 
     def __str__(self):
-        return self.nombre
+        if self.tipo == self.Tipo.PORCENTAJE:
+            return f"{self.nombre} (-{self.valor}%)"
+        else:
+            return f"{self.nombre} (-${self.valor:,.0f})"
 
     def vigente(self):
         """Comprueba si la promoción está activa en la fecha actual."""

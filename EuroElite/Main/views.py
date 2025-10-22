@@ -521,6 +521,77 @@ from django.contrib.admin.views.decorators import staff_member_required
 
 @staff_member_required
 @login_required
+@require_POST
+def crear_promocion(request):
+    """Crea una nueva promoción via AJAX"""
+    try:
+        from .models import Promocion
+        from decimal import Decimal
+        
+        nombre = request.POST.get('nombre', '').strip()
+        tipo = request.POST.get('tipo', 'PORCENTAJE')
+        valor = request.POST.get('valor', '0')
+        inicio = request.POST.get('inicio', None)
+        fin = request.POST.get('fin', None)
+        activa = request.POST.get('activa') == 'on'
+        
+        if not nombre:
+            return JsonResponse({'success': False, 'error': 'El nombre es obligatorio'})
+        
+        if tipo not in ['PORCENTAJE', 'MONTO']:
+            return JsonResponse({'success': False, 'error': 'Tipo de promoción inválido'})
+        
+        try:
+            valor_decimal = Decimal(valor)
+            if valor_decimal < 0:
+                return JsonResponse({'success': False, 'error': 'El valor debe ser positivo'})
+            if tipo == 'PORCENTAJE' and valor_decimal > 100:
+                return JsonResponse({'success': False, 'error': 'El porcentaje no puede ser mayor a 100'})
+        except:
+            return JsonResponse({'success': False, 'error': 'Valor inválido'})
+        
+        # Convertir fechas
+        inicio_dt = None
+        fin_dt = None
+        if inicio:
+            try:
+                from django.utils.dateparse import parse_datetime
+                inicio_dt = parse_datetime(inicio)
+            except:
+                pass
+        
+        if fin:
+            try:
+                from django.utils.dateparse import parse_datetime
+                fin_dt = parse_datetime(fin)
+            except:
+                pass
+        
+        # Crear promoción
+        promocion = Promocion.objects.create(
+            nombre=nombre,
+            tipo=tipo,
+            valor=valor_decimal,
+            inicio=inicio_dt,
+            fin=fin_dt,
+            activa=activa
+        )
+        
+        return JsonResponse({
+            'success': True,
+            'promocion': {
+                'id': promocion.id,
+                'nombre': promocion.nombre,
+                'tipo': promocion.tipo,
+                'valor': str(promocion.valor)
+            }
+        })
+        
+    except Exception as e:
+        return JsonResponse({'success': False, 'error': str(e)})
+
+@staff_member_required
+@login_required
 def agregar_editar(request, pk=None): 
     if pk:  # Editar producto
         producto = get_object_or_404(Producto, pk=pk)
