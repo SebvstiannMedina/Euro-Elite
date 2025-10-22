@@ -143,15 +143,23 @@ def flow_confirmacion(request):
     """
     Endpoint seguro para recibir notificaciones de Flow (server-to-server).
     """
+    print(f"[FLOW_CONFIRMACION] ========== WEBHOOK RECIBIDO ==========")
+    print(f"[FLOW_CONFIRMACION] Método: {request.method}")
+    print(f"[FLOW_CONFIRMACION] POST data: {dict(request.POST)}")
+    
     Pedido = apps.get_model('Main', 'Pedido')
     Pago   = apps.get_model('Main', 'Pago')
 
     if request.method != "POST":
+        print(f"[FLOW_CONFIRMACION] ❌ Método no permitido: {request.method}")
         return HttpResponseBadRequest("Método no permitido")
 
     token = _s(request.POST.get("token"))
     if not token:
+        print(f"[FLOW_CONFIRMACION] ❌ Falta token")
         return HttpResponseBadRequest("Falta token")
+    
+    print(f"[FLOW_CONFIRMACION] Token recibido: {token}")
 
     api_base = _s(settings.FLOW_API_BASE)
     api_key  = _s(settings.FLOW_API_KEY)
@@ -161,16 +169,23 @@ def flow_confirmacion(request):
     params["s"] = flow_sign(params, secret)
 
     try:
+        print(f"[FLOW_CONFIRMACION] Consultando estado en Flow...")
         rs = requests.get(f"{api_base}/payment/getStatusExtended", params=params, timeout=20)
         rs.raise_for_status()
         data = rs.json()
+        print(f"[FLOW_CONFIRMACION] Respuesta de Flow: {data}")
     except requests.RequestException as e:
+        print(f"[FLOW_CONFIRMACION] ❌ Error de red: {e}")
         return HttpResponseBadRequest(f"Error de red al consultar estado en Flow: {e}")
     except ValueError:
+        print(f"[FLOW_CONFIRMACION] ❌ Respuesta inválida (no JSON)")
         return HttpResponseBadRequest("Respuesta inválida de Flow (no JSON).")
 
     status_flow = str(data.get("status"))            # 1=pagado, 2=pendiente, 3=fallido
     commerce_order = str(data.get("commerceOrder"))  # ej: "9-1700000000" o "9"
+    
+    print(f"[FLOW_CONFIRMACION] status_flow: {status_flow}")
+    print(f"[FLOW_CONFIRMACION] commerce_order: {commerce_order}")
 
     # Extraer pedido_id desde commerceOrder (antes del primer '-')
     if "-" in commerce_order:
@@ -208,7 +223,18 @@ def flow_confirmacion(request):
         )
 
     # Actualizar estados según status_flow
-    if status_flow == "1":
+    # IMPORTANTE: En Flow Sandbox, los pagos pueden quedar con status = 2 (PENDIENTE)
+    # pero en realidad están aprobados. Verificar paymentData para confirmar.
+    payment_data = data.get('paymentData', {})
+    has_payment_data = payment_data and payment_data.get('authorizationCode')
+    
+    # Considerar exitoso si:
+    # - status = 1 (pagado definitivo), O
+    # - status = 2 (pendiente) PERO tiene paymentData con código de autorización (pago aprobado en sandbox)
+    is_paid = status_flow == "1" or (status_flow == "2" and has_payment_data)
+    
+    if is_paid:
+        print(f"[FLOW_CONFIRMACION] ✅ Pago EXITOSO - status_flow = {status_flow}, tiene authCode = {has_payment_data}")
         pago.estado = Pago.Estado.COMPLETADO
         pedido.estado = Pedido.Estado.PAGADO
         
@@ -217,20 +243,30 @@ def flow_confirmacion(request):
         Producto = apps.get_model('Main', 'Producto')
         ItemPedido = apps.get_model('Main', 'ItemPedido')
         
+        print(f"[FLOW_CONFIRMACION] Descontando stock para pedido {pedido.id}")
+        
         # Recorrer los items del pedido y descontar stock
         for item in pedido.items.select_related('producto'):
             producto = item.producto
             if producto and producto.stock is not None:
+                stock_antes = producto.stock
                 # Descontar la cantidad solo si aún no se ha descontado
                 # (en caso de múltiples notificaciones de Flow)
                 nueva_stock = max(0, producto.stock - item.cantidad)
                 if nueva_stock != producto.stock:
                     producto.stock = nueva_stock
                     producto.save(update_fields=['stock'])
+                    print(f"[FLOW_CONFIRMACION] Producto '{producto.nombre}': stock {stock_antes} → {nueva_stock} (descontado {item.cantidad})")
+                else:
+                    print(f"[FLOW_CONFIRMACION] Producto '{producto.nombre}': stock ya está en {producto.stock} (no se descuenta)")
+            else:
+                print(f"[FLOW_CONFIRMACION] Item {item.id}: producto={producto}, stock={'None' if not producto else producto.stock}")
         
     elif status_flow == "3":
+        print(f"[FLOW_CONFIRMACION] ❌ Pago FALLIDO - status_flow = 3")
         pago.estado = Pago.Estado.FALLIDO
     else:
+        print(f"[FLOW_CONFIRMACION] ⏳ Pago PENDIENTE - status_flow = {status_flow}, sin paymentData")
         pago.estado = Pago.Estado.PENDIENTE
 
     # Guardar respuesta cruda y token en Pago si existen los campos
