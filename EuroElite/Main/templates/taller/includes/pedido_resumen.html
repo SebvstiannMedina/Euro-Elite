@@ -24,24 +24,33 @@
     </div>
   </div>
 
-  {% if estado_slug == 'pendiente-de-envio' or estado_slug == 'enviado' or estado_slug == 'entregado' %}
-      {% with direccion=pedido.direccion_envio %}
-        <div class="direccion-envio mt-3 d-flex flex-column flex-md-row align-items-md-center gap-3">
-          <div class="direccion-label-badge">Direccion de entrega</div>
-          <div class="direccion-text">
-            <i class="fas fa-map-marker-alt direccion-icon"></i>
-            <span>
-              {% if direccion %}
-                {{ direccion.direccion|default:"Sin direccion" }}
-                {% if direccion.comuna %}, {{ direccion.comuna }}{% endif %}
-                {% if direccion.region %}, {{ direccion.region }}{% endif %}
-              {% else %}
-                Av. Central 123, Ciudad Simulada
-              {% endif %}
-            </span>
-          </div>
+  {% if pedido.metodo_entrega == 'RETIRO' %}
+    <div class="direccion-envio mt-3 d-flex flex-column flex-md-row align-items-md-center gap-3">
+      <div class="direccion-label-badge">Método de entrega</div>
+      <div class="direccion-text">
+        <i class="fas fa-store direccion-icon"></i>
+        <span>Retiro en tienda</span>
+      </div>
+    </div>
+  {% elif pedido.metodo_entrega == 'DESPACHO' %}
+    {% with direccion=pedido.direccion_envio %}
+      <div class="direccion-envio mt-3 d-flex flex-column flex-md-row align-items-md-center gap-3">
+        <div class="direccion-label-badge">Dirección de envío</div>
+        <div class="direccion-text">
+          <i class="fas fa-map-marker-alt direccion-icon"></i>
+          <span>
+            {% if direccion %}
+              {{ direccion.linea1|default:"Sin dirección" }}
+              {% if direccion.linea2 %}, {{ direccion.linea2 }}{% endif %}
+              {% if direccion.comuna %}, {{ direccion.comuna }}{% endif %}
+              {% if direccion.region %}, {{ direccion.region }}{% endif %}
+            {% else %}
+              Sin dirección registrada
+            {% endif %}
+          </span>
         </div>
-      {% endwith %}
+      </div>
+    {% endwith %}
   {% endif %}
 
   <div class="table-responsive mt-3">

@@ -105,21 +105,6 @@
                        data-bs-parent="#usuariosPedidos">
                     <div class="card-body">
                       {% for pedido in pedidos_usuario %}
-                        {% if pedido.direccion_envio %}
-                          <div class="direccion-envio mb-3">
-                            <span class="direccion-label-badge">Dirección de envío</span>
-                            <div class="direccion-text">
-                              <i class="fas fa-map-marker-alt direccion-icon" style="margin-top: 0.5rem;"></i>
-                              <span style="margin-top: 0.5rem;">
-                                {{ pedido.direccion_envio.linea1|default:"" }}
-                                {% if pedido.direccion_envio.linea2 %}, {{ pedido.direccion_envio.linea2 }}{% endif %}
-                                {% if pedido.direccion_envio.comuna %}, {{ pedido.direccion_envio.comuna }}{% endif %}
-                                {% if pedido.direccion_envio.region %}, {{ pedido.direccion_envio.region }}{% endif %}
-                                {% if pedido.direccion_envio.telefono %} | Cel: {{ pedido.direccion_envio.telefono }}{% endif %}
-                              </span>
-                            </div>
-                          </div>
-                        {% endif %}
                         {% with estado_slug=pedido.estado|default:""|lower %}
                           {% if estado_slug == 'enviado' %}
                             {% with estado_display='Enviado' estado_class='estado-enviado' estado_data='enviado' %}
@@ -441,6 +426,9 @@
   .direccion-icon {
     color: #4f46e5;
     font-size: 1.25rem;
+  }
+  .fa-store.direccion-icon {
+    color: #10b981;
   }
   .pedido-estado {
     font-size: 0.7rem;

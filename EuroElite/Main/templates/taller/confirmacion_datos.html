@@ -74,10 +74,10 @@
               </div>
             </div>
 
-            <hr class="my-4">
+            <hr class="my-4" id="direccion-separator">
 
-            <h2 class="h5 mb-3">Dirección de envío</h2>
-            <div class="row g-3">
+            <h2 class="h5 mb-3" id="direccion-title">Dirección de envío</h2>
+            <div class="row g-3" id="direccion-fields">
               <div class="col-12 col-md-6">
                 <label for="direccion" class="form-label">Calle / Dirección</label>
                 <input id="direccion" name="direccion" type="text" class="form-control" required minlength="3" maxlength="65"
@@ -159,6 +159,11 @@
       <div class="card shadow-sm">
         <div class="card-body">
           <h2 class="h6 text-uppercase mb-3">Resumen del pedido</h2>
+          <div class="d-flex justify-content-between mb-2" id="metodo-entrega-display">
+            <span>Método de entrega</span>
+            <strong id="metodo-entrega-text">Envío a domicilio</strong>
+          </div>
+          <hr>
           <div class="d-flex justify-content-between">
             <span>Subtotal</span><strong id="summary-subtotal-text">{{ subtotal|default:"-" }}</strong>
           </div>
@@ -182,6 +187,34 @@
   const telefono = document.getElementById('telefono');
   const telefonoHelper = document.getElementById('telefono-helper');
   const rut = document.getElementById('rut');
+
+  // ==========================================
+  // DETECTAR MÉTODO DE ENTREGA
+  // ==========================================
+  const metodoEntrega = localStorage.getItem('delivery_method') || 'envio';
+  const metodoInput = document.getElementById('metodo_entrega');
+  if (metodoInput) metodoInput.value = metodoEntrega;
+
+  // Si es "retiro", ocultar campos de dirección
+  const direccionTitle = document.getElementById('direccion-title');
+  const direccionFields = document.getElementById('direccion-fields');
+  const direccionSeparator = document.getElementById('direccion-separator');
+  
+  if (metodoEntrega === 'retiro') {
+    if (direccionTitle) direccionTitle.style.display = 'none';
+    if (direccionFields) direccionFields.style.display = 'none';
+    if (direccionSeparator) direccionSeparator.style.display = 'none';
+    
+    // Actualizar el resumen para mostrar "Retiro en tienda"
+    const metodoText = document.getElementById('metodo-entrega-text');
+    if (metodoText) metodoText.textContent = 'Retiro en tienda';
+    
+    // Quitar validaciones required de campos de dirección
+    const addressInputs = direccionFields.querySelectorAll('input[required], select[required]');
+    addressInputs.forEach(input => {
+      input.removeAttribute('required');
+    });
+  }
 
     const fields = {
       nombre: {
@@ -238,6 +271,9 @@
 
     function validateAllFields() {
       let isValid = true;
+      
+      // Si es retiro en tienda, no validar campos de dirección
+      const metodoEntrega = localStorage.getItem('delivery_method') || 'envio';
 
       // Validador nombre
       const nombre = fields.nombre.input.value.trim();
@@ -301,52 +337,60 @@
         setError(fields.email, null);
       }
 
-      // Validador dirección (address line 1)
-      const direccion = fields.direccion.input.value.trim();
-      if (!direccion) {
-        setError(fields.direccion, 'La dirección es obligatoria.');
-        isValid = false;
-      } else if (direccion.length < 3) {
-        setError(fields.direccion, 'La dirección debe tener al menos 3 caracteres.');
-        isValid = false;
-      } else if (direccion.length === 65) {
-        setError(fields.direccion, 'Has alcanzado el máximo (65 caracteres)');
-      } else if (direccion.length > 65) {
-        setError(fields.direccion, 'Máximo 65 caracteres');
-        isValid = false;
+      // Validador dirección (address line 1) - solo si es envío
+      if (metodoEntrega === 'envio') {
+        const direccion = fields.direccion.input.value.trim();
+        if (!direccion) {
+          setError(fields.direccion, 'La dirección es obligatoria.');
+          isValid = false;
+        } else if (direccion.length < 3) {
+          setError(fields.direccion, 'La dirección debe tener al menos 3 caracteres.');
+          isValid = false;
+        } else if (direccion.length === 65) {
+          setError(fields.direccion, 'Has alcanzado el máximo (65 caracteres)');
+        } else if (direccion.length > 65) {
+          setError(fields.direccion, 'Máximo 65 caracteres');
+          isValid = false;
+        } else {
+          setError(fields.direccion, null);
+        }
+
+        // Validador dirección2 (address line 2 - optional)
+        const direccion2 = fields.direccion2.input.value.trim();
+        let d2Msg = '';
+        if (direccion2.length > 0 && direccion2.length < 3) {
+          d2Msg = 'Debe tener al menos 3 caracteres';
+          isValid = false;
+        } else if (direccion2.length === 65) {
+          d2Msg = 'Has alcanzado el máximo (65 caracteres)';
+        } else if (direccion2.length > 65) {
+          d2Msg = 'Máximo 65 caracteres';
+          isValid = false;
+        }
+        setError(fields.direccion2, d2Msg);
+
+        // Validador región
+        const region = fields.region.input.value.trim();
+        if (!region) {
+          setError(fields.region, 'Debes seleccionar una región.');
+          isValid = false;
+        } else {
+          setError(fields.region, null);
+        }
+
+        // Validador comuna
+        const comuna = fields.comuna.input.value.trim();
+        if (!comuna) {
+          setError(fields.comuna, 'Debes seleccionar una comuna.');
+          isValid = false;
+        } else {
+          setError(fields.comuna, null);
+        }
       } else {
+        // Si es retiro, limpiar errores de dirección
         setError(fields.direccion, null);
-      }
-
-      // Validador dirección2 (address line 2 - optional)
-      const direccion2 = fields.direccion2.input.value.trim();
-      let d2Msg = '';
-      if (direccion2.length > 0 && direccion2.length < 3) {
-        d2Msg = 'Debe tener al menos 3 caracteres';
-        isValid = false;
-      } else if (direccion2.length === 65) {
-        d2Msg = 'Has alcanzado el máximo (65 caracteres)';
-      } else if (direccion2.length > 65) {
-        d2Msg = 'Máximo 65 caracteres';
-        isValid = false;
-      }
-      setError(fields.direccion2, d2Msg);
-
-      // Validador región
-      const region = fields.region.input.value.trim();
-      if (!region) {
-        setError(fields.region, 'Debes seleccionar una región.');
-        isValid = false;
-      } else {
+        setError(fields.direccion2, null);
         setError(fields.region, null);
-      }
-
-      // Validador comuna
-      const comuna = fields.comuna.input.value.trim();
-      if (!comuna) {
-        setError(fields.comuna, 'Debes seleccionar una comuna.');
-        isValid = false;
-      } else {
         setError(fields.comuna, null);
       }
 
