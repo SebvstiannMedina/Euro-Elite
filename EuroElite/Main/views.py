@@ -566,6 +566,11 @@ def compra_exitosa(request, pedido_id=None):
             pedido = Pedido.objects.select_related('usuario').prefetch_related('items__producto').get(id=pedido_id)
             pago = getattr(pedido, 'pago', None)
             print(f"[COMPRA_EXITOSA] ✅ Pedido {pedido.id} encontrado para usuario {pedido.usuario.email}")
+            print(f"[COMPRA_EXITOSA] Estado del pedido: {pedido.estado}")
+            
+            if pedido.estado == Pedido.Estado.CANCELADO:
+                print(f"[COMPRA_EXITOSA] 🚫 Pedido CANCELADO - redirigiendo a compra_rechazada")
+                return redirect('compra_rechazada', pedido_id=pedido.id)
             
             # Guardar en sesión para futuras visitas
             request.session['last_order_id'] = pedido.id
