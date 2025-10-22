@@ -313,6 +313,11 @@ class Pago(MarcaTiempo):
     metodo = models.CharField(max_length=30, choices=Pedido.MetodoPago.choices)
     monto = models.DecimalField(max_digits=12, decimal_places=2)
     estado = models.CharField(max_length=12, choices=Estado.choices, default=Estado.PENDIENTE)
+    
+    # Campos para integración con Flow
+    flow_token = models.CharField(max_length=200, blank=True, null=True, db_index=True)
+    commerce_order = models.CharField(max_length=100, blank=True, null=True, db_index=True)
+    flow_response = models.TextField(blank=True, null=True)  # Respuesta cruda de Flow para auditoría
 
 
 class Boleta(MarcaTiempo):

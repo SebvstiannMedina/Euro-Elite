@@ -177,18 +177,27 @@ def checkout_crear_pedido_y_pagar(request):
 
     addr = Direccion.objects.filter(usuario=request.user).order_by('-predeterminada', '-id').first()
 
+    # Leer método de entrega del formulario (envio | retiro)
+    metodo_entrega_form = request.POST.get('metodo_entrega', 'envio').strip().lower()
+    
+    # Determinar método de entrega para el pedido
+    if metodo_entrega_form == 'retiro':
+        metodo_entrega = Pedido.MetodoEntrega.RETIRO
+    else:
+        metodo_entrega = Pedido.MetodoEntrega.DESPACHO
+
     # Crea Pedido
     pedido = Pedido.objects.create(
         usuario=request.user,
         estado=Pedido.Estado.PENDIENTE,
-        metodo_entrega=Pedido.MetodoEntrega.DESPACHO,
+        metodo_entrega=metodo_entrega,
         metodo_pago=Pedido.MetodoPago.PASARELA,
         direccion_envio=addr,
         direccion_facturacion=addr,
         subtotal=0, descuento=0, envio=0, total=0,
     )
 
-    subtotal = 0
+    subtotal = Decimal(0)
     for it in cart.items.select_related('producto'):
         ItemPedido.objects.create(
             pedido=pedido,
@@ -200,14 +209,25 @@ def checkout_crear_pedido_y_pagar(request):
         )
         subtotal += it.precio_unitario * it.cantidad
 
-        if it.producto.stock is not None:
-            it.producto.stock = max(0, it.producto.stock - it.cantidad)
-            it.producto.save(update_fields=['stock'])
+        # ⚠️ NO descontamos stock aquí - se descuenta solo cuando Flow confirma el pago
+
+    # Calcular costo de envío según método elegido
+    if metodo_entrega == Pedido.MetodoEntrega.RETIRO:
+        envio_cost = Decimal(0)
+    else:
+        # Obtener costo de envío configurado (fallback 4990)
+        envio_cost = Decimal(4990)
+        try:
+            cfg = ConfigSitio.objects.first()
+            if cfg and getattr(cfg, 'costo_envio_base', None) is not None:
+                envio_cost = Decimal(cfg.costo_envio_base)
+        except Exception:
+            pass
 
     # Totales
     pedido.subtotal = subtotal
-    pedido.envio = 0
-    pedido.descuento = 0
+    pedido.envio = envio_cost
+    pedido.descuento = Decimal(0)
     pedido.total = subtotal + pedido.envio - pedido.descuento
     pedido.save()
 
@@ -509,8 +529,42 @@ def prueba(request):
     return render(request, 'taller/prueba.html')
 
 @csrf_exempt
-def compra_exitosa(request):
-    return render(request, 'taller/compra_exitosa.html')
+@login_required
+def compra_exitosa(request, pedido_id=None):
+    """
+    Muestra la página de compra exitosa con los detalles del pedido.
+    """
+    pedido = None
+    pago = None
+    if pedido_id:
+        try:
+            pedido = Pedido.objects.select_related('usuario').prefetch_related('items__producto').get(id=pedido_id, usuario=request.user)
+            pago = getattr(pedido, 'pago', None)
+        except Pedido.DoesNotExist:
+            messages.warning(request, "No se encontró el pedido.")
+            return redirect('home')
+
+    # Comprobante descargable si existe
+    comprobante_url = pago.comprobante_url if pago and hasattr(pago, 'comprobante_url') else None
+
+    # Número de pedido flexible (mockup existente)
+    numero_pedido = getattr(pedido, 'id', None)
+
+    # Total flexible
+    total = getattr(pedido, 'total', None)
+
+    # Método de pago
+    metodo_pago = getattr(pago, 'metodo', None)
+
+    return render(request, 'taller/compra_exitosa.html', {
+        'user': request.user,
+        'pedido': pedido,
+        'numero_pedido': numero_pedido,
+        'total': total,
+        'metodo_pago': metodo_pago,
+        'comprobante_url': comprobante_url,
+    })
+
 
 def ofertas(request):
     return render(request, 'taller/ofertas.html')
@@ -620,7 +674,6 @@ def confirmacion_datos(request):
     addr = Direccion.objects.filter(usuario=user).order_by('-predeterminada', '-id').first()
 
     if request.method == 'POST':
-        # Extract and validate form data
         rut = request.POST.get('rut', '').strip()
         nombre = request.POST.get('nombre', '').strip()
         apellido = request.POST.get('apellido', '').strip()
@@ -632,20 +685,17 @@ def confirmacion_datos(request):
         comuna = request.POST.get('comuna', '').strip()
         notas = request.POST.get('notas', '').strip()
 
-        # Update user fields
         if nombre:
-            user.first_name = nombre[:25]  # Limit to 25 chars
+            user.first_name = nombre[:25] 
         if apellido:
-            user.last_name = apellido[:25]  # Limit to 25 chars
+            user.last_name = apellido[:25]
         if email:
-            # Sanitize email (remove spaces and dangerous chars)
             email_clean = email.replace(' ', '').lower()
             for char in ['<', '>', '"', "'", ';', '\r', '\n', '\t']:
                 email_clean = email_clean.replace(char, '')
             if len(email_clean) <= 120:
                 user.email = email_clean
         if telefono:
-            # Extract only digits
             telefono_digits = ''.join(filter(str.isdigit, telefono))
             if len(telefono_digits) == 8:
                 user.telefono = telefono_digits
@@ -654,14 +704,13 @@ def confirmacion_datos(request):
         
         user.save(update_fields=['first_name', 'last_name', 'email', 'telefono', 'rut'])
 
-        # Update or create address
         if not addr:
             addr = Direccion(usuario=user, tipo=Direccion.Tipo.ENVIO)
         
         if direccion_txt:
-            addr.linea1 = direccion_txt[:65]  # Limit to 65 chars
+            addr.linea1 = direccion_txt[:65] 
         if direccion2_txt:
-            addr.linea2 = direccion2_txt[:65]  # Limit to 65 chars (optional)
+            addr.linea2 = direccion2_txt[:65]
         if telefono:
             telefono_digits = ''.join(filter(str.isdigit, telefono))
             if len(telefono_digits) == 8:
@@ -680,7 +729,6 @@ def confirmacion_datos(request):
 
         return redirect('pago')
 
-    # ==== Compute order summary (subtotal, shipping, total) ====
     try:
         cart = _get_active_cart(user)
     except Exception:
@@ -690,14 +738,12 @@ def confirmacion_datos(request):
     if cart:
         try:
             for it in cart.items.all():
-                # precio_unitario is Decimal, cantidad is int
                 price = it.precio_unitario or Decimal(0)
                 qty = int(getattr(it, 'cantidad', 0) or 0)
                 subtotal_dec += (price * qty)
         except Exception:
             pass
 
-    # Shipping cost from config (fallback 4990)
     shipping_cost_int = 4990
     try:
         cfg = ConfigSitio.objects.first()

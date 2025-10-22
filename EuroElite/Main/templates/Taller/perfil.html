@@ -137,7 +137,6 @@
 </div>
 
 <script>
-// Single, minimal validator for the profile form. External js/perfil.js only populates comunas.
 document.addEventListener('DOMContentLoaded', () => {
   const form = document.getElementById('perfilForm');
   const submitBtn = document.getElementById('perfilSubmit');
@@ -379,7 +378,6 @@ document.addEventListener('DOMContentLoaded', () => {
     return ok;
   }
 
-  // Wire listeners
   ['first_name','last_name','email','telefono','linea1','linea2'].forEach(k=>{
     const i = fields[k].input; if(!i) return;
     i.addEventListener('input', update);
@@ -391,7 +389,6 @@ document.addEventListener('DOMContentLoaded', () => {
     i.addEventListener('blur', update);
   });
 
-  // RUT listeners replicated from confirmacion_datos
   if (fields.rut.input) {
     const rut = fields.rut.input;
     rut.addEventListener('input', function(){
@@ -421,17 +418,14 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  // Initial validation (delayed to allow JS to populate comuna)
   setTimeout(update, 100);
 
-  // Expose for onsubmit handler
   window.validateForm = function(e){
     const ok = update();
     if (!ok && e){ e.preventDefault(); e.stopPropagation(); }
     return ok;
   }
   
-  // Make update function available globally for region.js
   window.updateSubmitButton = update;
 });
 </script>

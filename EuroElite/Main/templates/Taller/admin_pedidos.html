@@ -113,33 +113,33 @@
                         {% with estado_slug=pedido.estado|default:""|lower %}
                           {% if estado_slug == 'enviado' %}
                             {% with estado_display='Enviado' estado_class='estado-enviado' estado_data='enviado' %}
-                              {% include 'Taller/includes/pedido_resumen.html' %}
+                              {% include 'taller/includes/pedido_resumen.html' %}
                             {% endwith %}
                           {% elif estado_slug == 'entregado' %}
                             {% with estado_display='Entregado' estado_class='estado-entregado' estado_data='entregado' %}
-                              {% include 'Taller/includes/pedido_resumen.html' %}
+                              {% include 'taller/includes/pedido_resumen.html' %}
                             {% endwith %}
                           {% elif estado_slug == 'preparacion' %}
                             {% if pedido.metodo_entrega == 'RETIRO' %}
                               {% with estado_display='Esperando retiro' estado_class='estado-esperando-retiro' estado_data='esperando-retiro' %}
-                                {% include 'Taller/includes/pedido_resumen.html' %}
+                                {% include 'taller/includes/pedido_resumen.html' %}
                               {% endwith %}
                             {% else %}
                               {% with estado_display='Pendiente de envio' estado_class='estado-pendiente-de-envio' estado_data='pendiente de envio' %}
-                                {% include 'Taller/includes/pedido_resumen.html' %}
+                                {% include 'taller/includes/pedido_resumen.html' %}
                               {% endwith %}
                             {% endif %}
                           {% elif estado_slug == 'pendiente' %}
                             {% with estado_display='Pendiente de envio' estado_class='estado-pendiente-de-envio' estado_data='pendiente de envio' %}
-                              {% include 'Taller/includes/pedido_resumen.html' %}
+                              {% include 'taller/includes/pedido_resumen.html' %}
                             {% endwith %}
                           {% elif estado_slug == 'cancelado' %}
                             {% with estado_display='Retirado' estado_class='estado-retirado' estado_data='retirado' %}
-                              {% include 'Taller/includes/pedido_resumen.html' %}
+                              {% include 'taller/includes/pedido_resumen.html' %}
                             {% endwith %}
                           {% else %}
                             {% with estado_display='Pendiente de envio' estado_class='estado-pendiente-de-envio' estado_data=estado_slug %}
-                              {% include 'Taller/includes/pedido_resumen.html' %}
+                              {% include 'taller/includes/pedido_resumen.html' %}
                             {% endwith %}
                           {% endif %}
                         {% endwith %}

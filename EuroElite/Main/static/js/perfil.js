@@ -1052,8 +1052,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 });
-// Deprecated: logic moved to js/perfil.region.js and inline validator in template.
-// Keeping this file as a no-op to avoid duplicate bindings and syntax errors.
+
 (function(){
-  // no-op
+
 })();

@@ -4,7 +4,7 @@ from django.apps import apps
 from django.conf import settings
 from django.http import JsonResponse, HttpResponseBadRequest, HttpResponseRedirect
 from django.views.decorators.csrf import csrf_exempt
-from django.shortcuts import get_object_or_404
+from django.shortcuts import get_object_or_404, redirect
 import time
 import uuid
 
@@ -92,7 +92,6 @@ def flow_crear_orden(request):
 
     # Llamada a Flow (mejor manejo de errores y logging para depuración)
     try:
-        # Logs de depuración (puedes eliminarlos en producción)
         print("FLOW -> POST:", f"{api_base}/payment/create")
         print("FLOW -> BODY:", body)
         print("FLOW -> s:", body.get("s"))
@@ -123,7 +122,7 @@ def flow_crear_orden(request):
     if not url or not token:
         return HttpResponseBadRequest(f"Respuesta inesperada de Flow: {data}")
 
-    # Guardar token en Pago para poder relacionar confirmaciones (si el campo existe)
+    # Guardar token en Pago para poder relacionar confirmaciones
     try:
         if hasattr(pago, "flow_token"):
             pago.flow_token = token
@@ -178,7 +177,6 @@ def flow_confirmacion(request):
 
     # Intentar encontrar el Pago asociado:
     pago = None
-    # 1) intentar por token (si lo guardaste)
     token_from_flow = _s(request.POST.get("token")) or _s(data.get("token") or "")
     if token_from_flow:
         try:
@@ -186,18 +184,15 @@ def flow_confirmacion(request):
         except Exception:
             pago = None
 
-    # 2) intentar por commerce_order si lo guardaste
     if not pago:
         try:
             pago = Pago.objects.filter(pedido=pedido, commerce_order=commerce_order).first()
         except Exception:
             pago = None
 
-    # 3) fallback: usar el último Pago creado para ese pedido
     if not pago:
         pago = Pago.objects.filter(pedido=pedido).order_by("-id").first()
 
-    # 4) si no existe ninguno, crear uno
     if not pago:
         pago = Pago.objects.create(
             pedido=pedido,
@@ -210,6 +205,23 @@ def flow_confirmacion(request):
     if status_flow == "1":
         pago.estado = Pago.Estado.COMPLETADO
         pedido.estado = Pedido.Estado.PAGADO
+        
+        # ✅ DESCONTAR STOCK: solo cuando el pago es exitoso
+        # Obtener el modelo Producto
+        Producto = apps.get_model('Main', 'Producto')
+        ItemPedido = apps.get_model('Main', 'ItemPedido')
+        
+        # Recorrer los items del pedido y descontar stock
+        for item in pedido.items.select_related('producto'):
+            producto = item.producto
+            if producto and producto.stock is not None:
+                # Descontar la cantidad solo si aún no se ha descontado
+                # (en caso de múltiples notificaciones de Flow)
+                nueva_stock = max(0, producto.stock - item.cantidad)
+                if nueva_stock != producto.stock:
+                    producto.stock = nueva_stock
+                    producto.save(update_fields=['stock'])
+        
     elif status_flow == "3":
         pago.estado = Pago.Estado.FALLIDO
     else:
@@ -232,5 +244,25 @@ def flow_confirmacion(request):
 def flow_retorno(request):
     """
     Endpoint donde el usuario vuelve desde Flow.
+    Redirige a la página de compra exitosa.
     """
-    return JsonResponse({"mensaje": "Volviste desde Flow. Estamos procesando tu pago."})
+    # Flow envía el token como parámetro GET
+    token = request.GET.get('token', '').strip()
+    
+    if not token:
+        # Si no hay token, redirigir al home
+        return redirect('home')
+    
+    # Intentar obtener el pedido asociado al token
+    Pago = apps.get_model('Main', 'Pago')
+    try:
+        # Buscar el pago por token
+        pago = Pago.objects.filter(flow_token=token).select_related('pedido').first()
+        if pago and pago.pedido:
+            # Redirigir a la página de éxito con el ID del pedido
+            return redirect('compra_exitosa_detalle', pedido_id=pago.pedido.id)
+    except Exception:
+        pass
+    
+    # Fallback: redirigir a compra exitosa sin ID específico
+    return redirect('compra_exitosa')

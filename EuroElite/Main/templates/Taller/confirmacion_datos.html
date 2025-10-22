@@ -183,9 +183,6 @@
   const telefonoHelper = document.getElementById('telefono-helper');
   const rut = document.getElementById('rut');
 
-    // ==========================================
-    // FIELD DEFINITIONS & HELPERS
-    // ==========================================
     const fields = {
       nombre: {
         input: document.getElementById('nombre'),
@@ -221,7 +218,6 @@
       }
     };
 
-    // Helper: Show/hide error messages
     function setError(field, message) {
       if (field && field.feedback) {
         if (message) {
@@ -236,18 +232,14 @@
       }
     }
 
-    // Email sanitization function
     function sanitizeEmailValue(value) {
       return value.replace(/[\s<>"';]/g, '').toLowerCase().slice(0, 120);
     }
 
-    // ==========================================
-    // MAIN VALIDATION FUNCTION
-    // ==========================================
     function validateAllFields() {
       let isValid = true;
 
-      // Validate nombre (first name)
+      // Validador nombre
       const nombre = fields.nombre.input.value.trim();
       if (!nombre) {
         setError(fields.nombre, 'El nombre es obligatorio.');
@@ -267,7 +259,7 @@
         setError(fields.nombre, null);
       }
 
-      // Validate apellido (last name)
+      // Validador apellido
       const apellido = fields.apellido.input.value.trim();
       if (!apellido) {
         setError(fields.apellido, 'El apellido es obligatorio.');
@@ -287,7 +279,7 @@
         setError(fields.apellido, null);
       }
 
-      // Validate email
+      // Validador email
       const email = sanitizeEmailValue(fields.email.input.value);
       fields.email.input.value = email;
       const emailRegex = /^[a-z0-9._%-]+@[a-z0-9.-]+\.[a-z]{2,}$/;
@@ -309,7 +301,7 @@
         setError(fields.email, null);
       }
 
-      // Validate direccion (address line 1)
+      // Validador dirección (address line 1)
       const direccion = fields.direccion.input.value.trim();
       if (!direccion) {
         setError(fields.direccion, 'La dirección es obligatoria.');
@@ -326,7 +318,7 @@
         setError(fields.direccion, null);
       }
 
-      // Validate direccion2 (address line 2 - optional)
+      // Validador dirección2 (address line 2 - optional)
       const direccion2 = fields.direccion2.input.value.trim();
       let d2Msg = '';
       if (direccion2.length > 0 && direccion2.length < 3) {
@@ -340,7 +332,7 @@
       }
       setError(fields.direccion2, d2Msg);
 
-      // Validate region
+      // Validador región
       const region = fields.region.input.value.trim();
       if (!region) {
         setError(fields.region, 'Debes seleccionar una región.');
@@ -349,7 +341,7 @@
         setError(fields.region, null);
       }
 
-      // Validate comuna
+      // Validador comuna
       const comuna = fields.comuna.input.value.trim();
       if (!comuna) {
         setError(fields.comuna, 'Debes seleccionar una comuna.');
@@ -358,7 +350,7 @@
         setError(fields.comuna, null);
       }
 
-      // Validate telefono (phone) - using existing validation function
+      // Validador teléfono
       const telefonoValid = validatePhone(telefono);
       if (!telefonoValid) {
         isValid = false;
@@ -367,9 +359,6 @@
       return isValid;
     }
 
-    // ==========================================
-    // EVENT LISTENERS FOR REAL-TIME VALIDATION
-    // ==========================================
     ['input', 'blur'].forEach(eventType => {
       fields.nombre.input.addEventListener(eventType, validateAllFields);
       fields.apellido.input.addEventListener(eventType, validateAllFields);
@@ -378,15 +367,11 @@
       fields.direccion2.input.addEventListener(eventType, validateAllFields);
     });
 
-    // Region and comuna use 'change' event for selects
     ['change', 'blur'].forEach(eventType => {
       fields.region.input.addEventListener(eventType, validateAllFields);
       fields.comuna.input.addEventListener(eventType, validateAllFields);
     });
 
-    // ==========================================
-    // PHONE VALIDATION (EXISTING)
-    // ==========================================
 
     function sanitizePhoneValue(value) {
       const digits = (value || '').replace(/\D/g, '');
@@ -548,10 +533,8 @@
     form.addEventListener('submit', function (e) {
       let valid = true;
       
-      // Run all field validations
       if (!validateAllFields()) valid = false;
       
-      // Validate RUT (keep existing validation)
       if (rut && !validateRut(rut)) valid = false;
       
       if (!form.checkValidity() || !valid) {
@@ -562,7 +545,7 @@
     }, false);
 
     // ==========================================
-    // REGION → COMUNA POPULATION
+    // REGION → COMUNA
     // ==========================================
     const REGION_COMMUNES = [
       { name: "Arica y Parinacota", comunas: ["Arica","Camarones","Putre","General Lagos"] },
@@ -594,7 +577,6 @@
       
       const map = new Map(REGION_COMMUNES.map(r=>[normalizeText(r.name), r.comunas]));
       
-      // Capture the server-rendered comuna value
       const initialComunaValue = comunaSelect.value;
 
       function fillComunas(regionValue, preserveSelection = false){
@@ -603,7 +585,6 @@
         
         comunaSelect.innerHTML = '';
         
-        // Add placeholder
         const ph = document.createElement('option');
         ph.value = '';
         ph.textContent = comunas.length ? 'Selecciona una comuna' : 'Selecciona una región primero';
@@ -611,7 +592,6 @@
         ph.hidden = true;
         comunaSelect.appendChild(ph);
         
-        // Add comuna options
         let hasSelection = false;
         comunas.forEach(c=>{
           const opt = document.createElement('option');
@@ -624,7 +604,6 @@
           comunaSelect.appendChild(opt);
         });
         
-        // Try to restore initial value if no selection was made
         if (!hasSelection && preserveSelection && initialComunaValue) {
           const opts = comunaSelect.querySelectorAll('option');
           opts.forEach(opt => {
@@ -637,15 +616,12 @@
         
         comunaSelect.disabled = comunas.length === 0;
         
-        // Trigger validation update
         comunaSelect.dispatchEvent(new Event('change', { bubbles: true }));
         validateAllFields();
       }
 
-      // Initial population - preserve server-rendered value
       fillComunas(regionSelect.value, true);
       
-      // When region changes, clear comuna
       regionSelect.addEventListener('change', e=> {
         fillComunas(e.target.value, false);
       });
@@ -654,7 +630,7 @@
     populateRegionComuna();
 
     // ==========================================
-    // MÉTODO DE ENTREGA ← desde Resumen (localStorage)
+    // MÉTODO DE ENTREGA ← desde Resumen
     // ==========================================
     try {
       const metodoInput = document.getElementById('metodo_entrega');

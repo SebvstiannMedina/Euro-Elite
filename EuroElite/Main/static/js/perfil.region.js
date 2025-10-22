@@ -30,18 +30,14 @@
     
     const map = new Map(REGION_COMMUNES.map(r=>[normalizeText(r.name), r.comunas]));
     
-    // IMPORTANT: Capture the server-rendered value BEFORE any DOM manipulation
-    // Django has already set the correct selected option
     const initialComunaValue = comuna.value;
 
     function fill(regionValue, preserveSelection = false){
-      // Determine which value to restore
       const comunaToSelect = preserveSelection ? comuna.value : '';
       
       const comunas = map.get(normalizeText(regionValue)) || [];
       comuna.innerHTML = '';
       
-      // Add placeholder option
       const ph = document.createElement('option');
       ph.value = '';
       ph.textContent = comunas.length ? 'Selecciona una comuna' : 'Selecciona una región primero';
@@ -49,13 +45,11 @@
       ph.hidden = true;
       comuna.appendChild(ph);
       
-      // Add all comuna options
       let hasSelection = false;
       comunas.forEach(c=>{
         const opt = document.createElement('option');
         opt.value = c; 
         opt.textContent = c;
-        // Restore selection if it matches
         if (comunaToSelect && c === comunaToSelect) {
           opt.selected = true;
           hasSelection = true;
@@ -63,10 +57,7 @@
         comuna.appendChild(opt);
       });
       
-      // If no selection was restored but we had an initial value, try to restore it
-      // This handles the initial page load case
       if (!hasSelection && preserveSelection && initialComunaValue) {
-        // Try again with the initial value
         const opts = comuna.querySelectorAll('option');
         opts.forEach(opt => {
           if (opt.value === initialComunaValue) {
@@ -78,7 +69,6 @@
       
       comuna.disabled = comunas.length === 0;
       
-      // Trigger change event so validation updates
       comuna.dispatchEvent(new Event('change', { bubbles: true }));
       
       if(typeof window.updateSubmitButton === 'function'){
@@ -86,10 +76,8 @@
       }
     }
 
-    // Initial fill - preserve the server-rendered value
     fill(region.value, true);
     
-    // When region changes, clear comuna selection
     region.addEventListener('change', e=> {
       fill(e.target.value, false);
     });

@@ -29,7 +29,7 @@
         <div class="bg-light rounded-3 p-3 text-start mx-auto" style="max-width: 520px;">
           <div class="d-flex py-1">
             <span class="text-muted">Fecha&nbsp;&nbsp;</span>
-            <span>{% now "d/m/Y H:i" %}</span>
+            <span>{{ pedido.fecha|date:"d/m/Y H:i" }}</span>
           </div>
           {% if numero_pedido or pedido or orden or order %}
           <div class="d-flex justify-content-between py-1">
@@ -55,6 +55,19 @@
               {% elif order and order.total %}{{ order.total }}
               {% endif %}
             </span>
+            {% if pedido %}
+            <div class="mt-3">
+              <h5>Productos:</h5>
+              <ul class="list-group">
+                {% for item in pedido.items.all %}
+                  <li class="list-group-item d-flex justify-content-between">
+                    {{ item.producto.nombre }} x{{ item.cantidad }}
+                    <span>{{ item.subtotal }}</span>
+                  </li>
+                {% endfor %}
+              </ul>
+            </div>
+          {% endif %}
           </div>
           {% endif %}
           {% if metodo_pago or medio_pago %}

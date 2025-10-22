@@ -42,24 +42,19 @@ class PerfilForm(forms.ModelForm):
         if not email:
             raise forms.ValidationError('El correo electrónico es obligatorio.')
         
-        # Remove all whitespace
         email = ''.join(email.split())
         
-        # Remove dangerous characters for XSS/injection prevention
         dangerous_chars = ['<', '>', '"', "'", ';', '\\', '\r', '\n', '\t']
         for char in dangerous_chars:
             email = email.replace(char, '')
         
-        # Convert to lowercase
         email = email.lower()
         
-        # Length validation
         if len(email) < 5:
             raise forms.ValidationError('El correo electrónico debe tener al menos 5 caracteres.')
         if len(email) > 120:
             raise forms.ValidationError('El correo electrónico no puede tener más de 120 caracteres.')
         
-        # Basic email format validation (Django's EmailField will also validate)
         import re
         if not re.match(r'^[a-z0-9._+%-]+@[a-z0-9.-]+\.[a-z]{2,}$', email):
             raise forms.ValidationError('Formato de correo electrónico inválido.')
@@ -282,7 +277,6 @@ class ProductoForm(forms.ModelForm):
 class DireccionForm(forms.ModelForm):
     """Formulario para editar o agregar dirección del usuario (sin código postal)."""
     
-    # Override comuna to accept any text value (populated by JS)
     comuna = forms.CharField(
         max_length=100,
         required=True,
@@ -293,7 +287,6 @@ class DireccionForm(forms.ModelForm):
         model = Direccion
         fields = ['linea1', 'linea2', 'comuna', 'region']
 
-    # --- Helpers para normalizar y mapear regiones antiguas a valores canónicos ---
     @staticmethod
     def _normalize_text(value: str) -> str:
         s = (value or '').strip()
@@ -303,7 +296,6 @@ class DireccionForm(forms.ModelForm):
 
     @classmethod
     def _region_aliases(cls):
-        # Mapeos conocidos desde nombres antiguos a los canónicos que existen en el modelo
         return {
             "Aysén del Gral. Carlos Ibáñez del Campo": "Aysén",
             "Aysen del Gral. Carlos Ibanez del Campo": "Aysén",
@@ -318,8 +310,6 @@ class DireccionForm(forms.ModelForm):
         self.fields['region'].widget.attrs.setdefault('class', 'form-select')
         self.fields['comuna'].widget.attrs.setdefault('class', 'form-select')
 
-        # Si existe una región guardada que no coincide exactamente con las choices actuales,
-        # ajustamos el initial a un valor canónico o agregamos temporalmente la opción guardada
         saved_region = None
         if self.instance and getattr(self.instance, 'region', None):
             saved_region = self.instance.region
@@ -332,10 +322,8 @@ class DireccionForm(forms.ModelForm):
             canonical = aliases.get(saved_region, saved_region)
 
             if canonical in allowed_values:
-                # Preferimos mostrar el valor canónico vigente
                 self.initial['region'] = canonical
             elif saved_region not in allowed_values:
-                # Agregamos la región antigua al select para que se vea seleccionada
                 self.fields['region'].choices = [(saved_region, saved_region)] + list(self.fields['region'].choices)
                 self.initial['region'] = saved_region
 
@@ -395,19 +383,16 @@ class DireccionForm(forms.ModelForm):
         widgets = {
             'linea1': forms.TextInput(attrs={
                 'class': 'form-control',
-                # Only allow letters (incl. tildes/ñ), digits, spaces and # symbol
                 'oninput': "this.value=this.value.replace(/[^A-Za-zÁÉÍÓÚÜÑáéíóúüñ0-9# ]/g,'');",
                 'minlength': '3',
                 'maxlength': '65'
             }),
             'linea2': forms.TextInput(attrs={
                 'class': 'form-control',
-                # Only allow letters (incl. tildes/ñ), digits and spaces
                 'oninput': "this.value=this.value.replace(/[^A-Za-zÁÉÍÓÚÜÑáéíóúüñ0-9 ]/g,'');",
                 'minlength': '3',
                 'maxlength': '65'
             }),
-            # Render region as a select with choices from the model
             'region': forms.Select(attrs={'class': 'form-select', 'required': True}),
         }
 
