@@ -243,6 +243,15 @@ def checkout_crear_pedido_y_pagar(request):
     cart.activo = False
     cart.save(update_fields=['activo'])
     track(request, "purchase", order_id=pedido.id, total=int(pedido.total))  # ← ANALYTICS
+    
+    # Guardar pedido_id en sesión para recuperarlo después del pago
+    request.session['last_order_id'] = pedido.id
+    request.session.modified = True
+    request.session.save()  # Forzar guardado inmediato
+    
+    print(f"[CHECKOUT] Pedido {pedido.id} creado y guardado en sesión")
+    print(f"[CHECKOUT] Session keys después de guardar: {list(request.session.keys())}")
+    
     # Redirigir a Flow
     pay_url = reverse("flow_crear_orden")
     return redirect(f"{pay_url}?pedido_id={pedido.id}")
@@ -529,35 +538,72 @@ def prueba(request):
     return render(request, 'taller/prueba.html')
 
 @csrf_exempt
-@login_required
 def compra_exitosa(request, pedido_id=None):
     """
     Muestra la página de compra exitosa con los detalles del pedido.
+    PRIORIDAD: Encontrar el pedido primero, autenticación después.
     """
+    print(f"[COMPRA_EXITOSA] ========== INICIO ==========")
+    print(f"[COMPRA_EXITOSA] pedido_id recibido: {pedido_id}")
+    print(f"[COMPRA_EXITOSA] Usuario autenticado: {request.user.is_authenticated}")
+    print(f"[COMPRA_EXITOSA] User: {request.user}")
+    print(f"[COMPRA_EXITOSA] Session keys: {list(request.session.keys())}")
+    print(f"[COMPRA_EXITOSA] GET params: {dict(request.GET)}")
+    
     pedido = None
     pago = None
+    
+    # PASO 1: Intentar obtener pedido_id de TODAS las fuentes posibles
+    if not pedido_id:
+        # Desde la sesión
+        pedido_id = request.session.get('last_order_id')
+        print(f"[COMPRA_EXITOSA] pedido_id desde sesión: {pedido_id}")
+    
+    # PASO 2: Intentar cargar el pedido (con o sin autenticación)
     if pedido_id:
         try:
-            pedido = Pedido.objects.select_related('usuario').prefetch_related('items__producto').get(id=pedido_id, usuario=request.user)
+            # Intentar cargar el pedido SIN filtrar por usuario
+            pedido = Pedido.objects.select_related('usuario').prefetch_related('items__producto').get(id=pedido_id)
             pago = getattr(pedido, 'pago', None)
+            print(f"[COMPRA_EXITOSA] ✅ Pedido {pedido.id} encontrado para usuario {pedido.usuario.email}")
+            
+            # Guardar en sesión para futuras visitas
+            request.session['last_order_id'] = pedido.id
+            
         except Pedido.DoesNotExist:
-            messages.warning(request, "No se encontró el pedido.")
-            return redirect('home')
-
-    # Comprobante descargable si existe
+            print(f"[COMPRA_EXITOSA] ❌ Pedido {pedido_id} NO existe en BD")
+            pedido = None
+    
+    # PASO 3: Si NO hay pedido y el usuario está autenticado, buscar el más reciente
+    if not pedido and request.user.is_authenticated:
+        print(f"[COMPRA_EXITOSA] Buscando pedido más reciente para usuario autenticado")
+        pedido = Pedido.objects.filter(
+            usuario=request.user
+        ).select_related('usuario').prefetch_related('items__producto').order_by('-creado').first()
+        
+        if pedido:
+            pago = getattr(pedido, 'pago', None)
+            print(f"[COMPRA_EXITOSA] ✅ Pedido más reciente encontrado: {pedido.id}")
+    
+    # PASO 4: Si AÚN no hay pedido, mostrar mensaje
+    if not pedido:
+        print(f"[COMPRA_EXITOSA] ⚠️ No se encontró ningún pedido")
+        messages.info(request, "Tu pago está siendo procesado. Recibirás una confirmación por correo.")
+    
+    # PASO 5: Preparar contexto (funciona con o sin pedido)
     comprobante_url = pago.comprobante_url if pago and hasattr(pago, 'comprobante_url') else None
-
-    # Número de pedido flexible (mockup existente)
-    numero_pedido = getattr(pedido, 'id', None)
-
-    # Total flexible
-    total = getattr(pedido, 'total', None)
-
-    # Método de pago
-    metodo_pago = getattr(pago, 'metodo', None)
-
+    numero_pedido = getattr(pedido, 'id', None) if pedido else None
+    total = getattr(pedido, 'total', None) if pedido else None
+    metodo_pago = getattr(pago, 'metodo', None) if pago else None
+    
+    # Usuario para el template (puede ser el del pedido o el autenticado)
+    template_user = request.user if request.user.is_authenticated else (pedido.usuario if pedido else None)
+    
+    print(f"[COMPRA_EXITOSA] Renderizando template con pedido_id={numero_pedido}")
+    print(f"[COMPRA_EXITOSA] ========== FIN ==========")
+    
     return render(request, 'taller/compra_exitosa.html', {
-        'user': request.user,
+        'user': template_user,
         'pedido': pedido,
         'numero_pedido': numero_pedido,
         'total': total,

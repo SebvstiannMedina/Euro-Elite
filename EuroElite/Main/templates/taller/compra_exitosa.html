@@ -26,57 +26,64 @@
         </p>
 
         <!-- Resumen del pedido (campos opcionales si el backend aún no los envía) -->
+        {% if pedido %}
         <div class="bg-light rounded-3 p-3 text-start mx-auto" style="max-width: 520px;">
-          <div class="d-flex py-1">
-            <span class="text-muted">Fecha&nbsp;&nbsp;</span>
-            <span>{{ pedido.fecha|date:"d/m/Y H:i" }}</span>
+          <div class="d-flex justify-content-between py-1">
+            <span class="text-muted">Fecha</span>
+            <span>{{ pedido.creado|date:"d/m/Y H:i" }}</span>
           </div>
-          {% if numero_pedido or pedido or orden or order %}
+          {% if numero_pedido %}
           <div class="d-flex justify-content-between py-1">
             <span class="text-muted">N° de pedido</span>
-            <span>
-              {% if numero_pedido %}{{ numero_pedido }}
-              {% elif pedido and pedido.numero %}{{ pedido.numero }}
-              {% elif pedido and pedido.id %}{{ pedido.id }}
-              {% elif orden and orden.numero %}{{ orden.numero }}
-              {% elif orden and orden.id %}{{ orden.id }}
-              {% elif order and order.number %}{{ order.number }}
-              {% elif order and order.id %}{{ order.id }}
-              {% endif %}
-            </span>
+            <span>#{{ numero_pedido }}</span>
           </div>
           {% endif %}
-          {% if total or monto_total or order and order.total %}
+          {% if total %}
           <div class="d-flex justify-content-between py-1">
-            <span class="text-muted">Total</span>
-            <span>
-              {% if total %}{{ total }}
-              {% elif monto_total %}{{ monto_total }}
-              {% elif order and order.total %}{{ order.total }}
-              {% endif %}
-            </span>
-            {% if pedido %}
-            <div class="mt-3">
-              <h5>Productos:</h5>
-              <ul class="list-group">
-                {% for item in pedido.items.all %}
-                  <li class="list-group-item d-flex justify-content-between">
-                    {{ item.producto.nombre }} x{{ item.cantidad }}
-                    <span>{{ item.subtotal }}</span>
-                  </li>
-                {% endfor %}
-              </ul>
-            </div>
-          {% endif %}
+            <span class="text-muted">Total pagado</span>
+            <span class="fw-bold text-success">${{ total|floatformat:0 }}</span>
           </div>
           {% endif %}
-          {% if metodo_pago or medio_pago %}
+          
+          {% if metodo_pago %}
           <div class="d-flex justify-content-between py-1">
             <span class="text-muted">Método de pago</span>
-            <span>{% if metodo_pago %}{{ metodo_pago }}{% else %}{{ medio_pago }}{% endif %}</span>
+            <span>{{ metodo_pago }}</span>
+          </div>
+          {% endif %}
+          
+          {% if pedido.metodo_entrega %}
+          <div class="d-flex justify-content-between py-1">
+            <span class="text-muted">Método de entrega</span>
+            <span>{{ pedido.get_metodo_entrega_display }}</span>
           </div>
           {% endif %}
         </div>
+
+        <!-- Lista de productos comprados -->
+        {% if pedido.items.all %}
+        <div class="mt-3">
+          <h6 class="fw-semibold mb-2">Productos:</h6>
+          <div class="list-group">
+            {% for item in pedido.items.all %}
+            <div class="list-group-item d-flex justify-content-between align-items-center">
+              <div>
+                <div class="fw-medium">{{ item.nombre_producto }}</div>
+                <small class="text-muted">Cantidad: {{ item.cantidad }} × ${{ item.precio_unitario|floatformat:0 }}</small>
+              </div>
+              <span class="badge bg-primary rounded-pill">${{ item.precio_unitario|floatformat:0 }}</span>
+            </div>
+            {% endfor %}
+          </div>
+        </div>
+        {% endif %}
+        {% else %}
+        <!-- Mensaje cuando no hay pedido disponible aún -->
+        <div class="alert alert-info mt-3" role="alert">
+          <i class="fa-solid fa-circle-info me-2"></i>
+          Tu pago está siendo procesado. Recibirás un correo de confirmación en breve con todos los detalles de tu pedido.
+        </div>
+        {% endif %}
 
         <!-- Acciones -->
         <div class="d-flex flex-wrap gap-2 justify-content-center mt-4">

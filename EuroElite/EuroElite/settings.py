@@ -178,4 +178,11 @@ FLOW_API_BASE = "https://sandbox.flow.cl/api"
 FLOW_API_KEY = "4426F16C-1880-404C-A66D-6D9E24L18B4B".strip()
 FLOW_SECRET_KEY = "4a12a875e3923de0efbc492f2a7787dc117eed14".strip()
 FLOW_URL_CONFIRMATION = "https://www.euroelite.cl/pagos/flow/confirmacion/"
-FLOW_URL_RETURN       = "https://www.euroelite.cl/compra_exitosa"
+FLOW_URL_RETURN       = "https://www.euroelite.cl/pagos/flow/retorno/"
+
+#importante para mantener sesión durante redirect de Flow
+SESSION_COOKIE_HTTPONLY = True
+SESSION_COOKIE_SAMESITE = 'Lax'  # Permite cookies en redirects externos
+SESSION_COOKIE_SECURE = False  # True en producción con HTTPS
+SESSION_SAVE_EVERY_REQUEST = True  # Guarda sesión en cada request
+SESSION_COOKIE_AGE = 86400  # 24 horas

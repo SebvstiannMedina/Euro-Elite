@@ -127,9 +127,15 @@ def flow_crear_orden(request):
         if hasattr(pago, "flow_token"):
             pago.flow_token = token
             pago.save()
-    except Exception:
-        pass
+            print(f"[FLOW_CREAR_ORDEN] Token guardado en Pago: {token} para pedido {pedido.id}")
+    except Exception as e:
+        print(f"[FLOW_CREAR_ORDEN] Error guardando token: {e}")
 
+    url_retorno_con_id = f"{url_ret}?pedido_id={pedido.id}"
+    
+    print(f"[FLOW_CREAR_ORDEN] Redirigiendo a Flow con token: {token}")
+    print(f"[FLOW_CREAR_ORDEN] URL de retorno configurada: {url_retorno_con_id}")
+    
     return HttpResponseRedirect(f"{url}?token={token}")
 
 @csrf_exempt
@@ -241,6 +247,7 @@ def flow_confirmacion(request):
     return JsonResponse({"ok": True})
 
 
+@csrf_exempt
 def flow_retorno(request):
     """
     Endpoint donde el usuario vuelve desde Flow.
@@ -248,21 +255,68 @@ def flow_retorno(request):
     """
     # Flow envía el token como parámetro GET
     token = request.GET.get('token', '').strip()
+    pedido_id_url = request.GET.get('pedido_id', '').strip()  # Por si lo enviamos nosotros
     
-    if not token:
-        # Si no hay token, redirigir al home
-        return redirect('home')
+    print(f"[FLOW_RETORNO] ========== INICIO ==========")
+    print(f"[FLOW_RETORNO] Token recibido: '{token}'")
+    print(f"[FLOW_RETORNO] Pedido ID en URL: '{pedido_id_url}'")
+    print(f"[FLOW_RETORNO] Usuario autenticado: {request.user.is_authenticated}")
+    print(f"[FLOW_RETORNO] Session ID: {request.session.session_key}")
+    print(f"[FLOW_RETORNO] Session keys: {list(request.session.keys())}")
+    print(f"[FLOW_RETORNO] Todos los GET params: {dict(request.GET)}")
+    
+    pedido_id_sesion = request.session.get('last_order_id')
+    print(f"[FLOW_RETORNO] Pedido ID desde sesión: {pedido_id_sesion}")
     
     # Intentar obtener el pedido asociado al token
     Pago = apps.get_model('Main', 'Pago')
-    try:
-        # Buscar el pago por token
-        pago = Pago.objects.filter(flow_token=token).select_related('pedido').first()
-        if pago and pago.pedido:
-            # Redirigir a la página de éxito con el ID del pedido
-            return redirect('compra_exitosa_detalle', pedido_id=pago.pedido.id)
-    except Exception:
-        pass
+    Pedido = apps.get_model('Main', 'Pedido')
     
-    # Fallback: redirigir a compra exitosa sin ID específico
+    pedido_id = None
+    
+    # Buscar por token de Flow (si existe)
+    if token:
+        try:
+            pago = Pago.objects.filter(flow_token=token).select_related('pedido').first()
+            print(f"[FLOW_RETORNO] Pago encontrado por token: {pago}")
+            
+            if pago and pago.pedido:
+                pedido_id = pago.pedido.id
+                print(f"[FLOW_RETORNO] ✅ Pedido ID desde pago por token: {pedido_id}")
+        except Exception as e:
+            print(f"[FLOW_RETORNO] Error al buscar pago por token: {e}")
+    else:
+        print(f"[FLOW_RETORNO] ⚠️ No hay token de Flow")
+    
+    # Usar pedido_id de URL 
+    if not pedido_id and pedido_id_url:
+        try:
+            pedido_id = int(pedido_id_url)
+            print(f"[FLOW_RETORNO] ✅ Usando pedido_id de URL: {pedido_id}")
+        except (ValueError, TypeError):
+            print(f"[FLOW_RETORNO] ❌ pedido_id de URL inválido: {pedido_id_url}")
+    
+    # Usar pedido_id de sesión
+    if not pedido_id and pedido_id_sesion:
+        pedido_id = pedido_id_sesion
+        print(f"[FLOW_RETORNO] ✅ Usando pedido_id de sesión: {pedido_id}")
+
+    # Si el usuario está autenticado, buscar su último pedido
+    if not pedido_id and request.user.is_authenticated:
+        try:
+            ultimo_pedido = Pedido.objects.filter(usuario=request.user).order_by('-creado').first()
+            if ultimo_pedido:
+                pedido_id = ultimo_pedido.id
+                print(f"[FLOW_RETORNO] ✅ Usando último pedido del usuario: {pedido_id}")
+        except Exception as e:
+            print(f"[FLOW_RETORNO] Error buscando último pedido: {e}")
+    
+    if pedido_id:
+        print(f"[FLOW_RETORNO] 🎯 Redirigiendo a compra_exitosa_detalle con pedido_id={pedido_id}")
+        print(f"[FLOW_RETORNO] ========== FIN ==========")
+        return redirect('compra_exitosa_detalle', pedido_id=pedido_id)
+    
+    print("[FLOW_RETORNO] ❌ No se pudo determinar pedido_id")
+    print("[FLOW_RETORNO] Redirigiendo a compra_exitosa genérica")
+    print(f"[FLOW_RETORNO] ========== FIN ==========")
     return redirect('compra_exitosa')
