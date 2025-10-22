@@ -5,7 +5,7 @@ from django.contrib.auth.decorators import login_required
 from django.contrib.auth.forms import AuthenticationForm
 from django.contrib.auth.signals import user_logged_in
 from django.db import transaction
-from django.db.models import Q, Sum
+from django.db.models import Q, Sum, F
 from django.db.models.functions import TruncMonth
 from django.dispatch import receiver
 from django.http import HttpResponseBadRequest, JsonResponse
@@ -261,6 +261,7 @@ def checkout_crear_pedido_y_pagar(request):
 def home(request):
     ahora = timezone.now()
 
+    # Filtrar productos que tengan stock mayor al mínimo (stock > stock_minimo)
     productos_oferta = (
         Producto.objects.filter(
             activo=True,
@@ -268,6 +269,7 @@ def home(request):
         )
         .filter(Q(promociones__inicio__isnull=True) | Q(promociones__inicio__lte=ahora))
         .filter(Q(promociones__fin__isnull=True) | Q(promociones__fin__gte=ahora))
+        .filter(stock__gt=F('stock_minimo'))  # Solo productos con stock > stock_minimo
         .select_related('categoria')
         .distinct()
         .order_by('-id')[:6]
@@ -275,6 +277,7 @@ def home(request):
 
     productos_normales = (
         Producto.objects.filter(activo=True)
+        .filter(stock__gt=F('stock_minimo'))  # Solo productos con stock > stock_minimo
         .exclude(id__in=productos_oferta.values('id'))
         .select_related('categoria')
         .order_by('-id')[:6]
@@ -301,7 +304,8 @@ def equipo(request):
     return render(request, 'taller/equipo.html')
 
 def productos(request):
-    productos = Producto.objects.filter(activo=True).select_related("categoria")
+    # Solo mostrar productos con stock > stock_minimo
+    productos = Producto.objects.filter(activo=True).filter(stock__gt=F('stock_minimo')).select_related("categoria")
     categorias = Categoria.objects.filter(activa=True)
 
     for p in productos:
@@ -714,9 +718,30 @@ def admin_dashboard(request):
 
 @staff_member_required
 def admin_pedidos(request):
-    pedidos = Pedido.objects.select_related('usuario').prefetch_related('items__producto').order_by('-creado')
+    # Obtener todos los pedidos con sus relaciones necesarias
+    pedidos = Pedido.objects.select_related(
+        'usuario', 
+        'direccion_envio',
+        'pago'
+    ).prefetch_related(
+        'items__producto'
+    ).order_by('-creado')
+    
+    # Agrupar pedidos por usuario para la vista
+    from itertools import groupby
+    pedidos_por_usuario = []
+    
+    # Agrupar por usuario.email
+    for email, pedidos_grupo in groupby(pedidos, key=lambda p: p.usuario.email if p.usuario else 'Sin usuario'):
+        pedidos_lista = list(pedidos_grupo)
+        pedidos_por_usuario.append({
+            'grouper': email,
+            'list': pedidos_lista
+        })
+    
     return render(request, 'taller/admin_pedidos.html', {
         'pedidos': pedidos,
+        'pedidos_por_usuario': pedidos_por_usuario,
     })
 
 def admin_reportes(request):
@@ -755,14 +780,57 @@ def eliminar_usuario(request, usuario_id):
 
 
 def mis_pedidos(request):
-    pedidos_qs = request.user.pedidos.all().order_by('-creado') if request.user.is_authenticated else []
-    pedidos = [
-        {
+    if not request.user.is_authenticated:
+        return redirect('login')
+    
+    pedidos_qs = request.user.pedidos.select_related('pago').prefetch_related('items__producto__imagenes').order_by('-creado')
+    
+    pedidos = []
+    for p in pedidos_qs:
+        # Obtener el primer item para mostrar la imagen principal
+        primer_item = p.items.first()
+        imagen_url = ''
+        titulo = 'Detalle de compra'
+        descripcion = ''
+        cantidad_total = p.items.count()
+        
+        if primer_item:
+            # Imagen del primer producto - primero intentar la imagen directa del producto
+            if primer_item.producto.imagen:
+                imagen_url = primer_item.producto.imagen.url
+            else:
+                # Si no tiene imagen directa, buscar en las imágenes relacionadas
+                primera_imagen = primer_item.producto.imagenes.first()
+                if primera_imagen:
+                    imagen_url = primera_imagen.imagen.url
+            
+            # Título y descripción
+            if cantidad_total == 1:
+                titulo = primer_item.nombre_producto
+                descripcion = f"SKU: {primer_item.sku_producto}"
+            else:
+                titulo = f"{primer_item.nombre_producto} y {cantidad_total - 1} producto(s) más"
+                descripcion = f"Pedido con {cantidad_total} productos"
+        
+        # Calcular fecha de entrega estimada (7 días después de creado si es despacho)
+        fecha_entrega = None
+        if p.metodo_entrega == Pedido.MetodoEntrega.DESPACHO and p.estado in [Pedido.Estado.PAGADO, Pedido.Estado.PREPARACION, Pedido.Estado.ENVIADO]:
+            fecha_entrega = p.creado + timezone.timedelta(days=7)
+        
+        pedidos.append({
+            'id': p.id,
             'fecha': p.creado,
-            'estado': p.get_estado_display() if hasattr(p, 'get_estado_display') else '',
-        }
-        for p in pedidos_qs
-    ]
+            'fecha_entrega': fecha_entrega,
+            'estado': p.get_estado_display(),
+            'imagen_url': imagen_url,
+            'titulo': titulo,
+            'descripcion': descripcion,
+            'cantidad': cantidad_total,
+            'vendedor': 'Euro Elite',
+            'detalle_url': reverse('compra_exitosa_detalle', args=[p.id]),
+            'recomprar_url': None,  # Se puede implementar más adelante
+        })
+    
     return render(request, 'taller/mis_pedidos.html', {
         'pedidos': pedidos,
         'DEBUG': settings.DEBUG,
