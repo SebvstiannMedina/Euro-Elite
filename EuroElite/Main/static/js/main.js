@@ -2,6 +2,7 @@
 let currentSlide = 0;
 const totalSlides = 3;
 let isUserMenuOpen = false;
+let isAdminMenuOpen = false;
 
 // =============== CAROUSEL ===============
 function updateCarousel() {
@@ -393,11 +394,29 @@ function toggleUserMenu() {
     dropdown.classList.toggle('show');
     isUserMenuOpen = !isUserMenuOpen;
 }
+
+function toggleAdminMenu() {
+    const dropdown = document.getElementById('admin-dropdown');
+    dropdown.classList.toggle('show');
+    isAdminMenuOpen = !isAdminMenuOpen;
+}
+
 document.addEventListener('click', function (event) {
     const userIcon = document.querySelector('.user-icon');
-    const dropdown = document.getElementById('user-dropdown');
-    if (userIcon && !userIcon.contains(event.target) && isUserMenuOpen) {
-        dropdown.classList.remove('show'); isUserMenuOpen = false;
+    const userDropdown = document.getElementById('user-dropdown');
+    const adminIcon = document.querySelector('.admin-icon');
+    const adminDropdown = document.getElementById('admin-dropdown');
+    
+    // Cerrar menú de usuario si se hace clic fuera
+    if (userIcon && userDropdown && !userIcon.contains(event.target) && isUserMenuOpen) {
+        userDropdown.classList.remove('show');
+        isUserMenuOpen = false;
+    }
+    
+    // Cerrar menú de admin si se hace clic fuera
+    if (adminIcon && adminDropdown && !adminIcon.contains(event.target) && isAdminMenuOpen) {
+        adminDropdown.classList.remove('show');
+        isAdminMenuOpen = false;
     }
 });
 
