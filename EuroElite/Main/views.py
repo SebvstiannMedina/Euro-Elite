@@ -1411,3 +1411,46 @@ def toggle_bloqueo_usuario(request, user_id):
         messages.success(request, f"El usuario {usuario.get_full_name() or usuario.email} ha sido desbloqueado.")
 
     return redirect('admin_usuarios')
+
+from django.contrib.auth.decorators import login_required
+from django.shortcuts import render
+from .models import Pedido
+
+@staff_member_required
+@login_required
+def entregas_view(request):
+    """
+    Muestra los pedidos asignados al usuario.
+    Si el usuario es superusuario, muestra todos los pedidos.
+    """
+    if request.user.is_superuser:
+        pedidos = Pedido.objects.all().order_by('-creado')
+    else:
+        pedidos = Pedido.objects.filter(asignado_a=request.user).order_by('-creado')
+
+    return render(request, 'taller/admin_entregas.html', {'pedidos': pedidos})
+
+from django.contrib import messages
+from django.shortcuts import get_object_or_404, redirect
+from django.contrib.admin.views.decorators import staff_member_required
+from .models import Pedido
+
+@staff_member_required
+@login_required
+def actualizar_estado_pedido(request, pedido_id, nuevo_estado):
+    pedido = get_object_or_404(Pedido, id=pedido_id)
+
+    if nuevo_estado == "ENTREGADO":
+        pedido.marcar_como_entregado(request.user.get_full_name() or request.user.email)
+        messages.success(request, f"✅ Pedido entregado por {pedido.entregado_por}.")
+    elif nuevo_estado == "EN_RUTA":
+        pedido.marcar_en_ruta()
+        messages.info(request, "🚚 Pedido marcado como EN RUTA.")
+    else:
+        pedido.estado = nuevo_estado
+        pedido.save()
+        messages.info(request, f"📦 Pedido actualizado a {pedido.get_estado_display()}.")
+
+    # Redirige dinámicamente a la página desde donde se hizo clic
+    return redirect(request.META.get('HTTP_REFERER', 'admin_entregas'))
+
