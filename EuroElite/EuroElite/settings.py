@@ -160,14 +160,14 @@ EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
 EMAIL_HOST = "smtp.gmail.com"
 EMAIL_PORT = 587
 EMAIL_USE_TLS = True
-EMAIL_HOST_USER = "seba.medina2602@gmail.com"
-EMAIL_HOST_PASSWORD = "xuyg enzc hqzk mevf"
-DEFAULT_FROM_EMAIL = "Euro Elite <seba.medina2602@gmail.com>"
+EMAIL_HOST_USER = "mirandaservicespa@gmail.com"
+EMAIL_HOST_PASSWORD = "oxir ghig bqsp hrdj"
+DEFAULT_FROM_EMAIL = "Euro Elite <mirandaservicespa@gmail.com>"
 
 
 
 AUTHENTICATION_BACKENDS = [
-    "django.contrib.auth.backends.ModelBackend",
+    'Main.backends.BloqueoBackend',
 ]
 
 LOGIN_URL = "login"

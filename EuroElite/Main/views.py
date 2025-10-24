@@ -340,10 +340,46 @@ class CustomLoginView(LoginView):
     authentication_form = EmailAuthenticationForm
 
     def form_valid(self, form):
-        messages.success(self.request, f"Bienvenido: {form.get_user().first_name or form.get_user().email}")
-        track(self.request, "login", user_id=form.get_user().id)  # ← ANALYTICS
+        user = form.get_user()
+
+        # Si el usuario está bloqueado, detener login
+        if getattr(user, 'bloqueado', False):
+            messages.error(
+                self.request,
+                "⚠️ Tu cuenta ha sido bloqueada por un administrador. "
+                "Si crees que se trata de un error, contacta con el soporte de Euro Elite."
+            )
+            return redirect('login')
+
+        # Login normal
+        messages.success(self.request, f"Bienvenido: {user.first_name or user.email}")
+        track(self.request, "login", user_id=user.id)
         return super().form_valid(form)
 
+    def form_invalid(self, form):
+        """
+        Este método se ejecuta cuando el formulario NO es válido,
+        es decir, cuando las credenciales son incorrectas o el backend
+        rechazó al usuario bloqueado.
+        """
+        email = self.request.POST.get('username') or self.request.POST.get('email')
+
+        from Main.models import Usuario  
+        try:
+            usuario = Usuario.objects.get(email=email)
+            if usuario.bloqueado:
+                messages.error(
+                    self.request,
+                    "⚠️ Tu cuenta ha sido bloqueada por un administrador. "
+                    "No puedes iniciar sesión hasta que sea desbloqueada."
+                )
+                return redirect('login')
+        except Usuario.DoesNotExist:
+            pass
+
+        # Si no está bloqueado, mostrar error estándar
+        messages.error(self.request, "Correo o contraseña incorrectos.")
+        return super().form_invalid(form)
 # ============ LOGOUT ============
 class CustomLogoutView(LogoutView):
     next_page = "login"
@@ -835,11 +871,49 @@ from django.contrib.admin.views.decorators import staff_member_required
 
 Usuario = get_user_model()  # tu modelo custom de usuario
 
-# Listar usuarios
+from django.contrib.admin.views.decorators import staff_member_required
+from django.core.paginator import Paginator
+from django.db.models import Q
+from django.shortcuts import render
+from .models import Usuario
+
 @staff_member_required
 def admin_usuarios(request):
+    # Obtener parámetros de búsqueda
+    q = request.GET.get('q', '')
+    rol = request.GET.get('rol', '')
+
+    # Base queryset (todos los usuarios)
     usuarios = Usuario.objects.all().order_by('-date_joined')
-    return render(request, 'taller/admin_usuarios.html', {"usuarios": usuarios})
+
+    # --- Filtro de búsqueda ---
+    if q:
+        usuarios = usuarios.filter(
+            Q(first_name__icontains=q) |
+            Q(last_name__icontains=q) |
+            Q(email__icontains=q) |
+            Q(username__icontains=q)
+        )
+
+    # --- Filtro por rol ---
+    if rol:
+        usuarios = usuarios.filter(rol=rol)
+
+    # --- Paginación (20 por página) ---
+    paginator = Paginator(usuarios, 20)
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+
+    context = {
+        "usuarios": page_obj,  # importante: para que el HTML funcione igual
+        "page_obj": page_obj,
+        "q": q,
+        "rol": rol,
+    }
+
+    return render(request, 'taller/admin_usuarios.html', context)
+
+
 
 # Detalle de un usuario
 @staff_member_required
@@ -1315,3 +1389,25 @@ def carrito_eliminar(request, item_id):
     item = get_object_or_404(ItemCarrito, id=item_id, carrito__usuario=request.user, carrito__activo=True)
     item.delete()
     return JsonResponse({"ok": True, "msg": "Producto eliminado"})
+
+
+# ============================= Bloquear usuario =============================
+
+@staff_member_required
+def toggle_bloqueo_usuario(request, user_id):
+    usuario = get_object_or_404(Usuario, id=user_id)
+
+    # Evitar bloquear administradores o superusuarios
+    if usuario.is_superuser or usuario.rol == Usuario.Rol.ADMIN:
+        messages.warning(request, "No puedes bloquear a un usuario administrador.")
+        return redirect('admin_usuarios')
+
+    usuario.bloqueado = not usuario.bloqueado
+    usuario.save()
+
+    if usuario.bloqueado:
+        messages.warning(request, f"El usuario {usuario.get_full_name() or usuario.email} ha sido bloqueado.")
+    else:
+        messages.success(request, f"El usuario {usuario.get_full_name() or usuario.email} ha sido desbloqueado.")
+
+    return redirect('admin_usuarios')

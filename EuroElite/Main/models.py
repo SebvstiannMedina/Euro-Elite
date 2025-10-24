@@ -58,7 +58,7 @@ class UsuarioManager(BaseUserManager):
 
 # --- MODELO USUARIO ---
 class Usuario(AbstractUser):
-    username = None  # 👈 eliminamos username
+    username = None  
     email = models.EmailField(unique=True)
 
     telefono = models.CharField(max_length=20, blank=True, null=True)
@@ -66,7 +66,6 @@ class Usuario(AbstractUser):
 
     class Rol(models.TextChoices):
         ADMIN = "ADMIN", "Administrador"
-        EMPLEADO = "EMPLEADO", "Empleado"
         CLIENTE = "CLIENTE", "Cliente"
 
     rol = models.CharField(max_length=12, choices=Rol.choices, default=Rol.CLIENTE, db_index=True)
