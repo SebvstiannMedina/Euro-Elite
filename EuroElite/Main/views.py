@@ -1116,7 +1116,7 @@ def confirmacion_datos(request):
 def olvide_contra(request):
     return render(request, 'taller/olvide_contra.html')
 
-def estadistica(request):
+def estadisticas(request):
     labels = ["Enero 2025", "Febrero 2025", "Marzo 2025"]
     values = [220000, 330000, 200000]
 
@@ -1126,7 +1126,7 @@ def estadistica(request):
     mes_max = labels[values.index(max_val)] if values else "N/A"
     cantidad_pedidos = len(values)
 
-    return render(request, "taller/estadistica.html", {
+    return render(request, "taller/estadisticas.html", {
         "labels": labels,
         "values": values,
         "total": total,
@@ -1454,3 +1454,216 @@ def actualizar_estado_pedido(request, pedido_id, nuevo_estado):
     # Redirige dinámicamente a la página desde donde se hizo clic
     return redirect(request.META.get('HTTP_REFERER', 'admin_entregas'))
 
+import pandas as pd
+from django.http import HttpResponse
+from django.db.models import Sum
+from django.utils import timezone
+from django.contrib.admin.views.decorators import staff_member_required
+from .models import Pedido
+from openpyxl import Workbook
+from openpyxl.styles import Font, Alignment, PatternFill, Border, Side
+from django.http import HttpResponse
+from django.contrib.admin.views.decorators import staff_member_required
+from .models import Pedido
+
+from django.http import HttpResponse
+from openpyxl import Workbook
+from openpyxl.styles import PatternFill, Font, Alignment, Border, Side
+from datetime import datetime
+from django.contrib.admin.views.decorators import staff_member_required
+from .models import Pedido
+
+
+@staff_member_required
+def descargar_excel_pedidos(request):
+    pedidos = Pedido.objects.all().order_by("-creado")
+
+  
+    wb = Workbook()
+    ws = wb.active
+    ws.title = "Pedidos"
+
+   
+    headers = [
+        "ID", "Cliente", "Estado", "Precio (Venta)",
+        "Costo", "Total (Precio - Costo)", "IVA (19%)",
+        "Método Entrega", "Método Pago", "Fecha", "Entregado por"
+    ]
+    ws.append(headers)
+
+    header_fill = PatternFill(start_color="2563EB", end_color="2563EB", fill_type="solid")
+    header_font = Font(color="FFFFFF", bold=True)
+    border_style = Side(style="thin", color="D1D5DB")
+
+    for col in ws.iter_cols(min_row=1, max_row=1, min_col=1, max_col=len(headers)):
+        for cell in col:
+            cell.fill = header_fill
+            cell.font = header_font
+            cell.alignment = Alignment(horizontal="center", vertical="center")
+            cell.border = Border(top=border_style, bottom=border_style, left=border_style, right=border_style)
+
+    # 📊 Variables para totales
+    total_precio = 0
+    total_costo = 0
+    total_ganancia = 0
+    total_iva = 0
+
+
+    for p in pedidos:
+        precio = float(p.total or 0)
+        costo = round(precio * 0.75, 0)  # estimación de costo
+        total = precio - costo
+        iva = round(precio * 0.19, 0)
+
+        total_precio += precio
+        total_costo += costo
+        total_ganancia += total
+        total_iva += iva
+
+        ws.append([
+            p.id,
+            p.usuario.get_full_name() or p.usuario.email,
+            p.get_estado_display(),
+            precio,
+            costo,
+            total,
+            iva,
+            p.get_metodo_entrega_display(),
+            p.get_metodo_pago_display(),
+            p.creado.strftime("%d/%m/%Y %H:%M"),
+            p.entregado_por or "-"
+        ])
+
+
+    for col_letter in ["D", "E", "F", "G"]:
+        for cell in ws[col_letter][1:]:
+            cell.number_format = '"$"#,##0'
+
+
+    for col in ws.columns:
+        max_length = 0
+        column = col[0].column_letter
+        for cell in col:
+            try:
+                length = len(str(cell.value))
+                if length > max_length:
+                    max_length = length
+            except:
+                pass
+        ws.column_dimensions[column].width = max_length + 3
+
+    resumen = wb.create_sheet(title="Resumen")
+    resumen_headers = ["Concepto", "Valor"]
+    resumen.append(resumen_headers)
+
+    resumen_datos = [
+        ("Total Ventas (Precio)", total_precio),
+        ("Total Costos", total_costo),
+        ("Ganancia Total", total_ganancia),
+        ("IVA Total (19%)", total_iva),
+        ("Cantidad de Pedidos", len(pedidos)),
+        ("Fecha de Generación", datetime.now().strftime("%d/%m/%Y %H:%M")),
+    ]
+
+    for item, valor in resumen_datos:
+        resumen.append([item, valor])
+
+    for cell in resumen["A"] + resumen["B"]:
+        cell.border = Border(top=border_style, bottom=border_style, left=border_style, right=border_style)
+        cell.alignment = Alignment(horizontal="center", vertical="center")
+
+    for col in resumen.columns:
+        col_letter = col[0].column_letter
+        resumen.column_dimensions[col_letter].width = 25
+
+
+    for col in resumen[1]:
+        col.fill = header_fill
+        col.font = header_font
+        col.alignment = Alignment(horizontal="center")
+
+    for cell in resumen["B"][1:5]:
+        cell.number_format = '"$"#,##0'
+
+
+    fecha_str = datetime.now().strftime("%d-%m-%Y")
+    nombre_archivo = f"pedidos_financieros_{fecha_str}.xlsx"
+
+    response = HttpResponse(
+        content_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+    )
+    response["Content-Disposition"] = f'attachment; filename="{nombre_archivo}"'
+
+    wb.save(response)
+    return response
+
+
+from decimal import Decimal
+from django.db.models import Sum, F, ExpressionWrapper, DecimalField
+from django.contrib.admin.views.decorators import staff_member_required
+from django.utils import timezone
+from .models import Pedido
+
+@staff_member_required
+def estadisticas_view(request):  
+    pedidos = Pedido.objects.prefetch_related("items__producto")
+
+
+    fecha_inicio = request.GET.get("fecha_inicio")
+    fecha_fin = request.GET.get("fecha_fin")
+    estado = request.GET.get("estado")
+
+    if fecha_inicio:
+        pedidos = pedidos.filter(creado__date__gte=fecha_inicio)
+    if fecha_fin:
+        pedidos = pedidos.filter(creado__date__lte=fecha_fin)
+    if estado:
+        pedidos = pedidos.filter(estado=estado)
+
+
+    for p in pedidos:
+        costo_total = Decimal(0)
+        for i in p.items.all():
+            precio_costo = i.producto.costo if i.producto.costo else Decimal(0)
+            costo_total += precio_costo * Decimal(i.cantidad or 0)
+
+        precio = Decimal(p.total or 0)
+        ganancia = precio - costo_total
+        iva = precio * Decimal("0.19")
+
+        p.costo_total = round(costo_total, 2)
+        p.ganancia = round(ganancia, 2)
+        from math import ceil
+        p.iva = Decimal(ceil(iva))
+
+    total_ganancia = sum([p.ganancia for p in pedidos], Decimal(0))
+    total_iva = sum([p.iva for p in pedidos], Decimal(0))
+    cantidad_pedidos = pedidos.count()
+
+    data_por_mes = (
+        pedidos.values("creado__month")
+        .annotate(
+            ganancia_mes=Sum(
+                ExpressionWrapper(F("total") - F("descuento") + F("envio"), output_field=DecimalField())
+            )
+        )
+        .order_by("creado__month")
+    )
+
+    labels = [f"{m['creado__month']:02d}" for m in data_por_mes]
+    values = [float(m["ganancia_mes"] or 0) for m in data_por_mes]
+    mes_max = labels[values.index(max(values))] if values else "Sin datos"
+
+    estados = Pedido.Estado.choices
+
+    context = {
+        "pedidos": pedidos,
+        "labels": labels,
+        "values": values,
+        "total_ganancia": total_ganancia,
+        "total_iva": total_iva,
+        "cantidad_pedidos": cantidad_pedidos,
+        "mes_max": mes_max,
+        "estados": estados,
+    }
+    return render(request, "taller/estadisticas.html", context)

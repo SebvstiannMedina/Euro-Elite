@@ -58,7 +58,8 @@ urlpatterns = [
 
 
 
-    path('estadistica', main_views.estadistica, name='estadistica'),
+    path("estadisticas/", main_views.estadisticas_view, name="estadisticas"),
+    path("estadisticas/descargar_excel/", main_views.descargar_excel_pedidos, name="descargar_excel_pedidos"),
     path('producto/<int:pk>/', main_views.producto_detalle, name='producto_detalle'),
     # Carrito (server-first)
     path('carrito/agregar', main_views.cart_add, name='cart_add'),
