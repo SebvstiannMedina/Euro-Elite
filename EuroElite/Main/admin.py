@@ -32,3 +32,4 @@ admin.site.register(BloqueHorario)
 admin.site.register(Cita)
 admin.site.register(Banner)
 admin.site.register(ConfigSitio)
+

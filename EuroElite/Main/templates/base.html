@@ -187,7 +187,7 @@
         right: 0;
         background: #fff;
         border-radius: 12px;
-        box-shadow: 0 4px 12px rgba(0,0,0,0.12);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
         padding: 12px 0;
         min-width: 240px;
         opacity: 0;
@@ -347,11 +347,11 @@
             <div class="footer-section">
                 <h3>Productos</h3>
                 <ul>
-                    <li><a href="#">Repuestos BMW</a></li>
-                    <li><a href="#">Repuestos Audi</a></li>
-                    <li><a href="#">Repuestos Mercedes-Benz</a></li>
-                    <li><a href="#">Accesorios</a></li>
-                    <li><a href="#">Herramientas</a></li>
+                    <li><a href="{% url 'productos' %}?categoria=bmw">Repuestos BMW</a></li>
+                    <li><a href="{% url 'productos' %}?categoria=audi">Repuestos Audi</a></li>
+                    <li><a href="{% url 'productos' %}?categoria=mercedes-benz">Repuestos Mercedes-Benz</a></li>
+                    <li><a href="{% url 'productos' %}?categoria=accesorios">Accesorios</a></li>
+                    <li><a href="{% url 'productos' %}?categoria=herramientas">Herramientas</a></li>
                 </ul>
             </div>
 

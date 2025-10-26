@@ -4,13 +4,12 @@
 {% block title %}Mis citas - Euro Elite{% endblock %}
 {% block content %}
 
-<br><br><br><br><br><br>
-
-<div class="container my-4 profile-wrapper">
+<!-- Espaciado superior -->
+<div class="container my-5 profile-wrapper">
   <div class="row">
     <!-- Sidebar -->
-    <aside class="col-12 col-md-3 mb-3">
-      <div class="card shadow-sm">
+    <aside class="col-12 col-md-3 mb-4">
+      <div class="card shadow-sm border-0 rounded-4">
         <div class="card-body">
           <h5 class="mb-1">Hola, {{ user.first_name }}</h5>
           <p class="text-muted" style="font-size: .9rem;">Accede a toda la información de tu perfil</p>
@@ -32,62 +31,66 @@
       </div>
     </aside>
 
-    <!-- Main content -->
+    <!-- Contenido principal -->
     <section class="col-12 col-md-9" id="ordersSection">
-      <h3 class="mb-3">Mis citas</h3>
-      <!-- 🔹 Mostrar mensajes -->
+      <h3 class="mb-4">Mis citas</h3>
+
+      <!-- Mostrar mensajes -->
       {% if messages %}
-        <div class="mb-3">
-          {% for message in messages %}
-            <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
-              {{ message }}
-              <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-            </div>
-          {% endfor %}
-        </div>
+        {% for message in messages %}
+          <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+            {{ message }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+          </div>
+        {% endfor %}
       {% endif %}
 
-      <div class="card shadow-sm p-3">
+      <div class="card shadow-sm p-4 border-0 rounded-4 bg-white">
         {% if citas %}
           {% for c in citas %}
-            <div class="order-card shadow-sm mb-3 p-3 rounded-3">
+            <div class="order-card shadow-sm mb-4 p-3 rounded-3 border">
               <div class="row align-items-center gy-3">
                 <!-- Izquierda -->
-                <div class="col-12 col-md-7 d-flex">
-                  <div class="order-image-wrap">
+                <div class="col-12 col-md-8 d-flex align-items-start">
+                  <div class="order-image-wrap flex-shrink-0">
                     <img src="{% static 'img/LogoApp.png' %}" alt="Cita" class="order-image">
                   </div>
                   <div class="ms-3 flex-grow-1">
+                    <!-- Estado -->
                     <div class="small fw-semibold mb-1 
                       {% if c.estado == 'COMPLETADA' %}text-success
                       {% elif c.estado == 'CANCELADA' %}text-danger
-                      {% elif c.estado == 'EN_PROCESO' or c.get_estado_display == 'En proceso' %}text-warning
+                      {% elif c.estado == 'EN_PROCESO' %}text-warning
                       {% else %}text-primary{% endif %}">
                       {{ c.get_estado_display }}
                     </div>
+
+                    <!-- Fecha y hora -->
                     <div class="order-title">
-                      Cita el {{ c.bloque.inicio|localtime|date:"j \\de F" }}
+                      Cita el {{ c.bloque.inicio|localtime|date:"j \\d\\e F" }} a las {{ c.bloque.inicio|localtime|date:"H:i" }}
                     </div>
-                    <div class="order-subtitle">{{ c.servicio.nombre }}</div>
-                    <div class="order-subtitle">
-                      {{ c.bloque.inicio|localtime|date:"H:i" }}
-                    </div>
+
+                    <!-- Servicio -->
+                    <div class="order-subtitle fw-semibold text-dark">{{ c.servicio.nombre }}</div>
+
+                    <!-- Tipo de atención -->
                     {% if c.a_domicilio %}
                       <div class="order-subtitle">
-                        <i class="fas fa-truck"></i> A domicilio ({{ c.direccion_domicilio|default:"Sin dirección" }})
+                        <i class="fas fa-truck text-primary"></i>
+                        A domicilio ({{ c.direccion_domicilio|default:"Sin dirección" }})
                       </div>
                     {% else %}
                       <div class="order-subtitle">
-                        <i class="fas fa-warehouse"></i> En taller
+                        <i class="fas fa-warehouse text-secondary"></i> En taller
                       </div>
                     {% endif %}
                   </div>
                 </div>
 
                 <!-- Acciones -->
-                <div class="col-12 col-md-3 text-md-end">
+                <div class="col-12 col-md-4 text-md-end">
                   {% if c.estado == 'RESERVADA' %}
-                    <a class="btn btn-danger btn-sm" href="{% url 'anular_cita' c.id %}">
+                    <a class="btn btn-outline-danger btn-sm px-3" href="{% url 'anular_cita' c.id %}">
                       <i class="fas fa-times-circle me-1"></i> Anular
                     </a>
                   {% endif %}
@@ -110,18 +113,44 @@
 </div>
 
 <style>
+  /* === Tarjetas de perfil y citas === */
   .profile-wrapper .card {
-    border: 0;
+    border: none;
     border-radius: 12px;
-    box-shadow: var(--shadow);
     background: #fff;
+    box-shadow: var(--shadow, 0 2px 10px rgba(0,0,0,0.08));
   }
-  .profile-wrapper .list-group-item { border: 0; }
-  .order-card { background: #fff; border-radius: 12px; padding: 16px; }
-  .order-image { width: 72px; height: 72px; object-fit: cover; border-radius: 10px; background: #f8fafc; }
-  .order-title { font-weight: 600; font-size: 1.05rem; }
-  .order-subtitle { color: #6b7280; font-size: .9rem; }
-  #ordersSection .empty-state { border: 0 !important; }
+  .list-group-item.active {
+    background-color: #0d6efd !important;
+    color: #fff !important;
+    font-weight: 600;
+  }
+  .order-card {
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+  }
+  .order-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 6px 15px rgba(0,0,0,0.08);
+  }
+  .order-image {
+    width: 72px;
+    height: 72px;
+    object-fit: contain;
+    border-radius: 8px;
+    background: #f8fafc;
+  }
+  .order-title {
+    font-weight: 600;
+    font-size: 1.05rem;
+    color: #111827;
+  }
+  .order-subtitle {
+    color: #6b7280;
+    font-size: .9rem;
+  }
+  .empty-state img {
+    opacity: 0.6;
+  }
 </style>
 
 {% endblock %}

@@ -94,6 +94,52 @@
   </div>
 </section>
 
+<script>
+  function searchProducts() {
+    const searchInput = document.getElementById('searchInput').value.toLowerCase();
+    const categorySelect = document.getElementById('categoryFilter').value;
+    const products = document.querySelectorAll('.product-card');
+
+    products.forEach(product => {
+      const title = product.querySelector('.product-title').textContent.toLowerCase();
+      const category = product.dataset.category;
+
+      const matchesSearch = title.includes(searchInput);
+      const matchesCategory = (categorySelect === 'all' || category === categorySelect);
+
+      if (matchesSearch && matchesCategory) {
+        product.style.display = '';
+      } else {
+        product.style.display = 'none';
+      }
+    });
+  }
+
+  function filterProducts() {
+    // Simplemente reutilizamos la lógica de búsqueda
+    searchProducts();
+  }
+</script>
+<script>
+  document.addEventListener("DOMContentLoaded", function () {
+    // Detecta si hay una categoría en la URL (ejemplo: ?categoria=audi)
+    const params = new URLSearchParams(window.location.search);
+    const categoriaParam = params.get("categoria");
+
+    if (categoriaParam) {
+      // Selecciona la categoría en el filtro visual
+      const categorySelect = document.getElementById("categoryFilter");
+      if (categorySelect) {
+        categorySelect.value = categoriaParam;
+      }
+
+      // Aplica el filtro automáticamente
+      filterProducts();
+    }
+  });
+</script>
+
+
 {% endblock %}
 
 <!--El const carrito URL es para que la página de carrito cargue la URL correcta-->

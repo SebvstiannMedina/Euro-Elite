@@ -1667,3 +1667,62 @@ def estadisticas_view(request):
         "estados": estados,
     }
     return render(request, "taller/estadisticas.html", context)
+
+from django.shortcuts import render, redirect
+from django.contrib import messages
+from .forms import CitaForm
+from .models import Cita
+
+def agendar_servicio(request):
+    """Vista de agendamiento simple sin depender de profesionales."""
+    if request.method == "POST":
+        form = CitaForm(request.POST, user=request.user)
+        if form.is_valid():
+            cita = form.save(commit=False)
+            cita.usuario = request.user
+            cita.save()
+            messages.success(request, "✅ Tu cita fue agendada correctamente. Te contactaremos pronto.")
+            return redirect("mis_citas")
+    else:
+        form = CitaForm(user=request.user)
+
+    return render(request, "agendar.html", {"form": form})
+
+
+from django.utils import timezone
+from datetime import datetime, timedelta
+from .models import BloqueHorario
+
+def generar_bloques_si_faltan():
+    """Crea bloques horarios futuros (09:00–18:00) para hoy y mañana si no existen."""
+    if not BloqueHorario.objects.exists():
+        hoy = timezone.localdate()
+        for dia in [hoy, hoy + timedelta(days=1)]:
+            for hora in range(9, 19):  # 9:00 a 18:00
+                inicio_naive = datetime.combine(dia, datetime.min.time()) + timedelta(hours=hora)
+                inicio = timezone.make_aware(inicio_naive, timezone.get_current_timezone())
+                fin = inicio + timedelta(hours=1)
+                BloqueHorario.objects.get_or_create(inicio=inicio, fin=fin, bloqueado=False)
+        print("✅ Bloques horarios creados con zona horaria local.")
+
+def agendar_servicio(request):
+    """Vista para agendar citas."""
+    from .forms import CitaForm
+    from django.contrib import messages
+
+    # 👇 Genera bloques si no hay ninguno
+    generar_bloques_si_faltan()
+
+    if request.method == "POST":
+        form = CitaForm(request.POST, user=request.user)
+        if form.is_valid():
+            cita = form.save(commit=False)
+            cita.usuario = request.user
+            cita.save()
+            messages.success(request, "✅ Tu cita fue agendada correctamente. Te contactaremos pronto.")
+            return redirect("mis_citas")
+    else:
+        form = CitaForm(user=request.user)
+
+    return render(request, "agendar.html", {"form": form})
+
