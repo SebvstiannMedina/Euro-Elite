@@ -1,0 +1,125 @@
+{% extends 'base.html' %}
+{% block title %}Publicar Vehículo - Euro Elite{% endblock %}
+
+{% block content %}
+<style>
+  .vehiculo-card {
+    background: linear-gradient(135deg, #ffffff, #f8f9fa);
+    border-radius: 1.5rem;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+    transition: all 0.3s ease;
+  }
+  .vehiculo-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 15px 30px rgba(0, 0, 0, 0.15);
+  }
+  .vehiculo-title {
+    font-weight: 700;
+    color: #0d6efd;
+  }
+  .vehiculo-sub {
+    font-size: 0.95rem;
+    color: #6c757d;
+  }
+  .vehiculo-form label {
+    color: #495057;
+    font-weight: 600;
+  }
+  .vehiculo-form input,
+  .vehiculo-form textarea,
+  .vehiculo-form select {
+    border-radius: 0.75rem;
+  }
+  .btn-enviar {
+    background: linear-gradient(90deg, #0d6efd, #6610f2);
+    border: none;
+    color: white;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+    transition: all 0.3s ease;
+  }
+  .btn-enviar:hover {
+    background: linear-gradient(90deg, #6610f2, #0d6efd);
+    transform: scale(1.02);
+  }
+</style>
+
+<div class="container py-5">
+  <div class="text-center mb-5">
+    <h1 class="vehiculo-title mb-2">🚘 Publicar tu vehículo</h1>
+    <p class="vehiculo-sub">
+      Completa los datos de tu vehículo y envíalo para revisión.<br>
+      El administrador aprobará tu publicación antes de que aparezca en Euro Elite.
+    </p>
+  </div>
+
+  <div class="row justify-content-center">
+    <div class="col-lg-8 col-md-10">
+      <div class="vehiculo-card p-4 p-md-5">
+        
+        {% if messages %}
+          {% for message in messages %}
+            <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+              {{ message }}
+              <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+          {% endfor %}
+        {% endif %}
+
+        <form method="POST" enctype="multipart/form-data" class="vehiculo-form">
+          {% csrf_token %}
+          <div class="row g-3">
+            <div class="col-md-6">
+              <label class="form-label">Marca</label>
+              {{ form.marca }}
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">Modelo</label>
+              {{ form.modelo }}
+            </div>
+            <div class="col-md-4">
+              <label class="form-label">Año</label>
+              {{ form.año }}
+            </div>
+            <div class="col-md-4">
+              <label class="form-label">Kilometraje (km)</label>
+              {{ form.kilometraje }}
+            </div>
+            <div class="col-md-4">
+              <label class="form-label">Precio (CLP)</label>
+              {{ form.precio }}
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">Transmisión</label>
+              {{ form.transmision }}
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">Combustible</label>
+              {{ form.combustible }}
+            </div>
+            <div class="col-12">
+              <label class="form-label">Descripción</label>
+              {{ form.descripcion }}
+            </div>
+            <div class="col-12">
+              <label class="form-label">Imagen del vehículo</label>
+              <div class="input-group">
+                <span class="input-group-text bg-light"><i class="fa-solid fa-image"></i></span>
+                {{ form.imagen }}
+              </div>
+              <small class="text-muted">Formatos permitidos: JPG, PNG (máx. 5 MB)</small>
+            </div>
+          </div>
+
+          <div class="text-center mt-5">
+            <button type="submit" class="btn btn-enviar px-5 py-2 rounded-pill">
+              <i class="fa-solid fa-paper-plane me-2"></i> Enviar para aprobación
+            </button>
+          </div>
+        </form>
+
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,97 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Mis Vehículos - Euro Elite{% endblock %}
+
+{% block content %}
+<div class="container my-5">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1>Mis Vehículos</h1>
+        <a href="{% url 'agregar_vehiculo' %}" class="btn btn-primary">
+            <i class="fas fa-plus"></i> Agregar Vehículo
+        </a>
+    </div>
+
+    {% if vehiculos %}
+        {% for vehiculo in vehiculos %}
+        <div class="card mb-4 shadow">
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-8">
+                        <h3>{{ vehiculo.marca }} {{ vehiculo.modelo }}</h3>
+                        <p class="mb-2"><strong>Patente:</strong> {{ vehiculo.patente }}</p>
+                        <p class="mb-2"><strong>Año:</strong> {{ vehiculo.año }}</p>
+                        <p class="mb-2"><strong>Color:</strong> {{ vehiculo.color }}</p>
+                        <p class="mb-2"><strong>Kilometraje actual:</strong> {{ vehiculo.kilometraje_actual|floatformat:0 }} km</p>
+                    </div>
+                    <div class="col-md-4 text-end">
+                        <i class="fas fa-car fa-5x text-primary"></i>
+                    </div>
+                </div>
+
+                {% if vehiculo.historial.all %}
+                <hr>
+                <h5 class="mt-3">Historial de Servicios</h5>
+                <div class="table-responsive">
+                    <table class="table table-sm">
+                        <thead>
+                            <tr>
+                                <th>Fecha Ingreso</th>
+                                <th>Fecha Salida</th>
+                                <th>Descripción</th>
+                                <th>Estado</th>
+                                <th>Costo</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for servicio in vehiculo.historial.all %}
+                            <tr>
+                                <td>{{ servicio.fecha_ingreso|date:"d/m/Y H:i" }}</td>
+                                <td>
+                                    {% if servicio.fecha_salida %}
+                                        {{ servicio.fecha_salida|date:"d/m/Y H:i" }}
+                                    {% else %}
+                                        <span class="text-muted">En taller</span>
+                                    {% endif %}
+                                </td>
+                                <td>{{ servicio.descripcion_trabajo|truncatewords:10 }}</td>
+                                <td>
+                                    {% if servicio.estado == 'entregado' %}
+                                        <span class="badge bg-success">Entregado</span>
+                                    {% elif servicio.estado == 'completado' %}
+                                        <span class="badge bg-info">Completado</span>
+                                    {% elif servicio.estado == 'en_proceso' %}
+                                        <span class="badge bg-warning">En proceso</span>
+                                    {% else %}
+                                        <span class="badge bg-secondary">En espera</span>
+                                    {% endif %}
+                                </td>
+                                <td>${{ servicio.costo_total|floatformat:0 }}</td>
+                            </tr>
+                            {% if servicio.comentario_mecanico %}
+                            <tr>
+                                <td colspan="5" class="bg-light">
+                                    <small><strong>Comentario del mecánico:</strong> {{ servicio.comentario_mecanico }}</small>
+                                </td>
+                            </tr>
+                            {% endif %}
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <div class="alert alert-info mt-3">
+                    <i class="fas fa-info-circle"></i> Este vehículo aún no tiene servicios registrados.
+                </div>
+                {% endif %}
+            </div>
+        </div>
+        {% endfor %}
+    {% else %}
+        <div class="alert alert-info">
+            <i class="fas fa-info-circle me-2"></i>
+            No tienes vehículos registrados. <a href="{% url 'agregar_vehiculo' %}">Agrega uno ahora</a> para llevar un registro de sus servicios.
+        </div>
+    {% endif %}
+</div>
+{% endblock %}

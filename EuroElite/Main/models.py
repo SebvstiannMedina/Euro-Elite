@@ -67,6 +67,10 @@ class Usuario(AbstractUser):
     class Rol(models.TextChoices):
         ADMIN = "ADMIN", "Administrador"
         CLIENTE = "CLIENTE", "Cliente"
+        MECANICO = "MECANICO", "Mecánico"
+        RETIRO = "RETIRO", "Encargado de Retiro"
+        DESPACHO = "DESPACHO", "Encargado de Despacho"
+        REPARTIDOR = "REPARTIDOR", "Repartidor"
 
     rol = models.CharField(max_length=12, choices=Rol.choices, default=Rol.CLIENTE, db_index=True)
     bloqueado = models.BooleanField(default=False)
@@ -225,6 +229,54 @@ class Promocion(MarcaTiempo):
 
 
 # =============================
+#   CÓDIGOS DE DESCUENTO
+# =============================
+class CodigoDescuento(MarcaTiempo):
+    class Tipo(models.TextChoices):
+        PORCENTAJE = "PORCENTAJE", "Porcentaje"
+        MONTO = "MONTO", "Monto fijo"
+
+    codigo = models.CharField(max_length=50, unique=True, db_index=True)
+    tipo = models.CharField(max_length=12, choices=Tipo.choices, default=Tipo.PORCENTAJE)
+    valor = models.DecimalField(max_digits=10, decimal_places=2, validators=[MinValueValidator(0)])
+    inicio = models.DateTimeField(null=True, blank=True)
+    fin = models.DateTimeField(null=True, blank=True)
+    activo = models.BooleanField(default=True)
+    usos_maximos = models.PositiveIntegerField(null=True, blank=True, help_text="Cantidad máxima de veces que se puede usar este código")
+    usos_actuales = models.PositiveIntegerField(default=0)
+    monto_minimo = models.DecimalField(max_digits=10, decimal_places=2, default=0, help_text="Monto mínimo de compra para aplicar el descuento")
+
+    def __str__(self):
+        return f"{self.codigo} (-{self.valor}{'%' if self.tipo == self.Tipo.PORCENTAJE else ' CLP'})"
+
+    def es_valido(self):
+        """Verifica si el código es válido para usar."""
+        ahora = timezone.now()
+        if not self.activo:
+            return False, "El código no está activo"
+        if self.inicio and self.inicio > ahora:
+            return False, "El código aún no está disponible"
+        if self.fin and self.fin < ahora:
+            return False, "El código ha expirado"
+        if self.usos_maximos and self.usos_actuales >= self.usos_maximos:
+            return False, "El código ha alcanzado el límite de usos"
+        return True, "Código válido"
+
+    def calcular_descuento(self, subtotal):
+        """Calcula el descuento aplicable al subtotal."""
+        if subtotal < self.monto_minimo:
+            return Decimal('0.00')
+        
+        if self.tipo == self.Tipo.PORCENTAJE:
+            descuento = (subtotal * self.valor) / Decimal(100)
+        else:
+            descuento = self.valor
+        
+        # No puede ser mayor al subtotal
+        return min(descuento, subtotal).quantize(Decimal('0.01'))
+
+
+# =============================
 #   CARRITO DE COMPRAS
 # =============================
 class Carrito(MarcaTiempo):
@@ -339,6 +391,13 @@ class Pedido(models.Model):
     # =============================
     subtotal = models.DecimalField(max_digits=12, decimal_places=2, default=0)
     descuento = models.DecimalField(max_digits=12, decimal_places=2, default=0)
+    codigo_descuento = models.ForeignKey(
+        "CodigoDescuento",
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name="pedidos"
+    )
     envio = models.DecimalField(max_digits=12, decimal_places=2, default=0)
     total = models.DecimalField(max_digits=12, decimal_places=2, default=0)
 
@@ -522,6 +581,8 @@ class VehiculoEnVenta(models.Model):
         ('pendiente', 'Pendiente de aprobación'),
         ('aprobado', 'Aprobado'),
         ('rechazado', 'Rechazado'),
+        ('vendido', 'Vendido'),
+        ('oculto', 'Oculto'),
     ]
 
     usuario = models.ForeignKey(
@@ -532,14 +593,156 @@ class VehiculoEnVenta(models.Model):
     marca = models.CharField(max_length=50)
     modelo = models.CharField(max_length=50)
     año = models.PositiveIntegerField()
+    # Permitir guardar registros existentes sin valor inicial y completar luego
+    patente = models.CharField(max_length=10, help_text="Patente del vehículo", blank=True, default="")
     kilometraje = models.PositiveIntegerField(help_text="Kilómetros recorridos")
     transmision = models.CharField(max_length=20, choices=TRANSMISIONES)
     combustible = models.CharField(max_length=20, choices=COMBUSTIBLES)
+    # Color puede ser opcional al inicio
+    color = models.CharField(max_length=30, help_text="Color del vehículo", blank=True, default="")
     precio = models.DecimalField(max_digits=10, decimal_places=2)
     descripcion = models.TextField(blank=True)
     imagen = models.ImageField(upload_to='vehiculos/', blank=True, null=True)
     estado = models.CharField(max_length=20, choices=ESTADOS, default='pendiente')
     fecha_publicacion = models.DateTimeField(auto_now_add=True)
+    comision = models.DecimalField(max_digits=10, decimal_places=2, default=0, help_text="Comisión por venta")
 
     def __str__(self):
-        return f"{self.marca} {self.modelo} ({self.año}) - {self.usuario.username}"
+        return f"{self.marca} {self.modelo} ({self.año}) - {self.usuario.email}"
+
+    # Alias compatible para plantillas que usan "anio"
+    @property
+    def anio(self):
+        return self.año
+
+
+class VehiculoImagen(models.Model):
+    vehiculo = models.ForeignKey(
+        VehiculoEnVenta,
+        on_delete=models.CASCADE,
+        related_name='imagenes'
+    )
+    imagen = models.ImageField(upload_to='vehiculos/')
+    orden = models.PositiveIntegerField(default=0, help_text="Orden de aparición")
+    fecha_subida = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['orden', 'fecha_subida']
+
+    def __str__(self):
+        return f"Imagen {self.orden} - {self.vehiculo.marca} {self.vehiculo.modelo}"
+
+
+# =============================
+#   VEHÍCULO Y HISTORIAL DE SERVICIOS
+# =============================
+class VehiculoCliente(MarcaTiempo):
+    """Vehículo registrado por un cliente para seguimiento de servicios."""
+    usuario = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="vehiculos")
+    patente = models.CharField(max_length=10, unique=True)
+    marca = models.CharField(max_length=50)
+    modelo = models.CharField(max_length=50)
+    año = models.PositiveIntegerField()
+    color = models.CharField(max_length=30, blank=True)
+    kilometraje_actual = models.PositiveIntegerField(default=0)
+    
+    def __str__(self):
+        return f"{self.marca} {self.modelo} - {self.patente}"
+
+
+class HistorialServicio(MarcaTiempo):
+    """Registro de servicios realizados a un vehículo."""
+    vehiculo = models.ForeignKey(VehiculoCliente, on_delete=models.CASCADE, related_name="historial")
+    cita = models.OneToOneField(Cita, on_delete=models.SET_NULL, null=True, blank=True, related_name="historial")
+    fecha_ingreso = models.DateTimeField(default=timezone.now)
+    fecha_salida = models.DateTimeField(null=True, blank=True)
+    mecanico_asignado = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name="servicios_realizados"
+    )
+    descripcion_trabajo = models.TextField()
+    estado = models.CharField(
+        max_length=20,
+        choices=[
+            ('en_espera', 'En espera'),
+            ('en_proceso', 'En proceso'),
+            ('completado', 'Completado'),
+            ('entregado', 'Entregado'),
+        ],
+        default='en_espera'
+    )
+    comentario_mecanico = models.TextField(blank=True)
+    costo_total = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+    kilometraje = models.PositiveIntegerField(default=0)
+    
+    def __str__(self):
+        return f"{self.vehiculo.patente} - {self.fecha_ingreso.strftime('%d/%m/%Y')}"
+
+
+# =============================
+#   GALERÍA PÁGINA NOSOTROS
+# =============================
+class FotoNosotros(MarcaTiempo):
+    """Fotos editables para la página Nosotros."""
+    titulo = models.CharField(max_length=120)
+    descripcion = models.TextField(blank=True)
+    imagen = models.ImageField(upload_to='nosotros/')
+    orden = models.PositiveIntegerField(default=0)
+    activa = models.BooleanField(default=True)
+    
+    class Meta:
+        ordering = ['orden', '-creado']
+        verbose_name = "Foto de Nosotros"
+        verbose_name_plural = "Fotos de Nosotros"
+    
+    def __str__(self):
+        return self.titulo
+
+
+# =============================
+#   CONTACTO
+# =============================
+class Contacto(MarcaTiempo):
+    """Mensajes de contacto del formulario."""
+    nombre = models.CharField(max_length=120)
+    email = models.EmailField()
+    telefono = models.CharField(max_length=20, blank=True)
+    asunto = models.CharField(max_length=200)
+    mensaje = models.TextField()
+    leido = models.BooleanField(default=False)
+    respondido = models.BooleanField(default=False)
+    
+    class Meta:
+        ordering = ['-creado']
+        verbose_name = "Mensaje de Contacto"
+        verbose_name_plural = "Mensajes de Contacto"
+    
+    def __str__(self):
+        return f"{self.nombre} - {self.asunto}"
+
+
+# =============================
+#   RECORDATORIOS DE MANTENIMIENTO
+# =============================
+class RecordatorioMantenimiento(MarcaTiempo):
+    """Recordatorios automáticos de mantenimiento para clientes."""
+    usuario = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="recordatorios")
+    vehiculo = models.ForeignKey(VehiculoCliente, on_delete=models.CASCADE, related_name="recordatorios")
+    tipo = models.CharField(
+        max_length=50,
+        choices=[
+            ('tiempo', 'Por tiempo'),
+            ('kilometraje', 'Por kilometraje'),
+        ]
+    )
+    fecha_programada = models.DateField()
+    kilometraje_programado = models.PositiveIntegerField(null=True, blank=True)
+    mensaje = models.TextField()
+    enviado = models.BooleanField(default=False)
+    fecha_envio = models.DateTimeField(null=True, blank=True)
+    
+    def __str__(self):
+        return f"Recordatorio para {self.usuario.email} - {self.fecha_programada}"

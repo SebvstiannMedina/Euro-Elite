@@ -1,0 +1,195 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ producto.nombre }} - Euro Elite{% endblock %}
+
+{% block content %}
+<div class="container my-5">
+    <div class="row">
+        <!-- Imagen del producto -->
+        <div class="col-md-6">
+            {% if producto.imagen %}
+                <img src="{{ producto.imagen.url }}" alt="{{ producto.nombre }}" class="img-fluid rounded shadow">
+            {% else %}
+                <img src="{% static 'img/no-image.jpg' %}" alt="Sin imagen" class="img-fluid rounded shadow">
+            {% endif %}
+        </div>
+
+        <!-- Detalles del producto -->
+        <div class="col-md-6">
+            <h1 class="mb-3">{{ producto.nombre }}</h1>
+            
+            {% if producto.marca %}
+            <p class="text-muted"><strong>Marca:</strong> {{ producto.marca }}</p>
+            {% endif %}
+
+            <p class="text-muted"><strong>SKU:</strong> {{ producto.sku }}</p>
+
+            {% if producto.categoria %}
+            <p class="text-muted"><strong>Categoría:</strong> {{ producto.categoria.nombre }}</p>
+            {% endif %}
+
+            <hr>
+
+            <!-- Precio -->
+            <div class="mb-4">
+                {% if producto.precio_con_descuento < producto.precio %}
+                    <h3 class="text-danger mb-2">
+                        <del class="text-muted">${{ producto.precio|floatformat:0 }}</del>
+                        ${{ producto.precio_con_descuento|floatformat:0 }}
+                    </h3>
+                    <span class="badge bg-danger">
+                        {{ producto.promocion_vigente }}
+                    </span>
+                {% else %}
+                    <h3 class="text-primary mb-2">${{ producto.precio|floatformat:0 }}</h3>
+                {% endif %}
+            </div>
+
+            <!-- Stock -->
+            <div class="mb-3">
+                {% if producto.stock > 0 %}
+                    <span class="badge bg-success">
+                        <i class="fas fa-check-circle"></i> En stock ({{ producto.stock }} disponibles)
+                    </span>
+                    {% if producto.bajo_stock %}
+                        <span class="badge bg-warning text-dark">¡Últimas unidades!</span>
+                    {% endif %}
+                {% else %}
+                    <span class="badge bg-danger">Sin stock</span>
+                {% endif %}
+            </div>
+
+            <!-- Descripción -->
+            {% if producto.descripcion %}
+            <div class="mb-4">
+                <h5>Descripción</h5>
+                <p>{{ producto.descripcion|linebreaks }}</p>
+            </div>
+            {% endif %}
+
+            <!-- Botón de agregar al carrito -->
+            {% if user.is_authenticated %}
+                {% if producto.stock > 0 %}
+                    <form method="post" action="{% url 'cart_add' %}" class="mb-3">
+                        {% csrf_token %}
+                        <input type="hidden" name="producto_id" value="{{ producto.id }}">
+                        <div class="row g-2">
+                            <div class="col-auto">
+                                <input type="number" name="cantidad" value="1" min="1" max="{{ producto.stock }}" class="form-control" style="width: 80px;">
+                            </div>
+                            <div class="col-auto">
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="fas fa-shopping-cart me-2"></i>Agregar al carrito
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+                {% endif %}
+            {% else %}
+                <div class="alert alert-info">
+                    <i class="fas fa-info-circle me-2"></i>
+                    <a href="{% url 'login' %}">Inicia sesión</a> para agregar productos al carrito
+                </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Reseñas -->
+    <div class="row mt-5">
+        <div class="col-12">
+            <h3 class="mb-4">Reseñas de clientes</h3>
+
+            <!-- Formulario para agregar reseña (solo para usuarios que han comprado) -->
+            {% if user.is_authenticated and puede_resenar %}
+                <div class="card mb-4">
+                    <div class="card-body">
+                        <h5 class="card-title">Deja tu reseña</h5>
+                        <form method="post" action="{% url 'agregar_resena' producto.id %}">
+                            {% csrf_token %}
+                            <div class="mb-3">
+                                <label class="form-label">Calificación</label>
+                                <div class="rating-input">
+                                    <input type="radio" name="calificacion" value="5" id="star5" required>
+                                    <label for="star5"><i class="fas fa-star"></i></label>
+                                    <input type="radio" name="calificacion" value="4" id="star4">
+                                    <label for="star4"><i class="fas fa-star"></i></label>
+                                    <input type="radio" name="calificacion" value="3" id="star3">
+                                    <label for="star3"><i class="fas fa-star"></i></label>
+                                    <input type="radio" name="calificacion" value="2" id="star2">
+                                    <label for="star2"><i class="fas fa-star"></i></label>
+                                    <input type="radio" name="calificacion" value="1" id="star1">
+                                    <label for="star1"><i class="fas fa-star"></i></label>
+                                </div>
+                            </div>
+                            <div class="mb-3">
+                                <label for="comentario" class="form-label">Comentario</label>
+                                <textarea class="form-control" id="comentario" name="comentario" rows="3"></textarea>
+                            </div>
+                            <button type="submit" class="btn btn-primary">Publicar reseña</button>
+                        </form>
+                    </div>
+                </div>
+            {% endif %}
+
+            <!-- Mostrar reseñas aprobadas -->
+            {% if resenas %}
+                {% for resena in resenas %}
+                <div class="card mb-3">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between">
+                            <div>
+                                <h6 class="mb-1">{{ resena.usuario.get_full_name }}</h6>
+                                <div class="text-warning mb-2">
+                                    {% for i in "12345" %}
+                                        {% if forloop.counter <= resena.calificacion %}
+                                            <i class="fas fa-star"></i>
+                                        {% else %}
+                                            <i class="far fa-star"></i>
+                                        {% endif %}
+                                    {% endfor %}
+                                </div>
+                            </div>
+                            <small class="text-muted">{{ resena.creado|date:"d/m/Y" }}</small>
+                        </div>
+                        {% if resena.comentario %}
+                        <p class="mb-0">{{ resena.comentario }}</p>
+                        {% endif %}
+                    </div>
+                </div>
+                {% endfor %}
+            {% else %}
+                <div class="alert alert-info">
+                    <i class="fas fa-info-circle me-2"></i>
+                    Este producto aún no tiene reseñas. ¡Sé el primero en dejar una!
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<style>
+.rating-input {
+    display: flex;
+    flex-direction: row-reverse;
+    justify-content: flex-end;
+}
+
+.rating-input input {
+    display: none;
+}
+
+.rating-input label {
+    font-size: 2rem;
+    color: #ddd;
+    cursor: pointer;
+    transition: color 0.2s;
+}
+
+.rating-input label:hover,
+.rating-input label:hover ~ label,
+.rating-input input:checked ~ label {
+    color: #ffc107;
+}
+</style>
+{% endblock %}

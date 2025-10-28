@@ -1,62 +1,55 @@
 {% extends 'base.html' %}
+{% load static %}
 {% block title %}Publicar Vehículo - Euro Elite{% endblock %}
 
 {% block content %}
 <style>
-  .vehiculo-card {
-    background: linear-gradient(135deg, #ffffff, #f8f9fa);
-    border-radius: 1.5rem;
-    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
-    transition: all 0.3s ease;
-  }
-  .vehiculo-card:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 15px 30px rgba(0, 0, 0, 0.15);
-  }
-  .vehiculo-title {
-    font-weight: 700;
-    color: #0d6efd;
-  }
-  .vehiculo-sub {
-    font-size: 0.95rem;
-    color: #6c757d;
-  }
-  .vehiculo-form label {
-    color: #495057;
-    font-weight: 600;
-  }
-  .vehiculo-form input,
-  .vehiculo-form textarea,
-  .vehiculo-form select {
-    border-radius: 0.75rem;
-  }
-  .btn-enviar {
-    background: linear-gradient(90deg, #0d6efd, #6610f2);
-    border: none;
+  .hero-section {
+    background: linear-gradient(135deg, #000000, #5777b8);
     color: white;
-    font-weight: 600;
-    letter-spacing: 0.5px;
-    transition: all 0.3s ease;
+    padding: 60px 0 40px;
+    margin-bottom: 40px;
   }
-  .btn-enviar:hover {
-    background: linear-gradient(90deg, #6610f2, #0d6efd);
-    transform: scale(1.02);
+  .vehiculo-card {
+    background: #ffffff;
+    border-radius: 1rem;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.08);
   }
+  .vehiculo-form label { font-weight: 600; }
+  .vehiculo-form .help-text { font-size: .85rem; color: #6c757d; }
+  .preview-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
+  .preview-item { position: relative; border-radius: 8px; overflow: hidden; }
+  .preview-item img { width: 100%; height: 100px; object-fit: cover; }
+  .preview-item .badge { position: absolute; top: 6px; left: 6px; }
+  .btn-enviar {
+    background: linear-gradient(90deg, #5777b8, #3d5a8f);
+    border: none; color: #fff; font-weight: 600;
+  }
+  .btn-enviar:hover { filter: brightness(1.05); }
+  .field-error { color: #dc3545; font-size: .9rem; }
+  .section-title { font-weight: 700; color: #2c3e50; }
 </style>
 
-<div class="container py-5">
-  <div class="text-center mb-5">
-    <h1 class="vehiculo-title mb-2">🚘 Publicar tu vehículo</h1>
-    <p class="vehiculo-sub">
-      Completa los datos de tu vehículo y envíalo para revisión.<br>
-      El administrador aprobará tu publicación antes de que aparezca en Euro Elite.
-    </p>
+<!-- Hero -->
+<div class="hero-section">
+  <div class="container">
+    <div class="d-flex justify-content-between align-items-center">
+      <div>
+        <h1 class="fw-bold mb-2"><i class="fas fa-plus-circle"></i> Publicar tu vehículo</h1>
+        <div class="opacity-75">Completa los datos. Revisaremos y aprobarmos tu publicación.</div>
+      </div>
+      <a href="{% url 'vehiculos_venta' %}" class="btn btn-light">
+        <i class="fas fa-arrow-left"></i> Volver al listado
+      </a>
+    </div>
+  </div>
   </div>
 
+<div class="container mb-5">
   <div class="row justify-content-center">
-    <div class="col-lg-8 col-md-10">
+    <div class="col-lg-9 col-md-10">
       <div class="vehiculo-card p-4 p-md-5">
-        
+
         {% if messages %}
           {% for message in messages %}
             <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
@@ -68,58 +61,118 @@
 
         <form method="POST" enctype="multipart/form-data" class="vehiculo-form">
           {% csrf_token %}
+
+          <!-- Datos principales -->
+          <h5 class="section-title mb-3"><i class="fas fa-car me-2"></i> Datos del vehículo</h5>
           <div class="row g-3">
             <div class="col-md-6">
               <label class="form-label">Marca</label>
               {{ form.marca }}
+              {% if form.marca.errors %}<div class="field-error">{{ form.marca.errors.0 }}</div>{% endif %}
             </div>
             <div class="col-md-6">
               <label class="form-label">Modelo</label>
               {{ form.modelo }}
+              {% if form.modelo.errors %}<div class="field-error">{{ form.modelo.errors.0 }}</div>{% endif %}
             </div>
-            <div class="col-md-4">
+            <div class="col-md-3">
               <label class="form-label">Año</label>
               {{ form.año }}
+              {% if form.año.errors %}<div class="field-error">{{ form.año.errors.0 }}</div>{% endif %}
             </div>
-            <div class="col-md-4">
+            <div class="col-md-3">
               <label class="form-label">Kilometraje (km)</label>
               {{ form.kilometraje }}
+              {% if form.kilometraje.errors %}<div class="field-error">{{ form.kilometraje.errors.0 }}</div>{% endif %}
             </div>
-            <div class="col-md-4">
+            <div class="col-md-3">
               <label class="form-label">Precio (CLP)</label>
               {{ form.precio }}
+              {% if form.precio.errors %}<div class="field-error">{{ form.precio.errors.0 }}</div>{% endif %}
+            </div>
+            <div class="col-md-3">
+              <label class="form-label">Patente</label>
+              {{ form.patente }}
+              <div class="help-text">Opcional. Se mostrará en la ficha del vehículo.</div>
+              {% if form.patente.errors %}<div class="field-error">{{ form.patente.errors.0 }}</div>{% endif %}
             </div>
             <div class="col-md-6">
               <label class="form-label">Transmisión</label>
               {{ form.transmision }}
+              {% if form.transmision.errors %}<div class="field-error">{{ form.transmision.errors.0 }}</div>{% endif %}
             </div>
             <div class="col-md-6">
               <label class="form-label">Combustible</label>
               {{ form.combustible }}
+              {% if form.combustible.errors %}<div class="field-error">{{ form.combustible.errors.0 }}</div>{% endif %}
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">Color</label>
+              {{ form.color }}
+              {% if form.color.errors %}<div class="field-error">{{ form.color.errors.0 }}</div>{% endif %}
             </div>
             <div class="col-12">
               <label class="form-label">Descripción</label>
               {{ form.descripcion }}
-            </div>
-            <div class="col-12">
-              <label class="form-label">Imagen del vehículo</label>
-              <div class="input-group">
-                <span class="input-group-text bg-light"><i class="fa-solid fa-image"></i></span>
-                {{ form.imagen }}
-              </div>
-              <small class="text-muted">Formatos permitidos: JPG, PNG (máx. 5 MB)</small>
+              {% if form.descripcion.errors %}<div class="field-error">{{ form.descripcion.errors.0 }}</div>{% endif %}
             </div>
           </div>
 
-          <div class="text-center mt-5">
-            <button type="submit" class="btn btn-enviar px-5 py-2 rounded-pill">
+          <hr class="my-4">
+
+          <!-- Imágenes -->
+          <h5 class="section-title mb-3"><i class="fas fa-images me-2"></i> Galería de imágenes</h5>
+          <div class="row g-3">
+            <div class="col-12">
+              <label class="form-label">Imágenes del vehículo (hasta 10)</label>
+              {{ form.imagenes }}
+              <div class="help-text">
+                <i class="fas fa-info-circle"></i> 
+                JPG, PNG o WEBP. Máx. 5 MB cada una. <strong>La primera imagen será la portada.</strong>
+              </div>
+              {% if form.imagenes.errors %}<div class="field-error">{{ form.imagenes.errors.0 }}</div>{% endif %}
+            </div>
+            <div class="col-12">
+              <div id="previewGrid" class="preview-grid"></div>
+            </div>
+          </div>
+
+          <div class="text-center mt-4">
+            <button type="submit" class="btn btn-enviar px-4 py-2 rounded-pill">
               <i class="fa-solid fa-paper-plane me-2"></i> Enviar para aprobación
             </button>
           </div>
         </form>
-
       </div>
     </div>
   </div>
 </div>
+
+<script>
+  // Previsualización de la galería
+  (function() {
+    const input = document.querySelector('input[name="imagenes"]');
+    const grid = document.getElementById('previewGrid');
+    if (!input || !grid) return;
+    input.addEventListener('change', function() {
+      grid.innerHTML = '';
+      const files = Array.from(this.files || []);
+      if (files.length === 0) return;
+      
+      files.slice(0, 10).forEach((file, idx) => {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+          const item = document.createElement('div');
+          item.className = 'preview-item';
+          const badgeHTML = idx === 0 
+            ? '<span class="badge bg-primary">Portada</span>' 
+            : `<span class="badge bg-secondary">${idx + 1}</span>`;
+          item.innerHTML = `<img src="${e.target.result}" alt="img-${idx}">${badgeHTML}`;
+          grid.appendChild(item);
+        };
+        reader.readAsDataURL(file);
+      });
+    });
+  })();
+</script>
 {% endblock %}

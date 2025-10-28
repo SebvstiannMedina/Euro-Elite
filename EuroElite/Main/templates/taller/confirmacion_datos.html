@@ -167,12 +167,25 @@
           <div class="d-flex justify-content-between">
             <span>Subtotal</span><strong id="summary-subtotal-text">{{ subtotal|default:"-" }}</strong>
           </div>
+          {% if descuento %}
+          <div class="d-flex justify-content-between">
+            <span class="text-success">Descuento{% if codigo_descuento %} ({{ codigo_descuento }}){% endif %}</span>
+            <strong id="summary-descuento-text" class="text-success">-{{ descuento }}</strong>
+          </div>
+          {% endif %}
           <div class="d-flex justify-content-between">
             <span>Envío</span><strong id="summary-envio-text">{{ envio|default:"-" }}</strong>
           </div>
           <hr>
           <div class="d-flex justify-content-between fs-5">
-            <span>Total</span><strong id="summary-total-text">{{ total|default:"-" }}</strong>
+            <span>Total</span>
+            <strong id="summary-total-text">
+              {% if descuento %}
+                {{ subtotal|default:"-" }} - {{ descuento }} + {{ envio|default:"-" }} = {{ total|default:"-" }}
+              {% else %}
+                {{ total|default:"-" }}
+              {% endif %}
+            </strong>
           </div>
           <p class="text-muted small mt-2">El total final se confirmará al crear el pedido.</p>
         </div>
@@ -686,7 +699,7 @@
       const stored = (localStorage.getItem('delivery_method') === 'retiro') ? 'retiro' : 'envio';
       if (metodoInput) metodoInput.value = stored;
 
-      // Si el usuario eligió "retiro en tienda", reflejar envío = $0 y recalcular total
+      // Si el usuario eligió "retiro en tienda", reflejar envío = $0 y recalcular total (considerando descuento)
       if (stored === 'retiro' && subtotalEl && envioEl && totalEl) {
         // Parsear valores mostrados por el servidor
         const parseCLP = (txt) => {
@@ -697,9 +710,12 @@
         const formatCLP = (n) => n.toLocaleString('es-CL', { style: 'currency', currency: 'CLP' });
 
         const subtotalVal = parseCLP(subtotalEl.textContent);
+        // Si existe un descuento en el DOM, tomarlo
+        const descuentoNode = document.getElementById('summary-descuento-text');
+        const descuentoVal = descuentoNode ? parseCLP(descuentoNode.textContent) : 0;
         // En retiro, envío es 0
         const envioVal = 0;
-        const totalVal = subtotalVal + envioVal;
+        const totalVal = Math.max(0, subtotalVal - descuentoVal + envioVal);
 
         envioEl.textContent = formatCLP(envioVal);
         totalEl.textContent = formatCLP(totalVal);

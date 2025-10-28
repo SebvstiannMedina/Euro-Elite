@@ -1,0 +1,49 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Reseñas - Euro Elite{% endblock %}
+
+{% block content %}
+<div class="container my-5">
+    <h1 class="mb-4">Reseñas de nuestros clientes</h1>
+
+    <div class="row">
+        {% for resena in resenas %}
+        <div class="col-md-6 mb-4">
+            <div class="card shadow-sm h-100">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-start mb-3">
+                        <div>
+                            <h5 class="card-title mb-1">{{ resena.usuario.get_full_name }}</h5>
+                            <p class="text-muted small mb-0">{{ resena.creado|date:"d/m/Y" }}</p>
+                        </div>
+                        <div class="text-warning">
+                            {% for i in "12345" %}
+                                {% if forloop.counter <= resena.calificacion %}
+                                    <i class="fas fa-star"></i>
+                                {% else %}
+                                    <i class="far fa-star"></i>
+                                {% endif %}
+                            {% endfor %}
+                        </div>
+                    </div>
+                    
+                    <p class="card-text"><strong>Producto:</strong> {{ resena.producto.nombre }}</p>
+                    
+                    {% if resena.comentario %}
+                    <p class="card-text">{{ resena.comentario }}</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        {% empty %}
+        <div class="col-12">
+            <div class="alert alert-info text-center">
+                <i class="fas fa-info-circle me-2"></i>
+                Aún no hay reseñas publicadas. ¡Sé el primero en dejar una!
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}

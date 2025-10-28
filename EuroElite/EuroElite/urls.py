@@ -102,16 +102,58 @@ urlpatterns = [
          ), 
          name='password_reset_complete'),
     
+    # Vehículos en venta (marketplace)
+    path('vehiculos_venta', main_views.vehiculos_venta, name='vehiculos_venta'),
+    path('vehiculo/<int:vehiculo_id>/', main_views.vehiculo_detalle, name='vehiculo_detalle'),
+    
+    # Gestión de vehículos (usuario)
     path('publicar_vehiculo', main_views.publicar_vehiculo, name='publicar_vehiculo'),
     path('estado_revi_vehiculos', main_views.estado_revi_vehiculos, name='estado_revi_vehiculos'),
+    
+    # Gestión de vehículos (admin)
     path('revisar_vehiculo', main_views.revisar_vehiculo, name='revisar_vehiculo'),
     path('aprobar_vehiculo/<int:id>/', main_views.aprobar_vehiculo, name='aprobar_vehiculo'),
     path('rechazar_vehiculo/<int:id>/', main_views.rechazar_vehiculo, name='rechazar_vehiculo'),
+    path('cambiar_estado_vehiculo/<int:vehiculo_id>/', main_views.cambiar_estado_vehiculo, name='cambiar_estado_vehiculo'),
+    
     path('carrito/json/', main_views.carrito_json, name='carrito_json'),
     path('carrito/actualizar/<int:item_id>/', main_views.carrito_actualizar, name='carrito_actualizar'),
     path('carrito/eliminar/<int:item_id>/', main_views.carrito_eliminar, name='carrito_eliminar'),
 
     path('custom_404', main_views.custom_404, name='custom_404'),
+
+    # Gestión de productos
+    path('producto/<int:pk>/eliminar/', main_views.eliminar_producto, name='eliminar_producto'),
+
+    # Códigos de descuento
+    path('admin_codigos_descuento', main_views.gestionar_codigos_descuento, name='gestionar_codigos_descuento'),
+    path('api/aplicar-codigo-descuento/', main_views.aplicar_codigo_descuento, name='aplicar_codigo_descuento'),
+    path('api/crear-codigo-descuento/', main_views.crear_codigo_descuento, name='crear_codigo_descuento'),
+
+    # Contacto
+    path('contacto/', main_views.contacto, name='contacto'),
+    path('admin_contactos', main_views.admin_contactos, name='admin_contactos'),
+    path('api/contacto/<int:contacto_id>/marcar-leido/', main_views.marcar_contacto_leido, name='marcar_contacto_leido'),
+
+    # Reseñas
+    path('producto/<int:producto_id>/resena/', main_views.agregar_resena, name='agregar_resena'),
+    path('resenas/', main_views.resenas, name='resenas'),
+    path('admin_resenas', main_views.admin_resenas, name='admin_resenas'),
+    path('api/resena/<int:resena_id>/aprobar/', main_views.aprobar_resena, name='aprobar_resena'),
+    path('api/resena/<int:resena_id>/eliminar/', main_views.eliminar_resena, name='eliminar_resena'),
+
+    # Galería Nosotros
+    path('admin_galeria_nosotros', main_views.admin_galeria_nosotros, name='admin_galeria_nosotros'),
+    path('api/foto-nosotros/<int:foto_id>/eliminar/', main_views.eliminar_foto_nosotros, name='eliminar_foto_nosotros'),
+
+    # Vehículos y historial
+    path('mis_vehiculos', main_views.mis_vehiculos, name='mis_vehiculos'),
+    path('agregar_vehiculo', main_views.agregar_vehiculo, name='agregar_vehiculo'),
+    path('admin_historial_servicios', main_views.admin_historial_servicios, name='admin_historial_servicios'),
+    path('api/historial-servicio/<int:historial_id>/actualizar/', main_views.actualizar_historial_servicio, name='actualizar_historial_servicio'),
+
+    # Switch vista
+    path('toggle-vista-admin/', main_views.toggle_vista_admin, name='toggle_vista_admin'),
 
     
 

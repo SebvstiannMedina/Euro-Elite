@@ -1,0 +1,78 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Contacto - Euro Elite{% endblock %}
+
+{% block content %}
+<div class="container my-5">
+    <div class="row">
+        <div class="col-lg-8 mx-auto">
+            <h1 class="mb-4">Contáctanos</h1>
+            
+            {% if messages %}
+                {% for message in messages %}
+                    <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                        {{ message }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
+                {% endfor %}
+            {% endif %}
+
+            <div class="card shadow">
+                <div class="card-body p-4">
+                    <form method="post" action="{% url 'contacto' %}">
+                        {% csrf_token %}
+                        
+                        <div class="mb-3">
+                            <label for="nombre" class="form-label">Nombre completo <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control" id="nombre" name="nombre" required>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="email" class="form-label">Correo electrónico <span class="text-danger">*</span></label>
+                            <input type="email" class="form-control" id="email" name="email" required>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="telefono" class="form-label">Teléfono</label>
+                            <input type="tel" class="form-control" id="telefono" name="telefono" placeholder="+56 9 1234 5678">
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="asunto" class="form-label">Asunto <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control" id="asunto" name="asunto" required>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="mensaje" class="form-label">Mensaje <span class="text-danger">*</span></label>
+                            <textarea class="form-control" id="mensaje" name="mensaje" rows="6" required></textarea>
+                        </div>
+
+                        <button type="submit" class="btn btn-primary btn-lg">
+                            <i class="fas fa-paper-plane me-2"></i>Enviar mensaje
+                        </button>
+                    </form>
+                </div>
+            </div>
+
+            <div class="row mt-5">
+                <div class="col-md-4 text-center mb-3">
+                    <i class="fas fa-map-marker-alt fa-3x text-primary mb-3"></i>
+                    <h5>Dirección</h5>
+                    <p>Santiago, Chile</p>
+                </div>
+                <div class="col-md-4 text-center mb-3">
+                    <i class="fas fa-phone fa-3x text-primary mb-3"></i>
+                    <h5>Teléfono</h5>
+                    <p>+56 9 1234 5678</p>
+                </div>
+                <div class="col-md-4 text-center mb-3">
+                    <i class="fas fa-envelope fa-3x text-primary mb-3"></i>
+                    <h5>Email</h5>
+                    <p>contacto@euroelite.cl</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

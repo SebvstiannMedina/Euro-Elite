@@ -19,6 +19,17 @@
     <div class="col-12 col-lg-4">
       <div id="resumen-sidebar" class="card shadow-sm p-3" data-envio="{{ shipping_cost|default:'4990' }}">
         <h5 class="mb-3">Resumen</h5>
+        
+        <!-- Código de descuento -->
+        <div class="mb-3">
+          <label class="form-label">¿Tienes un código de descuento?</label>
+          <div class="input-group">
+            <input type="text" class="form-control" id="codigo-descuento" placeholder="Ingresa tu código">
+            <button class="btn btn-outline-primary" type="button" onclick="aplicarCodigo()">Aplicar</button>
+          </div>
+          <small id="codigo-mensaje" class="text-muted"></small>
+        </div>
+        
         <div class="mb-3">
           <div class="form-label">Método de entrega</div>
           <div class="form-check">
@@ -33,6 +44,10 @@
         <div class="d-flex justify-content-between mb-2">
           <span>Subtotal</span>
           <strong id="subtotal-text">$0</strong>
+        </div>
+        <div class="d-flex justify-content-between mb-2" id="descuento-row" style="display: none !important;">
+          <span class="text-success">Descuento</span>
+          <strong id="descuento-text" class="text-success">-$0</strong>
         </div>
         <div class="d-flex justify-content-between mb-2">
           <span>Envío</span>
@@ -80,29 +95,88 @@
 </style>
 
 <script>
-document.addEventListener("DOMContentLoaded", async () => {
-  const itemsContainer = document.getElementById('resumen-items');
-  const sidebar = document.getElementById('resumen-sidebar');
-  if (!itemsContainer || !sidebar) return;
+let descuentoAplicado = 0;
+let codigoAplicado = '';
 
-  const shippingBase = parseInt(sidebar.dataset.envio || '0', 10) || 0;
+async function aplicarCodigo() {
+  const input = document.getElementById('codigo-descuento');
+  const mensaje = document.getElementById('codigo-mensaje');
+  const codigo = input.value.trim().toUpperCase();
 
-  // Guardar / leer método de entrega
-  let delivery = (localStorage.getItem('delivery_method') === 'retiro') ? 'retiro' : 'envio';
-  const radioEnvio = document.getElementById('delivery-envio');
-  const radioRetiro = document.getElementById('delivery-retiro');
-
-  if (radioEnvio && radioRetiro) {
-    radioEnvio.checked = (delivery === 'envio');
-    radioRetiro.checked = (delivery === 'retiro');
+  if (!codigo) {
+    mensaje.textContent = 'Por favor ingresa un código';
+    mensaje.className = 'text-danger';
+    return;
   }
 
-  // Cargar carrito real desde Django
+  try {
+    const formData = new FormData();
+    formData.append('codigo', codigo);
+
+    const response = await fetch('/api/aplicar-codigo-descuento/', {
+      method: 'POST',
+      headers: {
+        'X-CSRFToken': getCookie('csrftoken')
+      },
+      body: formData
+    });
+
+    const data = await response.json();
+
+    if (data.ok) {
+      descuentoAplicado = data.descuento;
+      codigoAplicado = codigo;
+      mensaje.textContent = data.msg;
+      mensaje.className = 'text-success';
+      
+      // Actualizar totales
+      const subtotal = parseInt(document.getElementById('subtotal-text').textContent.replace(/[^\d]/g, '')) || 0;
+      updateTotals(subtotal);
+      
+      // Guardar en localStorage
+      localStorage.setItem('codigo_descuento', codigo);
+      localStorage.setItem('descuento_aplicado', descuentoAplicado);
+    } else {
+      mensaje.textContent = data.msg;
+      mensaje.className = 'text-danger';
+      descuentoAplicado = 0;
+      codigoAplicado = '';
+          await recargarCarritoYTotales();
+      localStorage.removeItem('codigo_descuento');
+      localStorage.removeItem('descuento_aplicado');
+    }
+  } catch (error) {
+    mensaje.textContent = 'Error al aplicar el código';
+    mensaje.className = 'text-danger';
+    console.error(error);
+  }
+}
+
+
+function getCookie(name) {
+  let cookieValue = null;
+  if (document.cookie && document.cookie !== '') {
+    const cookies = document.cookie.split(';');
+    for (let i = 0; i < cookies.length; i++) {
+      const cookie = cookies[i].trim();
+      if (cookie.substring(0, name.length + 1) === (name + '=')) {
+        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+        break;
+      }
+    }
+  }
+  return cookieValue;
+}
+
+// Recarga el carrito y actualiza el subtotal y totales
+async function recargarCarritoYTotales() {
+  const itemsContainer = document.getElementById('resumen-items');
+  if (!itemsContainer) return;
+  itemsContainer.innerHTML = '';
   try {
     const response = await fetch("/carrito/json/");
     if (!response.ok) throw new Error("No se pudo obtener el carrito");
     const data = await response.json();
-
     const items = data.items || [];
     if (!items.length) {
       itemsContainer.innerHTML = `
@@ -115,7 +189,6 @@ document.addEventListener("DOMContentLoaded", async () => {
       updateTotals(0);
       return;
     }
-
     // Encabezado de columnas
     const head = document.createElement('div');
     head.className = 'row-head';
@@ -126,7 +199,6 @@ document.addEventListener("DOMContentLoaded", async () => {
       <div class="subtotal">Subtotal</div>
     `;
     itemsContainer.appendChild(head);
-
     // Generar filas
     let subtotal = 0;
     items.forEach(item => {
@@ -144,30 +216,65 @@ document.addEventListener("DOMContentLoaded", async () => {
       `;
       itemsContainer.appendChild(row);
     });
-
-    // Mostrar totales iniciales
     updateTotals(subtotal);
-
   } catch (error) {
-    console.error("❌ Error al cargar el resumen:", error);
-    itemsContainer.innerHTML = `
-      <div class="alert alert-danger mt-4" role="alert">
-        No se pudo cargar el resumen de compra. Intenta nuevamente.
-      </div>`;
+    itemsContainer.innerHTML = `<div class="alert alert-danger mt-4" role="alert">No se pudo cargar el resumen de compra. Intenta nuevamente.</div>`;
     updateTotals(0);
   }
+}
 
-  // Función para actualizar totales
-  function updateTotals(subtotal = 0) {
-    const envio = (delivery === 'retiro') ? 0 : shippingBase;
-    const total = subtotal + envio;
-    document.getElementById('subtotal-text').textContent =
-      subtotal.toLocaleString('es-CL', { style: 'currency', currency: 'CLP' });
-    document.getElementById('envio-text').textContent =
-      envio.toLocaleString('es-CL', { style: 'currency', currency: 'CLP' });
-    document.getElementById('total-text').textContent =
-      total.toLocaleString('es-CL', { style: 'currency', currency: 'CLP' });
+let delivery = (localStorage.getItem('delivery_method') === 'retiro') ? 'retiro' : 'envio';
+let shippingBase = 0;
+
+function updateTotals(subtotal = 0) {
+  const descuento = descuentoAplicado;
+  const envio = (delivery === 'retiro') ? 0 : shippingBase;
+  const total = Math.max(0, subtotal - descuento + envio);
+  document.getElementById('subtotal-text').textContent =
+    subtotal.toLocaleString('es-CL', { style: 'currency', currency: 'CLP' });
+  // Mostrar descuento si existe
+  const descuentoRow = document.getElementById('descuento-row');
+  if (descuento > 0) {
+    descuentoRow.style.display = 'flex !important';
+    document.getElementById('descuento-text').textContent =
+      '-' + descuento.toLocaleString('es-CL', { style: 'currency', currency: 'CLP' });
+  } else {
+    descuentoRow.style.display = 'none !important';
   }
+  document.getElementById('envio-text').textContent =
+    envio.toLocaleString('es-CL', { style: 'currency', currency: 'CLP' });
+  document.getElementById('total-text').textContent =
+    total.toLocaleString('es-CL', { style: 'currency', currency: 'CLP' });
+}
+
+document.addEventListener("DOMContentLoaded", () => {
+  const itemsContainer = document.getElementById('resumen-items');
+  const sidebar = document.getElementById('resumen-sidebar');
+  if (!itemsContainer || !sidebar) return;
+
+  shippingBase = parseInt(sidebar.dataset.envio || '0', 10) || 0;
+
+  // Cargar código de descuento guardado
+  const codigoGuardado = localStorage.getItem('codigo_descuento');
+  const descuentoGuardado = parseFloat(localStorage.getItem('descuento_aplicado') || '0');
+  if (codigoGuardado) {
+    document.getElementById('codigo-descuento').value = codigoGuardado;
+    descuentoAplicado = descuentoGuardado;
+    codigoAplicado = codigoGuardado;
+    document.getElementById('codigo-mensaje').textContent = 'Código aplicado';
+    document.getElementById('codigo-mensaje').className = 'text-success';
+  }
+
+  const radioEnvio = document.getElementById('delivery-envio');
+  const radioRetiro = document.getElementById('delivery-retiro');
+
+  if (radioEnvio && radioRetiro) {
+    radioEnvio.checked = (delivery === 'envio');
+    radioRetiro.checked = (delivery === 'retiro');
+  }
+
+  // Cargar carrito real desde Django
+  recargarCarritoYTotales();
 
   // Listeners de método de entrega
   if (radioEnvio) {

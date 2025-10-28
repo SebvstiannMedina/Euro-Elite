@@ -1,0 +1,331 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Vehículos en Venta - Euro Elite{% endblock %}
+
+{% block content %}
+<style>
+    .hero-section {
+        background: linear-gradient(135deg, #000000, #5777b8);
+        color: white;
+        padding: 80px 0 60px;
+        margin-bottom: 50px;
+    }
+
+    .vehicle-card {
+        border: none;
+        border-radius: 15px;
+        overflow: hidden;
+        box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+        height: 100%;
+    }
+
+    .vehicle-card:hover {
+        transform: translateY(-10px);
+        box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+    }
+
+    .vehicle-image {
+        width: 100%;
+        height: 250px;
+        object-fit: cover;
+    }
+
+    .vehicle-badge {
+        position: absolute;
+        top: 15px;
+        right: 15px;
+        background: #5777b8;
+        color: white;
+        padding: 8px 15px;
+        border-radius: 25px;
+        font-weight: 600;
+        font-size: 0.85rem;
+    }
+
+    .vehicle-info {
+        padding: 20px;
+    }
+
+    .vehicle-title {
+        font-size: 1.4rem;
+        font-weight: 700;
+        color: #2c3e50;
+        margin-bottom: 10px;
+    }
+
+    .vehicle-price {
+        font-size: 1.8rem;
+        font-weight: 700;
+        color: #5777b8;
+        margin-bottom: 15px;
+    }
+
+    .vehicle-specs {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 10px;
+        margin-bottom: 15px;
+    }
+
+    .spec-item {
+        display: flex;
+        align-items: center;
+        font-size: 0.9rem;
+        color: #666;
+    }
+
+    .spec-item i {
+        margin-right: 8px;
+        color: #5777b8;
+        width: 20px;
+    }
+
+    .filter-section {
+        background: white;
+        padding: 30px;
+        border-radius: 15px;
+        box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+        margin-bottom: 40px;
+    }
+
+    .btn-filter {
+        background: #5777b8;
+        color: white;
+        border: none;
+        padding: 10px 25px;
+        border-radius: 25px;
+        font-weight: 600;
+        transition: all 0.3s ease;
+    }
+
+    .btn-filter:hover {
+        background: #3d5a8f;
+        color: white;
+        transform: translateY(-2px);
+    }
+
+    .btn-contact {
+        background: #5777b8;
+        color: white;
+        border: none;
+        padding: 10px 20px;
+        border-radius: 25px;
+        font-weight: 600;
+        width: 100%;
+        transition: all 0.3s ease;
+    }
+
+    .btn-contact:hover {
+        background: #3d5a8f;
+        color: white;
+        transform: translateY(-2px);
+    }
+
+    .no-vehicles {
+        text-align: center;
+        padding: 80px 20px;
+    }
+
+    .no-vehicles i {
+        font-size: 5rem;
+        color: #ddd;
+        margin-bottom: 20px;
+    }
+
+    .pagination {
+        margin-top: 40px;
+    }
+
+    .page-link {
+        color: #5777b8;
+        border: 1px solid #5777b8;
+        margin: 0 5px;
+        border-radius: 8px;
+    }
+
+    .page-item.active .page-link {
+        background-color: #5777b8;
+        border-color: #5777b8;
+    }
+</style>
+
+<!-- Hero Section -->
+<div class="hero-section">
+    <div class="container">
+        <div class="row align-items-center">
+            <div class="col-lg-8">
+                <h1 class="display-4 fw-bold mb-3">
+                    <i class="fas fa-car"></i> Vehículos en Venta
+                </h1>
+                <p class="lead mb-0">
+                    Encuentra el auto perfecto para ti. Vehículos verificados y aprobados.
+                </p>
+            </div>
+            <div class="col-lg-4 text-lg-end">
+                <a href="{% url 'publicar_vehiculo' %}" class="btn btn-light btn-lg">
+                    <i class="fas fa-plus-circle"></i> Vender mi Auto
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="container mb-5">
+    <!-- Filtros -->
+    <div class="filter-section">
+        <form method="get" action="{% url 'vehiculos_venta' %}">
+            <div class="row g-3">
+                <div class="col-md-3">
+                    <label class="form-label fw-bold">
+                        <i class="fas fa-tag"></i> Marca
+                    </label>
+                    <input type="text" name="marca" class="form-control" placeholder="Ej: Toyota, BMW..." value="{{ request.GET.marca }}">
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label fw-bold">
+                        <i class="fas fa-calendar"></i> Año Desde
+                    </label>
+                    <input type="number" name="anio_desde" class="form-control" placeholder="2010" value="{{ request.GET.anio_desde }}">
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label fw-bold">
+                        <i class="fas fa-dollar-sign"></i> Precio Máximo
+                    </label>
+                    <input type="number" name="precio_max" class="form-control" placeholder="10000000" value="{{ request.GET.precio_max }}">
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label fw-bold">
+                        <i class="fas fa-gas-pump"></i> Combustible
+                    </label>
+                    <select name="combustible" class="form-select">
+                        <option value="">Todos</option>
+                        <option value="gasolina" {% if request.GET.combustible == 'gasolina' %}selected{% endif %}>Gasolina</option>
+                        <option value="diesel" {% if request.GET.combustible == 'diesel' %}selected{% endif %}>Diésel</option>
+                        <option value="hibrido" {% if request.GET.combustible == 'hibrido' %}selected{% endif %}>Híbrido</option>
+                        <option value="electrico" {% if request.GET.combustible == 'electrico' %}selected{% endif %}>Eléctrico</option>
+                    </select>
+                </div>
+            </div>
+            <div class="row mt-3">
+                <div class="col-12 text-end">
+                    <a href="{% url 'vehiculos_venta' %}" class="btn btn-outline-secondary">
+                        <i class="fas fa-times"></i> Limpiar
+                    </a>
+                    <button type="submit" class="btn-filter ms-2">
+                        <i class="fas fa-search"></i> Buscar
+                    </button>
+                </div>
+            </div>
+        </form>
+    </div>
+
+    <!-- Resultados -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <h4 class="mb-3">
+                {% if vehiculos %}
+                    {{ vehiculos|length }} vehículo{{ vehiculos|length|pluralize }} encontrado{{ vehiculos|length|pluralize }}
+                {% else %}
+                    No se encontraron vehículos
+                {% endif %}
+            </h4>
+        </div>
+    </div>
+
+    <!-- Grid de Vehículos -->
+    {% if vehiculos %}
+    <div class="row g-4">
+        {% for vehiculo in vehiculos %}
+        <div class="col-lg-4 col-md-6">
+            <div class="vehicle-card">
+                <div class="position-relative">
+                    {% if vehiculo.imagen %}
+                        <img src="{{ vehiculo.imagen.url }}" class="vehicle-image" alt="{{ vehiculo.marca }} {{ vehiculo.modelo }}">
+                    {% else %}
+                        <img src="{% static 'img/default-car.jpg' %}" class="vehicle-image" alt="Sin imagen">
+                    {% endif %}
+                    <span class="vehicle-badge">{{ vehiculo.anio }}</span>
+                </div>
+                <div class="vehicle-info">
+                    <h3 class="vehicle-title">{{ vehiculo.marca }} {{ vehiculo.modelo }}</h3>
+                    <div class="vehicle-price">${{ vehiculo.precio|floatformat:0 }}</div>
+                    
+                    <div class="vehicle-specs">
+                        <div class="spec-item">
+                            <i class="fas fa-calendar-alt"></i>
+                            <span>{{ vehiculo.anio }}</span>
+                        </div>
+                        <div class="spec-item">
+                            <i class="fas fa-tachometer-alt"></i>
+                            <span>{{ vehiculo.kilometraje|floatformat:0 }} km</span>
+                        </div>
+                        <div class="spec-item">
+                            <i class="fas fa-gas-pump"></i>
+                            <span>{{ vehiculo.get_combustible_display }}</span>
+                        </div>
+                        <div class="spec-item">
+                            <i class="fas fa-cog"></i>
+                            <span>{{ vehiculo.get_transmision_display }}</span>
+                        </div>
+                    </div>
+
+                    <a href="{% url 'vehiculo_detalle' vehiculo.id %}" class="btn-contact">
+                        <i class="fas fa-eye"></i> Ver Detalles
+                    </a>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    <!-- Paginación -->
+    {% if vehiculos.has_other_pages %}
+    <nav aria-label="Paginación" class="mt-5">
+        <ul class="pagination justify-content-center">
+            {% if vehiculos.has_previous %}
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ vehiculos.previous_page_number }}{% if request.GET.marca %}&marca={{ request.GET.marca }}{% endif %}{% if request.GET.anio_desde %}&anio_desde={{ request.GET.anio_desde }}{% endif %}{% if request.GET.precio_max %}&precio_max={{ request.GET.precio_max }}{% endif %}{% if request.GET.combustible %}&combustible={{ request.GET.combustible }}{% endif %}">
+                        <i class="fas fa-chevron-left"></i> Anterior
+                    </a>
+                </li>
+            {% endif %}
+
+            {% for num in vehiculos.paginator.page_range %}
+                {% if vehiculos.number == num %}
+                    <li class="page-item active">
+                        <span class="page-link">{{ num }}</span>
+                    </li>
+                {% elif num > vehiculos.number|add:'-3' and num < vehiculos.number|add:'3' %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ num }}{% if request.GET.marca %}&marca={{ request.GET.marca }}{% endif %}{% if request.GET.anio_desde %}&anio_desde={{ request.GET.anio_desde }}{% endif %}{% if request.GET.precio_max %}&precio_max={{ request.GET.precio_max }}{% endif %}{% if request.GET.combustible %}&combustible={{ request.GET.combustible }}{% endif %}">{{ num }}</a>
+                    </li>
+                {% endif %}
+            {% endfor %}
+
+            {% if vehiculos.has_next %}
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ vehiculos.next_page_number }}{% if request.GET.marca %}&marca={{ request.GET.marca }}{% endif %}{% if request.GET.anio_desde %}&anio_desde={{ request.GET.anio_desde }}{% endif %}{% if request.GET.precio_max %}&precio_max={{ request.GET.precio_max }}{% endif %}{% if request.GET.combustible %}&combustible={{ request.GET.combustible }}{% endif %}">
+                        Siguiente <i class="fas fa-chevron-right"></i>
+                    </a>
+                </li>
+            {% endif %}
+        </ul>
+    </nav>
+    {% endif %}
+
+    {% else %}
+    <!-- Sin Resultados -->
+    <div class="no-vehicles">
+        <i class="fas fa-car-side"></i>
+        <h3 class="text-muted">No hay vehículos disponibles</h3>
+        <p class="text-muted">Intenta ajustar los filtros o vuelve más tarde.</p>
+        <a href="{% url 'publicar_vehiculo' %}" class="btn-filter mt-3">
+            <i class="fas fa-plus-circle"></i> Publica tu vehículo
+        </a>
+    </div>
+    {% endif %}
+</div>
+
+{% endblock %}

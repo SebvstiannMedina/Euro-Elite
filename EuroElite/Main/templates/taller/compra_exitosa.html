@@ -61,7 +61,38 @@
         </div>
 
         <!-- Lista de productos comprados -->
-        {% if pedido.items.all %}
+        {% if items_con_precios %}
+        <div class="mt-3">
+          <h6 class="fw-semibold mb-2">Productos:</h6>
+          <div class="list-group">
+            {% for it in items_con_precios %}
+            <div class="list-group-item d-flex justify-content-between align-items-center">
+              <div>
+                <div class="fw-medium">{{ it.nombre }}</div>
+                <small>
+                  Cantidad: {{ it.cantidad }} ×
+                  {% if it.precio_unitario_final < it.precio_unitario_original %}
+                    <span class="text-decoration-line-through text-muted">${{ it.precio_unitario_original|floatformat:0 }}</span>
+                    <span class="text-success fw-semibold">${{ it.precio_unitario_final|floatformat:0 }}</span>
+                  {% else %}
+                    ${{ it.precio_unitario_final|floatformat:0 }}
+                  {% endif %}
+                </small>
+              </div>
+              <div class="text-end">
+                {% if it.subtotal_final < it.subtotal_original %}
+                  <div class="small text-muted text-decoration-line-through">${{ it.subtotal_original|floatformat:0 }}</div>
+                {% endif %}
+                <span class="badge bg-primary rounded-pill">${{ it.subtotal_final|floatformat:0 }}</span>
+                {% if it.subtotal_final < it.subtotal_original %}
+                  <div class="small text-success">Ahorro: -${{ it.ahorro|floatformat:0 }}</div>
+                {% endif %}
+              </div>
+            </div>
+            {% endfor %}
+          </div>
+        </div>
+        {% elif pedido.items.all %}
         <div class="mt-3">
           <h6 class="fw-semibold mb-2">Productos:</h6>
           <div class="list-group">
@@ -108,22 +139,93 @@
 
       <!-- Siguiente paso (informativo) -->
       <div class="card shadow-sm p-3 mt-3">
+        <!-- Línea de progreso con auto animado -->
+        <div class="progress-track-container mb-4">
+          <div class="progress-track"></div>
+          <div class="progress-track-completed" id="progressBar"></div>
+          <div class="car-icon" id="carIcon">
+            <div class="car-effects">
+              <!-- Líneas de velocidad (izquierda del auto) -->
+              <div class="speed-line" style="left: -60px; top: 10px; width: 50px;"></div>
+              <div class="speed-line" style="left: -55px; top: 15px; width: 40px;"></div>
+              <div class="speed-line" style="left: -50px; top: 20px; width: 35px;"></div>
+              <div class="speed-line" style="left: -58px; top: 5px; width: 45px;"></div>
+              
+              <!-- Humo del escape (parte trasera) -->
+              <div class="smoke" style="left: -25px; bottom: 8px;"></div>
+              <div class="smoke" style="left: -30px; bottom: 10px;"></div>
+              <div class="smoke" style="left: -28px; bottom: 6px;"></div>
+              
+              <!-- Auto deportivo SVG -->
+              <svg class="sports-car-svg" viewBox="0 0 200 80" xmlns="http://www.w3.org/2000/svg">
+                <!-- Carrocería principal -->
+                <path d="M 20 55 L 30 40 L 50 35 L 80 30 L 120 30 L 145 35 L 165 40 L 180 55 Z" 
+                      fill="#4a5568" stroke="#2d3748" stroke-width="2"/>
+                
+                <!-- Techo y ventanas -->
+                <path d="M 50 35 L 60 20 L 100 18 L 130 20 L 145 35 Z" 
+                      fill="#2d3748" stroke="#1a202c" stroke-width="2"/>
+                <rect x="65" y="22" width="25" height="10" fill="#87ceeb" opacity="0.7" rx="2"/>
+                <rect x="105" y="22" width="20" height="10" fill="#87ceeb" opacity="0.7" rx="2"/>
+                
+                <!-- Detalles del capó -->
+                <line x1="145" y1="35" x2="155" y2="42" stroke="#1a202c" stroke-width="1.5"/>
+                <line x1="155" y1="35" x2="162" y2="42" stroke="#1a202c" stroke-width="1.5"/>
+                
+                <!-- Rueda trasera -->
+                <circle cx="50" cy="55" r="12" fill="#1a202c" stroke="#000" stroke-width="2"/>
+                <circle cx="50" cy="55" r="6" fill="#4a5568" stroke="#fff" stroke-width="1"/>
+                <circle cx="50" cy="55" r="3" fill="#fff"/>
+                
+                <!-- Rueda delantera -->
+                <circle cx="150" cy="55" r="12" fill="#1a202c" stroke="#000" stroke-width="2"/>
+                <circle cx="150" cy="55" r="6" fill="#4a5568" stroke="#fff" stroke-width="1"/>
+                <circle cx="150" cy="55" r="3" fill="#fff"/>
+                
+                <!-- Faro delantero -->
+                <ellipse cx="175" cy="45" rx="5" ry="3" fill="#ffd700" opacity="0.8"/>
+                
+                <!-- Alerón trasero -->
+                <rect x="20" y="32" width="8" height="3" fill="#1a202c" rx="1"/>
+                <rect x="20" y="36" width="12" height="2" fill="#2d3748"/>
+                
+                <!-- Detalles deportivos -->
+                <path d="M 25 50 L 170 50" stroke="#1a202c" stroke-width="1.5" fill="none"/>
+                <rect x="140" y="40" width="15" height="3" fill="#1a202c" opacity="0.5"/>
+              </svg>
+              
+              <!-- Partículas de polvo (rueda trasera) -->
+              <div class="dust-particle" style="left: -15px; bottom: 2px;"></div>
+              <div class="dust-particle" style="left: -20px; bottom: 4px;"></div>
+              <div class="dust-particle" style="left: -18px; bottom: 0px;"></div>
+            </div>
+          </div>
+        </div>
+        
         <div class="row text-center g-3 align-items-center">
           <div class="col-6 col-md-3">
-            <div class="step-dot bg-success-subtle text-success"><i class="fa-solid fa-circle-check"></i></div>
-            <div class="step-label">Pago confirmado</div>
+            <div class="step-dot bg-success-subtle text-success">
+              <i class="fa-solid fa-circle-check"></i>
+            </div>
+            <div class="step-label text-success fw-semibold">Pago confirmado</div>
           </div>
           <div class="col-6 col-md-3">
-            <div class="step-dot"><i class="fa-solid fa-box"></i></div>
-            <div class="step-label">Preparación</div>
+            <div class="step-dot {% if pedido.estado == 'PREPARACION' or pedido.estado == 'EN_RUTA' or pedido.estado == 'ENVIADO' or pedido.estado == 'ENTREGADO' %}bg-success-subtle text-success{% endif %}">
+              <i class="fa-solid fa-box"></i>
+            </div>
+            <div class="step-label {% if pedido.estado == 'PREPARACION' or pedido.estado == 'EN_RUTA' or pedido.estado == 'ENVIADO' or pedido.estado == 'ENTREGADO' %}text-success fw-semibold{% endif %}">En preparación</div>
           </div>
           <div class="col-6 col-md-3">
-            <div class="step-dot"><i class="fa-solid fa-truck"></i></div>
-            <div class="step-label">En camino</div>
+            <div class="step-dot {% if pedido.estado == 'EN_RUTA' or pedido.estado == 'ENVIADO' or pedido.estado == 'ENTREGADO' %}bg-success-subtle text-success{% endif %}">
+              <i class="fa-solid fa-truck"></i>
+            </div>
+            <div class="step-label {% if pedido.estado == 'EN_RUTA' or pedido.estado == 'ENVIADO' or pedido.estado == 'ENTREGADO' %}text-success fw-semibold{% endif %}">En ruta</div>
           </div>
           <div class="col-6 col-md-3">
-            <div class="step-dot"><i class="fa-solid fa-flag-checkered"></i></div>
-            <div class="step-label">Entrega</div>
+            <div class="step-dot {% if pedido.estado == 'ENTREGADO' %}bg-success-subtle text-success{% endif %}">
+              <i class="fa-solid fa-flag-checkered"></i>
+            </div>
+            <div class="step-label {% if pedido.estado == 'ENTREGADO' %}text-success fw-semibold{% endif %}">Entregado</div>
           </div>
         </div>
       </div>
@@ -149,6 +251,193 @@
     background: #f1f5f9; color: #0d6efd;
   }
   .step-label { font-size: .9rem; color: #4b5563; }
+  
+  /* Línea de progreso y animación del auto */
+  .progress-track-container {
+    position: relative;
+    height: 40px;
+    margin: 0 40px;
+  }
+  .progress-track {
+    position: absolute;
+    top: 50%;
+    left: 0;
+    right: 0;
+    height: 4px;
+    background: #e5e7eb;
+    border-radius: 2px;
+    transform: translateY(-50%);
+  }
+  .progress-track-completed {
+    position: absolute;
+    top: 50%;
+    left: 0;
+    height: 4px;
+    background: linear-gradient(90deg, #10b981, #059669);
+    border-radius: 2px;
+    transform: translateY(-50%);
+    transition: width 1.5s ease-in-out;
+  }
+  .car-icon {
+    position: absolute;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    transition: left 1.5s ease-in-out;
+    z-index: 10;
+    animation: carBounce 0.8s ease-in-out infinite alternate;
+  }
+  @keyframes carBounce {
+    0% { transform: translate(-50%, -50%) translateY(0); }
+    100% { transform: translate(-50%, -50%) translateY(-2px); }
+  }
+  
+  /* SVG del auto deportivo */
+  .sports-car-svg {
+    width: 100px;
+    height: auto;
+    filter: drop-shadow(0 3px 6px rgba(0,0,0,0.3));
+    position: relative;
+    z-index: 5;
+  }
+  
+  /* Líneas de velocidad (horizontales, múltiples) */
+  .speed-line {
+    position: absolute;
+    height: 2px;
+    background: linear-gradient(90deg, rgba(169, 169, 169, 0.8), transparent);
+    border-radius: 2px;
+    animation: speedLineMove 0.4s ease-in-out infinite;
+    z-index: 1;
+  }
+  .speed-line:nth-child(2) {
+    animation-delay: 0.1s;
+    opacity: 0.7;
+  }
+  .speed-line:nth-child(3) {
+    animation-delay: 0.2s;
+    opacity: 0.5;
+  }
+  .speed-line:nth-child(4) {
+    animation-delay: 0.15s;
+    opacity: 0.6;
+  }
+  @keyframes speedLineMove {
+    0% {
+      transform: translateX(0) scaleX(1);
+      opacity: 0;
+    }
+    20% {
+      opacity: 0.8;
+    }
+    100% {
+      transform: translateX(-30px) scaleX(0.5);
+      opacity: 0;
+    }
+  }
+  
+  /* Humo del escape - estilo de la imagen */
+  .smoke {
+    position: absolute;
+    width: 12px;
+    height: 12px;
+    background: radial-gradient(circle, rgba(169, 169, 169, 0.6), transparent);
+    border-radius: 50%;
+    animation: smokePuff 1s ease-out infinite;
+    z-index: 1;
+  }
+  .smoke:nth-child(6) {
+    animation-delay: 0.3s;
+    opacity: 0.7;
+  }
+  .smoke:nth-child(7) {
+    animation-delay: 0.6s;
+    opacity: 0.5;
+  }
+  @keyframes smokePuff {
+    0% {
+      transform: translate(0, 0) scale(0.8);
+      opacity: 0.7;
+    }
+    50% {
+      transform: translate(-20px, -10px) scale(1.5);
+      opacity: 0.4;
+    }
+    100% {
+      transform: translate(-35px, -20px) scale(2.2);
+      opacity: 0;
+    }
+  }
+  
+  /* Partículas de polvo - pequeñas y dispersas */
+  .dust-particle {
+    position: absolute;
+    width: 5px;
+    height: 5px;
+    background: rgba(139, 92, 46, 0.6);
+    border-radius: 50%;
+    animation: dustScatter 0.7s ease-out infinite;
+    z-index: 1;
+  }
+  .dust-particle:nth-child(9) {
+    animation-delay: 0.2s;
+  }
+  .dust-particle:nth-child(10) {
+    animation-delay: 0.4s;
+  }
+  @keyframes dustScatter {
+    0% {
+      transform: translate(0, 0) scale(1);
+      opacity: 0.6;
+    }
+    50% {
+      transform: translate(-12px, 8px) scale(1.2);
+      opacity: 0.3;
+    }
+    100% {
+      transform: translate(-22px, 12px) scale(1.5);
+      opacity: 0;
+    }
+  }
+  
+  /* Contenedor de efectos para posicionamiento relativo */
+  .car-effects {
+    position: relative;
+    display: inline-block;
+  }
+  
+  @media (max-width: 767px) {
+    .progress-track-container { margin: 0 20px; }
+    .sports-car-svg { width: 70px; }
+    .speed-line { height: 1.5px !important; }
+  }
 </style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  const pedidoEstado = '{{ pedido.estado }}';
+  const carIcon = document.getElementById('carIcon');
+  const progressBar = document.getElementById('progressBar');
+  
+  // Mapeo de estados a porcentajes de progreso
+  const estadoMap = {
+    'PENDIENTE': 0,
+    'PAGADO': 33,
+    'PREPARACION': 33,
+    'EN_RUTA': 66,
+    'ENVIADO': 66,
+    'ENTREGADO': 100
+  };
+  
+  const progress = estadoMap[pedidoEstado] || 0;
+  
+  // Animar el auto y la barra de progreso
+  setTimeout(() => {
+    if (carIcon && progressBar) {
+      carIcon.style.left = progress + '%';
+      progressBar.style.width = progress + '%';
+    }
+  }, 300);
+});
+</script>
 
 {% endblock %}

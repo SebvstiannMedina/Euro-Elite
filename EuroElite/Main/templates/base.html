@@ -189,7 +189,9 @@
         border-radius: 12px;
         box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
         padding: 12px 0;
-        min-width: 240px;
+        min-width: 280px;
+        max-height: 70vh;
+        overflow-y: auto;
         opacity: 0;
         visibility: hidden;
         transform: translateY(-10px);
@@ -209,6 +211,7 @@
         color: #0d1b2a;
         border-bottom: 1px solid #f1f1f1;
         margin-bottom: 8px;
+        font-size: 0.95rem;
     }
 
     .admin-dropdown a {
@@ -217,18 +220,45 @@
         color: #0d1b2a !important;
         text-decoration: none;
         transition: background 0.2s ease;
+        font-size: 0.9rem;
     }
 
     .admin-dropdown a:hover {
         background: #f8f9fb;
-        color: var(--primary-dark);
+        color: #5777b8 !important;
         border-radius: 6px;
     }
 
     .admin-dropdown a i {
-        margin-right: 8px;
+        margin-right: 10px;
         width: 20px;
         text-align: center;
+        color: #5777b8;
+    }
+
+    .admin-dropdown hr {
+        margin: 8px 16px;
+        border: 0;
+        border-top: 1px solid #e9ecef;
+    }
+
+    /* Scrollbar personalizado para dropdown admin */
+    .admin-dropdown::-webkit-scrollbar {
+        width: 6px;
+    }
+
+    .admin-dropdown::-webkit-scrollbar-track {
+        background: #f1f1f1;
+        border-radius: 10px;
+    }
+
+    .admin-dropdown::-webkit-scrollbar-thumb {
+        background: #5777b8;
+        border-radius: 10px;
+    }
+
+    .admin-dropdown::-webkit-scrollbar-thumb:hover {
+        background: #3d5a8f;
     }
 </style>
 
@@ -247,6 +277,7 @@
                 <li><a href="{% url 'home' %}">INICIO</a></li>
                 <li><a href="{% url 'productos' %}">PRODUCTOS</a></li>
                 <li><a href="{% url 'agendar' %}">SERVICIOS</a></li>
+                <li><a href="{% url 'vehiculos_venta' %}">VEHÍCULOS</a></li>
                 <li><a href="{% url 'nosotros' %}">NOSOTROS</a></li>
                 <li><a href="{% url 'equipo' %}">EQUIPO</a></li>
 
@@ -289,14 +320,21 @@
                     <div class="user-dropdown" id="user-dropdown">
                         {% if user.is_authenticated %}
                         <div class="dropdown-header">Hola, {{ user.first_name }}</div>
-                        <a href="{% url 'perfil' %}">Mi Perfil</a>
+                        <a href="{% url 'perfil' %}"><i class="fas fa-user-circle"></i> Mi Perfil</a>
+                        <a href="{% url 'mis_pedidos' %}"><i class="fas fa-shopping-bag"></i> Mis Pedidos</a>
+                        <a href="{% url 'mis_citas' %}"><i class="fas fa-calendar-check"></i> Mis Citas</a>
+                        <a href="{% url 'mis_vehiculos' %}"><i class="fas fa-car"></i> Mis Vehículos</a>
+                        <hr style="margin: 8px 0; border-color: #e0e0e0;">
+                        <a href="{% url 'publicar_vehiculo' %}"><i class="fas fa-plus-circle"></i> Vender mi Auto</a>
+                        <a href="{% url 'estado_revi_vehiculos' %}"><i class="fas fa-eye"></i> Estado de Publicaciones</a>
+                        <hr style="margin: 8px 0; border-color: #e0e0e0;">
                         <form action="{% url 'logout' %}" method="post" style="margin: 0;">
                             {% csrf_token %}
-                            <button type="submit" class="dropdown-item logout-btn">Cerrar Sesión</button>
+                            <button type="submit" class="dropdown-item logout-btn"><i class="fas fa-sign-out-alt"></i> Cerrar Sesión</button>
                         </form>
                         {% else %}
-                        <a href="{% url 'login' %}">Iniciar Sesión</a>
-                        <a href="{% url 'registro' %}">Registrarse</a>
+                        <a href="{% url 'login' %}"><i class="fas fa-sign-in-alt"></i> Iniciar Sesión</a>
+                        <a href="{% url 'registro' %}"><i class="fas fa-user-plus"></i> Registrarse</a>
                         {% endif %}
                     </div>
                 </div>
@@ -307,18 +345,86 @@
                     aria-expanded="false">
                     <i class="fas fa-cog"></i>
                     <div class="admin-dropdown" id="admin-dropdown">
-                        <div class="dropdown-header">Administración</div>
-                        <a href="{% url 'agregar_editar' %}">
-                            <i class="fas fa-box"></i> Gestionar Productos
-                        </a>
-                        <a href="{% url 'admin_pedidos' %}">
-                            <i class="fas fa-shopping-bag"></i> Ver Pedidos
-                        </a>
-                        <a href="{% url 'admin_usuarios' %}">
-                            <i class="fa-solid fa-user"></i> Ver Usuarios
+                        <div class="dropdown-header">Panel Administrativo</div>
+                        
+                        <!-- Dashboard y Reportes -->
+                        <a href="{% url 'admin_dashboard' %}">
+                            <i class="fas fa-tachometer-alt"></i> Dashboard
                         </a>
                         <a href="{% url 'estadisticas' %}">
                             <i class="fa-solid fa-chart-pie"></i> Estadísticas
+                        </a>
+                        <a href="{% url 'admin_reportes' %}">
+                            <i class="fas fa-file-alt"></i> Reportes
+                        </a>
+                        
+                        <hr style="margin: 8px 0; border-color: #e0e0e0;">
+                        
+                        <!-- Gestión de Productos -->
+                        <div class="dropdown-header" style="font-size: 0.85rem; color: #666;">Productos</div>
+                        <a href="{% url 'agregar_editar' %}">
+                            <i class="fas fa-box"></i> Gestionar Productos
+                        </a>
+                        <a href="{% url 'gestionar_codigos_descuento' %}">
+                            <i class="fas fa-tags"></i> Códigos de Descuento
+                        </a>
+                        
+                        <hr style="margin: 8px 0; border-color: #e0e0e0;">
+                        
+                        <!-- Pedidos y Entregas -->
+                        <div class="dropdown-header" style="font-size: 0.85rem; color: #666;">Ventas</div>
+                        <a href="{% url 'admin_pedidos' %}">
+                            <i class="fas fa-shopping-bag"></i> Ver Pedidos
+                        </a>
+                        <a href="{% url 'admin_entregas' %}">
+                            <i class="fas fa-truck"></i> Entregas
+                        </a>
+                        
+                        <hr style="margin: 8px 0; border-color: #e0e0e0;">
+                        
+                        <!-- Servicios -->
+                        <div class="dropdown-header" style="font-size: 0.85rem; color: #666;">Servicios</div>
+                        <a href="{% url 'admin_agendamiento' %}">
+                            <i class="fas fa-calendar-alt"></i> Agendamientos
+                        </a>
+                        <a href="{% url 'admin_historial_servicios' %}">
+                            <i class="fas fa-history"></i> Historial de Servicios
+                        </a>
+                        
+                        <hr style="margin: 8px 0; border-color: #e0e0e0;">
+                        
+                        <!-- Contenido -->
+                        <div class="dropdown-header" style="font-size: 0.85rem; color: #666;">Contenido</div>
+                        <a href="{% url 'admin_resenas' %}">
+                            <i class="fas fa-star"></i> Reseñas
+                        </a>
+                        <a href="{% url 'admin_contactos' %}">
+                            <i class="fas fa-envelope"></i> Mensajes de Contacto
+                        </a>
+                        <a href="{% url 'admin_galeria_nosotros' %}">
+                            <i class="fas fa-images"></i> Galería Nosotros
+                        </a>
+                        
+                        <hr style="margin: 8px 0; border-color: #e0e0e0;">
+                        
+                        <!-- Vehículos -->
+                        <div class="dropdown-header" style="font-size: 0.85rem; color: #666;">Vehículos</div>
+                        <a href="{% url 'revisar_vehiculo' %}">
+                            <i class="fas fa-car"></i> Revisar Vehículos en Venta
+                        </a>
+                        
+                        <hr style="margin: 8px 0; border-color: #e0e0e0;">
+                        
+                        <!-- Usuarios -->
+                        <a href="{% url 'admin_usuarios' %}">
+                            <i class="fa-solid fa-users"></i> Gestionar Usuarios
+                        </a>
+                        
+                        <hr style="margin: 8px 0; border-color: #e0e0e0;">
+                        
+                        <!-- Configuración -->
+                        <a href="{% url 'admin_configuracion' %}">
+                            <i class="fas fa-cogs"></i> Configuración
                         </a>
                     </div>
                 </div>
@@ -362,6 +468,7 @@
                     <li><a href="{% url 'agendar' %}">Mantención</a></li>
                     <li><a href="{% url 'agendar' %}">Diagnóstico</a></li>
                     <li><a href="{% url 'agendar' %}">Garantía</a></li>
+                    <li><a href="{% url 'publicar_vehiculo' %}">Vende tu Auto</a></li>
                 </ul>
             </div>
 
@@ -370,9 +477,9 @@
                 <ul>
                     <li><i class="fas fa-map-marker-alt"></i> Cooperativa 1144, Recoleta, Santiago</li>
                     <li><i class="fas fa-phone"></i> +56 9 1234 5678</li>
-                    <li><i class="fas fa-envelope"></i> contactoventas
-                        @euroelite.cl</li>
+                    <li><i class="fas fa-envelope"></i> <a href="{% url 'contacto' %}" style="color: inherit;">contactoventas@euroelite.cl</a></li>
                     <li><i class="fas fa-clock"></i> Lun-Vie: 9:00-18:00</li>
+                    <li><a href="{% url 'contacto' %}"><i class="fas fa-paper-plane"></i> Enviar Mensaje</a></li>
                 </ul>
             </div>
 
@@ -382,6 +489,7 @@
                     <li><a href="{% url 'terminos' %}">Términos y Condiciones</a></li>
                     <li><a href="{% url 'privacidad' %}">Política de Privacidad</a></li>
                     <li><a href="{% url 'privacidad' %}">Política de Devoluciones</a></li>
+                    <li><a href="{% url 'resenas' %}">Reseñas de Clientes</a></li>
                 </ul>
             </div>
         </div>

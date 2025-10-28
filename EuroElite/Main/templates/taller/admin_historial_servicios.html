@@ -1,0 +1,340 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Historial de Servicios - Admin{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2><i class="fas fa-history"></i> Historial de Servicios</h2>
+                <a href="{% url 'admin_dashboard' %}" class="btn btn-secondary">
+                    <i class="fas fa-arrow-left"></i> Volver al Dashboard
+                </a>
+            </div>
+
+            <!-- Filtros -->
+            <div class="card mb-4">
+                <div class="card-body">
+                    <form method="get" class="row g-3">
+                        <div class="col-md-3">
+                            <label class="form-label">Estado</label>
+                            <select name="estado" class="form-select">
+                                <option value="">Todos</option>
+                                <option value="PENDIENTE" {% if request.GET.estado == 'PENDIENTE' %}selected{% endif %}>Pendiente</option>
+                                <option value="EN_PROCESO" {% if request.GET.estado == 'EN_PROCESO' %}selected{% endif %}>En Proceso</option>
+                                <option value="COMPLETADO" {% if request.GET.estado == 'COMPLETADO' %}selected{% endif %}>Completado</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">Cliente</label>
+                            <input type="text" name="cliente" class="form-control" placeholder="Nombre del cliente" value="{{ request.GET.cliente }}">
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">Patente</label>
+                            <input type="text" name="patente" class="form-control" placeholder="Patente" value="{{ request.GET.patente }}">
+                        </div>
+                        <div class="col-md-3 d-flex align-items-end">
+                            <button type="submit" class="btn btn-primary me-2">
+                                <i class="fas fa-search"></i> Filtrar
+                            </button>
+                            <a href="{% url 'admin_historial_servicios' %}" class="btn btn-outline-secondary">
+                                <i class="fas fa-times"></i> Limpiar
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Tabla de Servicios -->
+            <div class="card">
+                <div class="card-body">
+                    {% if servicios %}
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>#ID</th>
+                                    <th>Cliente</th>
+                                    <th>Vehículo</th>
+                                    <th>Servicio</th>
+                                    <th>Mecánico</th>
+                                    <th>Fecha Ingreso</th>
+                                    <th>Estado</th>
+                                    <th>Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for servicio in servicios %}
+                                <tr>
+                                    <td><strong>#{{ servicio.id }}</strong></td>
+                                    <td>
+                                        {{ servicio.vehiculo.cliente.get_full_name }}
+                                        <br>
+                                        <small class="text-muted">{{ servicio.vehiculo.cliente.email }}</small>
+                                    </td>
+                                    <td>
+                                        <strong>{{ servicio.vehiculo.marca }} {{ servicio.vehiculo.modelo }}</strong>
+                                        <br>
+                                        <small class="text-muted">Patente: {{ servicio.vehiculo.patente }}</small>
+                                    </td>
+                                    <td>{{ servicio.tipo_servicio }}</td>
+                                    <td>
+                                        {% if servicio.mecanico_asignado %}
+                                            {{ servicio.mecanico_asignado.get_full_name }}
+                                        {% else %}
+                                            <span class="text-muted">No asignado</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>{{ servicio.fecha_ingreso|date:"d/m/Y H:i" }}</td>
+                                    <td>
+                                        {% if servicio.estado == 'PENDIENTE' %}
+                                            <span class="badge bg-warning text-dark">
+                                                <i class="fas fa-clock"></i> Pendiente
+                                            </span>
+                                        {% elif servicio.estado == 'EN_PROCESO' %}
+                                            <span class="badge bg-info">
+                                                <i class="fas fa-wrench"></i> En Proceso
+                                            </span>
+                                        {% elif servicio.estado == 'COMPLETADO' %}
+                                            <span class="badge bg-success">
+                                                <i class="fas fa-check"></i> Completado
+                                            </span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <button class="btn btn-sm btn-primary" onclick="verDetalle({{ servicio.id }})">
+                                            <i class="fas fa-eye"></i>
+                                        </button>
+                                        <button class="btn btn-sm btn-success" onclick="editarServicio({{ servicio.id }})">
+                                            <i class="fas fa-edit"></i>
+                                        </button>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- Paginación -->
+                    {% if servicios.has_other_pages %}
+                    <nav aria-label="Paginación" class="mt-4">
+                        <ul class="pagination justify-content-center">
+                            {% if servicios.has_previous %}
+                                <li class="page-item">
+                                    <a class="page-link" href="?page={{ servicios.previous_page_number }}{% if request.GET.estado %}&estado={{ request.GET.estado }}{% endif %}{% if request.GET.cliente %}&cliente={{ request.GET.cliente }}{% endif %}{% if request.GET.patente %}&patente={{ request.GET.patente }}{% endif %}">
+                                        Anterior
+                                    </a>
+                                </li>
+                            {% endif %}
+                            
+                            {% for num in servicios.paginator.page_range %}
+                                <li class="page-item {% if servicios.number == num %}active{% endif %}">
+                                    <a class="page-link" href="?page={{ num }}{% if request.GET.estado %}&estado={{ request.GET.estado }}{% endif %}{% if request.GET.cliente %}&cliente={{ request.GET.cliente }}{% endif %}{% if request.GET.patente %}&patente={{ request.GET.patente }}{% endif %}">
+                                        {{ num }}
+                                    </a>
+                                </li>
+                            {% endfor %}
+                            
+                            {% if servicios.has_next %}
+                                <li class="page-item">
+                                    <a class="page-link" href="?page={{ servicios.next_page_number }}{% if request.GET.estado %}&estado={{ request.GET.estado }}{% endif %}{% if request.GET.cliente %}&cliente={{ request.GET.cliente }}{% endif %}{% if request.GET.patente %}&patente={{ request.GET.patente }}{% endif %}">
+                                        Siguiente
+                                    </a>
+                                </li>
+                            {% endif %}
+                        </ul>
+                    </nav>
+                    {% endif %}
+
+                    {% else %}
+                    <div class="text-center py-5">
+                        <i class="fas fa-inbox fa-3x text-muted mb-3"></i>
+                        <h5 class="text-muted">No hay servicios registrados</h5>
+                        <p class="text-muted">Los servicios realizados aparecerán aquí</p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Detalle Servicio -->
+<div class="modal fade" id="detalleModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Detalle del Servicio</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body" id="detalleContent">
+                <div class="text-center py-4">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Cargando...</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Editar Servicio -->
+<div class="modal fade" id="editarModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Actualizar Servicio</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form id="editarForm">
+                <div class="modal-body">
+                    <input type="hidden" id="servicioId">
+                    
+                    <div class="mb-3">
+                        <label class="form-label">Estado</label>
+                        <select id="estadoServicio" class="form-select" required>
+                            <option value="PENDIENTE">Pendiente</option>
+                            <option value="EN_PROCESO">En Proceso</option>
+                            <option value="COMPLETADO">Completado</option>
+                        </select>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Comentarios del Mecánico</label>
+                        <textarea id="comentariosMecanico" class="form-control" rows="4" placeholder="Agregar observaciones sobre el servicio..."></textarea>
+                    </div>
+
+                    <div class="mb-3" id="fechaSalidaGroup" style="display: none;">
+                        <label class="form-label">Fecha de Salida</label>
+                        <input type="datetime-local" id="fechaSalida" class="form-control">
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-primary">Guardar Cambios</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+function verDetalle(servicioId) {
+    const modal = new bootstrap.Modal(document.getElementById('detalleModal'));
+    modal.show();
+    
+    // Aquí podrías hacer una llamada AJAX para obtener los detalles
+    // Por ahora, mostraremos la información básica
+    document.getElementById('detalleContent').innerHTML = `
+        <p>Cargando detalles del servicio #${servicioId}...</p>
+    `;
+}
+
+function editarServicio(servicioId) {
+    document.getElementById('servicioId').value = servicioId;
+    
+    // Aquí podrías cargar los datos actuales del servicio
+    const modal = new bootstrap.Modal(document.getElementById('editarModal'));
+    modal.show();
+}
+
+// Mostrar/ocultar fecha de salida según el estado
+document.getElementById('estadoServicio')?.addEventListener('change', function() {
+    const fechaSalidaGroup = document.getElementById('fechaSalidaGroup');
+    if (this.value === 'COMPLETADO') {
+        fechaSalidaGroup.style.display = 'block';
+    } else {
+        fechaSalidaGroup.style.display = 'none';
+    }
+});
+
+// Enviar formulario de edición
+document.getElementById('editarForm')?.addEventListener('submit', function(e) {
+    e.preventDefault();
+    
+    const servicioId = document.getElementById('servicioId').value;
+    const estado = document.getElementById('estadoServicio').value;
+    const comentarios = document.getElementById('comentariosMecanico').value;
+    const fechaSalida = document.getElementById('fechaSalida').value;
+    
+    fetch(`/api/historial-servicio/${servicioId}/actualizar/`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': getCookie('csrftoken')
+        },
+        body: JSON.stringify({
+            estado: estado,
+            comentarios_mecanico: comentarios,
+            fecha_salida: fechaSalida
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert('Servicio actualizado correctamente');
+            location.reload();
+        } else {
+            alert('Error al actualizar: ' + data.error);
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('Error al actualizar el servicio');
+    });
+});
+
+function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
+</script>
+
+<style>
+.table-hover tbody tr:hover {
+    background-color: #f8f9fa;
+    cursor: pointer;
+}
+
+.badge {
+    font-size: 0.85rem;
+    padding: 0.5em 0.75em;
+}
+
+.btn-sm {
+    padding: 0.25rem 0.5rem;
+    font-size: 0.875rem;
+}
+
+.card {
+    box-shadow: 0 0.125rem 0.25rem rgba(0,0,0,0.075);
+    border: none;
+}
+
+.card-body {
+    padding: 1.5rem;
+}
+
+.page-link {
+    color: #5777b8;
+}
+
+.page-item.active .page-link {
+    background-color: #5777b8;
+    border-color: #5777b8;
+}
+</style>
+
+{% endblock %}

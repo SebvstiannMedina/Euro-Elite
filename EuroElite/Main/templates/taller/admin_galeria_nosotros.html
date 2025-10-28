@@ -1,0 +1,123 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Galería - Administración - Euro Elite{% endblock %}
+
+{% block content %}
+<div class="container my-5">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1>Galería de Nosotros</h1>
+        <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#modalNuevaFoto">
+            <i class="fas fa-plus"></i> Agregar Foto
+        </button>
+    </div>
+
+    {% if messages %}
+        {% for message in messages %}
+            <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+        {% endfor %}
+    {% endif %}
+
+    <div class="row">
+        {% for foto in fotos %}
+        <div class="col-md-4 mb-4">
+            <div class="card shadow-sm h-100">
+                <img src="{{ foto.imagen.url }}" class="card-img-top" alt="{{ foto.titulo }}" style="height: 250px; object-fit: cover;">
+                <div class="card-body">
+                    <h5 class="card-title">{{ foto.titulo }}</h5>
+                    {% if foto.descripcion %}
+                    <p class="card-text">{{ foto.descripcion|truncatewords:20 }}</p>
+                    {% endif %}
+                    <div class="d-flex justify-content-between align-items-center">
+                        <small class="text-muted">Orden: {{ foto.orden }}</small>
+                        <div>
+                            <span class="badge {% if foto.activa %}bg-success{% else %}bg-secondary{% endif %}">
+                                {% if foto.activa %}Activa{% else %}Inactiva{% endif %}
+                            </span>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-footer">
+                    <button class="btn btn-sm btn-danger w-100" onclick="eliminarFoto({{ foto.id }})">
+                        <i class="fas fa-trash"></i> Eliminar
+                    </button>
+                </div>
+            </div>
+        </div>
+        {% empty %}
+        <div class="col-12">
+            <div class="alert alert-info text-center">
+                <i class="fas fa-info-circle me-2"></i>
+                No hay fotos en la galería. Agrega la primera ahora.
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+
+<!-- Modal para agregar foto -->
+<div class="modal fade" id="modalNuevaFoto" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Agregar Nueva Foto</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form method="post" enctype="multipart/form-data">
+                {% csrf_token %}
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label">Título <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" name="titulo" required>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Descripción</label>
+                        <textarea class="form-control" name="descripcion" rows="3"></textarea>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Imagen <span class="text-danger">*</span></label>
+                        <input type="file" class="form-control" name="imagen" accept="image/*" required>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Orden</label>
+                        <input type="number" class="form-control" name="orden" value="0" min="0">
+                        <small class="text-muted">Menor número = aparece primero</small>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-primary">Agregar Foto</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+function eliminarFoto(fotoId) {
+    if (!confirm('¿Eliminar esta foto permanentemente?')) return;
+    
+    fetch(`/api/foto-nosotros/${fotoId}/eliminar/`, {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': '{{ csrf_token }}',
+            'Content-Type': 'application/json'
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.ok) {
+            location.reload();
+        } else {
+            alert(data.msg);
+        }
+    });
+}
+</script>
+{% endblock %}

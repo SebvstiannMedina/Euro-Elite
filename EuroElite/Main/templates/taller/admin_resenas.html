@@ -1,0 +1,151 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Administrar Reseñas - Euro Elite{% endblock %}
+
+{% block content %}
+<div class="container my-5">
+    <h1 class="mb-4">Administrar Reseñas</h1>
+
+    <ul class="nav nav-tabs mb-4" role="tablist">
+        <li class="nav-item" role="presentation">
+            <button class="nav-link active" data-bs-toggle="tab" data-bs-target="#pendientes" type="button">
+                Pendientes <span class="badge bg-warning">{{ pendientes.count }}</span>
+            </button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" data-bs-toggle="tab" data-bs-target="#aprobadas" type="button">
+                Aprobadas <span class="badge bg-success">{{ aprobadas.count }}</span>
+            </button>
+        </li>
+    </ul>
+
+    <div class="tab-content">
+        <!-- Reseñas Pendientes -->
+        <div class="tab-pane fade show active" id="pendientes">
+            {% for resena in pendientes %}
+            <div class="card mb-3 shadow-sm">
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-8">
+                            <h5>{{ resena.producto.nombre }}</h5>
+                            <p class="mb-2">
+                                <strong>Usuario:</strong> {{ resena.usuario.get_full_name }} ({{ resena.usuario.email }})
+                            </p>
+                            <p class="mb-2">
+                                <strong>Calificación:</strong>
+                                <span class="text-warning">
+                                    {% for i in "12345" %}
+                                        {% if forloop.counter <= resena.calificacion %}
+                                            <i class="fas fa-star"></i>
+                                        {% else %}
+                                            <i class="far fa-star"></i>
+                                        {% endif %}
+                                    {% endfor %}
+                                </span>
+                            </p>
+                            <p class="mb-2"><strong>Fecha:</strong> {{ resena.creado|date:"d/m/Y H:i" }}</p>
+                            {% if resena.comentario %}
+                            <p><strong>Comentario:</strong> {{ resena.comentario }}</p>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-4 text-end">
+                            <button class="btn btn-success mb-2" onclick="aprobarResena({{ resena.id }})">
+                                <i class="fas fa-check"></i> Aprobar
+                            </button>
+                            <button class="btn btn-danger" onclick="eliminarResena({{ resena.id }})">
+                                <i class="fas fa-trash"></i> Eliminar
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% empty %}
+            <div class="alert alert-info">No hay reseñas pendientes de aprobación.</div>
+            {% endfor %}
+        </div>
+
+        <!-- Reseñas Aprobadas -->
+        <div class="tab-pane fade" id="aprobadas">
+            {% for resena in aprobadas %}
+            <div class="card mb-3 shadow-sm">
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-10">
+                            <h5>{{ resena.producto.nombre }}</h5>
+                            <p class="mb-2">
+                                <strong>Usuario:</strong> {{ resena.usuario.get_full_name }}
+                            </p>
+                            <p class="mb-2">
+                                <strong>Calificación:</strong>
+                                <span class="text-warning">
+                                    {% for i in "12345" %}
+                                        {% if forloop.counter <= resena.calificacion %}
+                                            <i class="fas fa-star"></i>
+                                        {% else %}
+                                            <i class="far fa-star"></i>
+                                        {% endif %}
+                                    {% endfor %}
+                                </span>
+                            </p>
+                            {% if resena.comentario %}
+                            <p>{{ resena.comentario }}</p>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-2 text-end">
+                            <button class="btn btn-danger btn-sm" onclick="eliminarResena({{ resena.id }})">
+                                <i class="fas fa-trash"></i> Eliminar
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% empty %}
+            <div class="alert alert-info">No hay reseñas aprobadas.</div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+
+<script>
+function aprobarResena(resenaId) {
+    if (!confirm('¿Aprobar esta reseña?')) return;
+    
+    fetch(`/api/resena/${resenaId}/aprobar/`, {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': '{{ csrf_token }}',
+            'Content-Type': 'application/json'
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.ok) {
+            location.reload();
+        } else {
+            alert(data.msg);
+        }
+    });
+}
+
+function eliminarResena(resenaId) {
+    if (!confirm('¿Eliminar esta reseña permanentemente?')) return;
+    
+    fetch(`/api/resena/${resenaId}/eliminar/`, {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': '{{ csrf_token }}',
+            'Content-Type': 'application/json'
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.ok) {
+            location.reload();
+        } else {
+            alert(data.msg);
+        }
+    });
+}
+</script>
+{% endblock %}

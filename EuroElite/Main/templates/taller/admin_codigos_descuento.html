@@ -1,0 +1,174 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Códigos de Descuento - Euro Elite{% endblock %}
+
+{% block content %}
+<div class="container my-5">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1>Códigos de Descuento</h1>
+        <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#modalNuevoCodigo">
+            <i class="fas fa-plus"></i> Nuevo Código
+        </button>
+    </div>
+
+    <div class="card shadow">
+        <div class="card-body">
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th>Código</th>
+                        <th>Tipo</th>
+                        <th>Valor</th>
+                        <th>Monto Mínimo</th>
+                        <th>Usos</th>
+                        <th>Vigencia</th>
+                        <th>Estado</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for codigo in codigos %}
+                    <tr>
+                        <td><strong>{{ codigo.codigo }}</strong></td>
+                        <td>
+                            {% if codigo.tipo == 'PORCENTAJE' %}
+                                <span class="badge bg-info">Porcentaje</span>
+                            {% else %}
+                                <span class="badge bg-warning">Monto Fijo</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if codigo.tipo == 'PORCENTAJE' %}
+                                {{ codigo.valor }}%
+                            {% else %}
+                                ${{ codigo.valor|floatformat:0 }}
+                            {% endif %}
+                        </td>
+                        <td>${{ codigo.monto_minimo|floatformat:0 }}</td>
+                        <td>
+                            {{ codigo.usos_actuales }}
+                            {% if codigo.usos_maximos %}
+                                / {{ codigo.usos_maximos }}
+                            {% else %}
+                                / ∞
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if codigo.inicio %}
+                                {{ codigo.inicio|date:"d/m/Y" }}
+                            {% else %}
+                                -
+                            {% endif %}
+                            -
+                            {% if codigo.fin %}
+                                {{ codigo.fin|date:"d/m/Y" }}
+                            {% else %}
+                                ∞
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if codigo.activo %}
+                                <span class="badge bg-success">Activo</span>
+                            {% else %}
+                                <span class="badge bg-secondary">Inactivo</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="7" class="text-center">No hay códigos de descuento registrados</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Modal para crear nuevo código -->
+<div class="modal fade" id="modalNuevoCodigo" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Nuevo Código de Descuento</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="formNuevoCodigo">
+                    {% csrf_token %}
+                    
+                    <div class="mb-3">
+                        <label class="form-label">Código <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" name="codigo" required>
+                        <small class="text-muted">Ej: VERANO2024</small>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Tipo <span class="text-danger">*</span></label>
+                        <select class="form-select" name="tipo" required>
+                            <option value="PORCENTAJE">Porcentaje</option>
+                            <option value="MONTO">Monto Fijo</option>
+                        </select>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Valor <span class="text-danger">*</span></label>
+                        <input type="number" class="form-control" name="valor" step="0.01" min="0" required>
+                        <small class="text-muted">Porcentaje (%) o Monto ($)</small>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Monto Mínimo</label>
+                        <input type="number" class="form-control" name="monto_minimo" value="0" step="0.01" min="0">
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Usos Máximos</label>
+                        <input type="number" class="form-control" name="usos_maximos" min="1">
+                        <small class="text-muted">Dejar vacío para usos ilimitados</small>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Fecha Inicio</label>
+                        <input type="datetime-local" class="form-control" name="inicio">
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Fecha Fin</label>
+                        <input type="datetime-local" class="form-control" name="fin">
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-primary" onclick="crearCodigo()">Crear Código</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function crearCodigo() {
+    const form = document.getElementById('formNuevoCodigo');
+    const formData = new FormData(form);
+
+    fetch('/api/crear-codigo-descuento/', {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.ok) {
+            alert(data.msg);
+            location.reload();
+        } else {
+            alert('Error: ' + data.msg);
+        }
+    })
+    .catch(error => {
+        alert('Error al crear el código');
+        console.error(error);
+    });
+}
+</script>
+{% endblock %}

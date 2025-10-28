@@ -28,6 +28,7 @@ from decimal import Decimal
 # Local apps
 from .forms import CitaForm, DireccionForm, PerfilForm, RegistroForm, EmailLoginForm
 from .models import (Carrito,Categoria,ConfigSitio,Direccion,ItemCarrito,ItemPedido,Pago,Pedido,Producto,)
+from .decorators import admin_required, mecanico_or_admin_required, repartidor_or_admin_required
 
 #temportal -- borrar despues
 from django.db import transaction, IntegrityError
@@ -180,6 +181,8 @@ def checkout_crear_pedido_y_pagar(request):
     3) Desactiva el carrito
     4) Redirige a payments:flow_crear_orden con ?pedido_id=...
     """
+    from .models import CodigoDescuento
+    
     cart = Carrito.objects.filter(usuario=request.user, activo=True).first()
     if not cart or not cart.items.exists():
         messages.error(request, "Tu carrito está vacío.")
@@ -234,11 +237,35 @@ def checkout_crear_pedido_y_pagar(request):
         except Exception:
             pass
 
+    # Aplicar código de descuento si existe en sesión
+    descuento_total = Decimal(0)
+    codigo_descuento_str = request.session.get('codigo_descuento', '').strip().upper()
+    
+    if codigo_descuento_str:
+        try:
+            codigo_obj = CodigoDescuento.objects.get(codigo=codigo_descuento_str)
+            valido, mensaje = codigo_obj.es_valido()
+            
+            if valido:
+                descuento_total = codigo_obj.calcular_descuento(subtotal)
+                pedido.codigo_descuento = codigo_obj
+                
+                # Incrementar usos del código
+                codigo_obj.usos_actuales += 1
+                codigo_obj.save(update_fields=['usos_actuales'])
+                
+                # Limpiar sesión
+                del request.session['codigo_descuento']
+                if 'descuento_aplicado' in request.session:
+                    del request.session['descuento_aplicado']
+        except CodigoDescuento.DoesNotExist:
+            pass
+
     # Totales
     pedido.subtotal = subtotal
     pedido.envio = envio_cost
-    pedido.descuento = Decimal(0)
-    pedido.total = subtotal + pedido.envio - pedido.descuento
+    pedido.descuento = descuento_total
+    pedido.total = max(Decimal(0), subtotal - descuento_total + envio_cost)
     pedido.save()
 
     # Pago PENDIENTE
@@ -299,16 +326,40 @@ def home(request):
     })
 
 def producto_detalle(request, pk):
+    from .models import Resena
     p = get_object_or_404(
         Producto.objects.select_related('categoria'),
         pk=pk,
         activo=True
     )
     track(request, "view_product", product_id=p.id)
-    return render(request, 'taller/producto_detalle.html', {'p': p})
+    
+    # Obtener reseñas aprobadas
+    resenas = Resena.objects.filter(producto=p, aprobada=True).select_related('usuario').order_by('-creado')
+    
+    # Verificar si el usuario puede reseñar (ha comprado el producto)
+    puede_resenar = False
+    if request.user.is_authenticated:
+        puede_resenar = (
+            ItemPedido.objects.filter(
+                pedido__usuario=request.user,
+                pedido__estado='ENTREGADO',
+                producto=p
+            ).exists() and 
+            not Resena.objects.filter(usuario=request.user, producto=p).exists()
+        )
+    
+    return render(request, 'taller/producto_detalle.html', {
+        'producto': p,
+        'p': p,
+        'resenas': resenas,
+        'puede_resenar': puede_resenar
+    })
 
 def nosotros(request):
-    return render(request, 'taller/nosotros.html')
+    from .models import FotoNosotros
+    fotos = FotoNosotros.objects.filter(activa=True).order_by('orden', '-creado')
+    return render(request, 'taller/nosotros.html', {'fotos': fotos})
 
 def equipo(request):
     return render(request, 'taller/equipo.html')
@@ -721,6 +772,45 @@ def compra_exitosa(request, pedido_id=None):
     numero_pedido = getattr(pedido, 'id', None) if pedido else None
     total = getattr(pedido, 'total', None) if pedido else None
     metodo_pago = getattr(pago, 'metodo', None) if pago else None
+
+    # Construir items con precios finales (prorrateo de descuento por ítem solo para visualización)
+    items_con_precios = None
+    if pedido:
+        try:
+            from decimal import Decimal, ROUND_HALF_UP
+            items = list(pedido.items.all())
+            sub_total_pedido = sum((i.subtotal for i in items), Decimal(0))
+            descuento_total = getattr(pedido, 'descuento', Decimal(0)) or Decimal(0)
+
+            if items and sub_total_pedido > 0 and descuento_total > 0:
+                items_con_precios = []
+                descuento_restante = descuento_total
+                # Prorratear el descuento con redondeo a pesos; ajustar en el último ítem para cuadrar
+                for idx, it in enumerate(items):
+                    sub_it = it.subtotal
+                    if idx < len(items) - 1:
+                        propor = (sub_it / sub_total_pedido)
+                        desc_it = (descuento_total * propor).quantize(Decimal('1'), rounding=ROUND_HALF_UP)
+                        # No exceder el subtotal del ítem
+                        if desc_it > sub_it:
+                            desc_it = sub_it
+                        descuento_restante -= desc_it
+                    else:
+                        # Al último ítem se le asigna el descuento restante para cuadrar
+                        desc_it = max(Decimal(0), min(descuento_restante, sub_it))
+                    sub_final = sub_it - desc_it
+                    unit_final = (sub_final / it.cantidad) if it.cantidad else Decimal(0)
+                    items_con_precios.append({
+                        'nombre': it.nombre_producto,
+                        'cantidad': it.cantidad,
+                        'precio_unitario_final': unit_final,
+                        'precio_unitario_original': it.precio_unitario,
+                        'subtotal_final': sub_final,
+                        'subtotal_original': sub_it,
+                        'ahorro': (sub_it - sub_final),
+                    })
+        except Exception:
+            items_con_precios = None
     
     # Usuario para el template (puede ser el del pedido o el autenticado)
     template_user = request.user if request.user.is_authenticated else (pedido.usuario if pedido else None)
@@ -735,6 +825,7 @@ def compra_exitosa(request, pedido_id=None):
         'total': total,
         'metodo_pago': metodo_pago,
         'comprobante_url': comprobante_url,
+        'items_con_precios': items_con_precios,
     })
 
 
@@ -1094,7 +1185,14 @@ def confirmacion_datos(request):
         pass
 
     envio_dec = Decimal(shipping_cost_int)
-    total_dec = (subtotal_dec or Decimal(0)) + envio_dec
+
+    # Leer descuento y código de la sesión
+    descuento_aplicado = Decimal(request.session.get('descuento_aplicado', '0'))
+    codigo_descuento = request.session.get('codigo_descuento', '')
+
+    total_dec = (subtotal_dec or Decimal(0)) - descuento_aplicado + envio_dec
+    if total_dec < 0:
+        total_dec = Decimal(0)
 
     def _format_clp(amount: Decimal) -> str:
         try:
@@ -1108,6 +1206,8 @@ def confirmacion_datos(request):
         'user': user,
         'subtotal': _format_clp(subtotal_dec),
         'envio': _format_clp(envio_dec),
+        'descuento': _format_clp(descuento_aplicado) if descuento_aplicado else None,
+        'codigo_descuento': codigo_descuento,
         'total': _format_clp(total_dec),
     }
 
@@ -1254,8 +1354,28 @@ def publicar_vehiculo(request):
             vehiculo = form.save(commit=False)
             vehiculo.usuario = request.user
             vehiculo.save()
+
+            # Guardar imágenes múltiples si se enviaron
+            try:
+                imagenes = request.FILES.getlist('imagenes')
+            except Exception:
+                imagenes = []
+
+            from .models import VehiculoImagen
+
+            if imagenes:
+                orden = 0
+                for img in imagenes[:10]:  # seguridad extra
+                    VehiculoImagen.objects.create(vehiculo=vehiculo, imagen=img, orden=orden)
+                    orden += 1
+
+                # Usar la primera imagen de la galería como imagen principal
+                primera = imagenes[0]
+                vehiculo.imagen = primera
+                vehiculo.save(update_fields=['imagen'])
+            
             messages.success(request, "Tu vehículo fue enviado para aprobación del administrador.")
-            return redirect('estado_revi_vehiculo')
+            return redirect('estado_revi_vehiculos')
         else:
             messages.error(request, "Por favor revisa los campos del formulario.")
     else:
@@ -1276,9 +1396,13 @@ def estado_revi_vehiculos(request):
 def revisar_vehiculo(request):
     pendientes = VehiculoEnVenta.objects.filter(estado='pendiente')
     aprobados = VehiculoEnVenta.objects.filter(estado='aprobado')
+    vendidos = VehiculoEnVenta.objects.filter(estado='vendido')
+    ocultos = VehiculoEnVenta.objects.filter(estado='oculto')
     return render(request, 'taller/revisar_vehiculo.html', {
         'pendientes': pendientes,
-        'aprobados': aprobados
+        'aprobados': aprobados,
+        'vendidos': vendidos,
+        'ocultos': ocultos
     })
 
 
@@ -1299,6 +1423,34 @@ def rechazar_vehiculo(request, id):
     vehiculo.save()
     messages.error(request, f"Vehículo {vehiculo.marca} {vehiculo.modelo} fue rechazado.")
     return redirect('revisar_vehiculo')
+
+
+@staff_member_required
+def cambiar_estado_vehiculo(request, vehiculo_id):
+    """Vista AJAX para cambiar el estado de un vehículo"""
+    if request.method == 'POST':
+        import json
+        try:
+            vehiculo = get_object_or_404(VehiculoEnVenta, id=vehiculo_id)
+            data = json.loads(request.body)
+            nuevo_estado = data.get('estado')
+            
+            estados_validos = ['pendiente', 'aprobado', 'rechazado', 'vendido', 'oculto']
+            if nuevo_estado not in estados_validos:
+                return JsonResponse({'success': False, 'error': 'Estado no válido'})
+            
+            vehiculo.estado = nuevo_estado
+            vehiculo.save()
+            
+            return JsonResponse({
+                'success': True,
+                'message': f'Estado cambiado a {nuevo_estado}'
+            })
+        except Exception as e:
+            return JsonResponse({'success': False, 'error': str(e)})
+    
+    return JsonResponse({'success': False, 'error': 'Método no permitido'})
+
 
 from django.http import JsonResponse
 from django.contrib.auth.decorators import login_required
@@ -1726,3 +1878,468 @@ def agendar_servicio(request):
 
     return render(request, "agendar.html", {"form": form})
 
+
+# =============================
+#   ELIMINAR PRODUCTO
+# =============================
+@login_required
+def eliminar_producto(request, pk):
+    """Eliminar un producto (solo administradores)."""
+    if request.user.rol != 'ADMIN':
+        messages.error(request, "No tienes permisos para eliminar productos.")
+        return redirect('home')
+    
+    producto = get_object_or_404(Producto, pk=pk)
+    nombre_producto = producto.nombre
+    producto.delete()
+    messages.success(request, f'Producto "{nombre_producto}" eliminado correctamente.')
+    return redirect('agregar_editar')
+
+
+# =============================
+#   CÓDIGOS DE DESCUENTO
+# =============================
+@login_required
+def gestionar_codigos_descuento(request):
+    """Vista para gestionar códigos de descuento (solo administradores)."""
+    if request.user.rol != 'ADMIN':
+        messages.error(request, "No tienes permisos para acceder a esta página.")
+        return redirect('home')
+    
+    from .models import CodigoDescuento
+    codigos = CodigoDescuento.objects.all().order_by('-creado')
+    
+    return render(request, 'taller/admin_codigos_descuento.html', {
+        'codigos': codigos
+    })
+
+
+@login_required
+@require_POST
+def aplicar_codigo_descuento(request):
+    """Aplicar código de descuento al carrito."""
+    from .models import CodigoDescuento
+    
+    codigo = request.POST.get('codigo', '').strip().upper()
+    if not codigo:
+        return JsonResponse({"ok": False, "msg": "Ingresa un código de descuento."}, status=400)
+    
+    try:
+        codigo_obj = CodigoDescuento.objects.get(codigo=codigo)
+    except CodigoDescuento.DoesNotExist:
+        return JsonResponse({"ok": False, "msg": "Código de descuento no válido."}, status=400)
+    
+    valido, mensaje = codigo_obj.es_valido()
+    if not valido:
+        return JsonResponse({"ok": False, "msg": mensaje}, status=400)
+    
+    # Obtener carrito
+    cart = _get_active_cart(request.user)
+    subtotal = cart.subtotal()
+    
+    # Verificar monto mínimo
+    if subtotal < codigo_obj.monto_minimo:
+        return JsonResponse({
+            "ok": False,
+            "msg": f"El monto mínimo para usar este código es ${codigo_obj.monto_minimo:,.0f}"
+        }, status=400)
+    
+    # Calcular descuento
+    descuento = codigo_obj.calcular_descuento(subtotal)
+    
+    # Guardar en sesión
+    request.session['codigo_descuento'] = codigo
+    request.session['descuento_aplicado'] = str(descuento)
+    
+    return JsonResponse({
+        "ok": True,
+        "msg": f"Código aplicado correctamente. Descuento: ${descuento:,.0f}",
+        "descuento": float(descuento),
+        "nuevo_total": float(subtotal - descuento)
+    })
+
+
+@login_required
+@require_POST
+def crear_codigo_descuento(request):
+    """Crear un nuevo código de descuento (solo administradores)."""
+    if request.user.rol != 'ADMIN':
+        return JsonResponse({"ok": False, "msg": "No tienes permisos."}, status=403)
+    
+    from .models import CodigoDescuento
+    
+    try:
+        codigo = CodigoDescuento.objects.create(
+            codigo=request.POST.get('codigo', '').strip().upper(),
+            tipo=request.POST.get('tipo', 'PORCENTAJE'),
+            valor=Decimal(request.POST.get('valor', 0)),
+            monto_minimo=Decimal(request.POST.get('monto_minimo', 0)),
+            usos_maximos=int(request.POST.get('usos_maximos')) if request.POST.get('usos_maximos') else None,
+            inicio=request.POST.get('inicio') or None,
+            fin=request.POST.get('fin') or None,
+        )
+        return JsonResponse({"ok": True, "msg": f"Código {codigo.codigo} creado correctamente."})
+    except Exception as e:
+        return JsonResponse({"ok": False, "msg": str(e)}, status=400)
+
+
+# =============================
+#   CONTACTO
+# =============================
+def contacto(request):
+    """Página de contacto con formulario."""
+    from .models import Contacto
+    
+    if request.method == 'POST':
+        contacto = Contacto.objects.create(
+            nombre=request.POST.get('nombre'),
+            email=request.POST.get('email'),
+            telefono=request.POST.get('telefono', ''),
+            asunto=request.POST.get('asunto'),
+            mensaje=request.POST.get('mensaje')
+        )
+        messages.success(request, '¡Gracias por contactarnos! Te responderemos pronto.')
+        
+        # Opcional: enviar correo al administrador
+        # send_mail(...)
+        
+        return redirect('contacto')
+    
+    return render(request, 'taller/contacto.html')
+
+
+@login_required
+def admin_contactos(request):
+    """Vista para administradores para ver mensajes de contacto."""
+    if request.user.rol != 'ADMIN':
+        messages.error(request, "No tienes permisos para acceder a esta página.")
+        return redirect('home')
+    
+    from .models import Contacto
+    contactos = Contacto.objects.all().order_by('-creado')
+    
+    return render(request, 'taller/admin_contactos.html', {
+        'contactos': contactos
+    })
+
+
+@login_required
+@require_POST
+def marcar_contacto_leido(request, contacto_id):
+    """Marcar un mensaje de contacto como leído."""
+    if request.user.rol != 'ADMIN':
+        return JsonResponse({"ok": False, "msg": "No tienes permisos."}, status=403)
+    
+    from .models import Contacto
+    contacto = get_object_or_404(Contacto, id=contacto_id)
+    contacto.leido = True
+    contacto.save()
+    
+    return JsonResponse({"ok": True})
+
+
+# =============================
+#   RESEÑAS
+# =============================
+@login_required
+@require_POST
+def agregar_resena(request, producto_id):
+    """Agregar una reseña a un producto."""
+    from .models import Resena
+    
+    producto = get_object_or_404(Producto, id=producto_id)
+    
+    # Verificar que el usuario haya comprado el producto
+    ha_comprado = ItemPedido.objects.filter(
+        pedido__usuario=request.user,
+        pedido__estado='ENTREGADO',
+        producto=producto
+    ).exists()
+    
+    if not ha_comprado:
+        return JsonResponse({
+            "ok": False,
+            "msg": "Solo puedes reseñar productos que hayas comprado."
+        }, status=400)
+    
+    # Verificar que no haya reseñado ya
+    if Resena.objects.filter(usuario=request.user, producto=producto).exists():
+        return JsonResponse({
+            "ok": False,
+            "msg": "Ya has reseñado este producto."
+        }, status=400)
+    
+    calificacion = int(request.POST.get('calificacion', 5))
+    comentario = request.POST.get('comentario', '')
+    
+    Resena.objects.create(
+        usuario=request.user,
+        producto=producto,
+        calificacion=calificacion,
+        comentario=comentario,
+        aprobada=False  # Requiere aprobación del admin
+    )
+    
+    messages.success(request, 'Gracias por tu reseña. Será publicada tras su aprobación.')
+    return redirect('producto_detalle', pk=producto_id)
+
+
+def resenas(request):
+    """Página pública de reseñas aprobadas."""
+    from .models import Resena
+    
+    resenas_aprobadas = Resena.objects.filter(aprobada=True).select_related('usuario', 'producto').order_by('-creado')
+    
+    return render(request, 'taller/resenas.html', {
+        'resenas': resenas_aprobadas
+    })
+
+
+@login_required
+def admin_resenas(request):
+    """Vista de administración de reseñas."""
+    if request.user.rol != 'ADMIN':
+        messages.error(request, "No tienes permisos para acceder a esta página.")
+        return redirect('home')
+    
+    from .models import Resena
+    
+    pendientes = Resena.objects.filter(aprobada=False).select_related('usuario', 'producto').order_by('-creado')
+    aprobadas = Resena.objects.filter(aprobada=True).select_related('usuario', 'producto').order_by('-creado')
+    
+    return render(request, 'taller/admin_resenas.html', {
+        'pendientes': pendientes,
+        'aprobadas': aprobadas
+    })
+
+
+@login_required
+@require_POST
+def aprobar_resena(request, resena_id):
+    """Aprobar una reseña."""
+    if request.user.rol != 'ADMIN':
+        return JsonResponse({"ok": False, "msg": "No tienes permisos."}, status=403)
+    
+    from .models import Resena
+    resena = get_object_or_404(Resena, id=resena_id)
+    resena.aprobada = True
+    resena.save()
+    
+    return JsonResponse({"ok": True, "msg": "Reseña aprobada."})
+
+
+@login_required
+@require_POST
+def eliminar_resena(request, resena_id):
+    """Eliminar una reseña."""
+    if request.user.rol != 'ADMIN':
+        return JsonResponse({"ok": False, "msg": "No tienes permisos."}, status=403)
+    
+    from .models import Resena
+    resena = get_object_or_404(Resena, id=resena_id)
+    resena.delete()
+    
+    return JsonResponse({"ok": True, "msg": "Reseña eliminada."})
+
+
+# =============================
+#   GALERÍA NOSOTROS
+# =============================
+@login_required
+def admin_galeria_nosotros(request):
+    """Gestionar galería de fotos de la página Nosotros."""
+    if request.user.rol != 'ADMIN':
+        messages.error(request, "No tienes permisos para acceder a esta página.")
+        return redirect('home')
+    
+    from .models import FotoNosotros
+    
+    if request.method == 'POST' and request.FILES.get('imagen'):
+        FotoNosotros.objects.create(
+            titulo=request.POST.get('titulo', 'Sin título'),
+            descripcion=request.POST.get('descripcion', ''),
+            imagen=request.FILES['imagen'],
+            orden=int(request.POST.get('orden', 0))
+        )
+        messages.success(request, 'Foto agregada correctamente.')
+        return redirect('admin_galeria_nosotros')
+    
+    fotos = FotoNosotros.objects.all().order_by('orden', '-creado')
+    
+    return render(request, 'taller/admin_galeria_nosotros.html', {
+        'fotos': fotos
+    })
+
+
+@login_required
+@require_POST
+def eliminar_foto_nosotros(request, foto_id):
+    """Eliminar una foto de la galería."""
+    if request.user.rol != 'ADMIN':
+        return JsonResponse({"ok": False, "msg": "No tienes permisos."}, status=403)
+    
+    from .models import FotoNosotros
+    foto = get_object_or_404(FotoNosotros, id=foto_id)
+    foto.delete()
+    
+    return JsonResponse({"ok": True, "msg": "Foto eliminada."})
+
+
+# =============================
+#   VEHÍCULOS Y HISTORIAL
+# =============================
+@login_required
+def mis_vehiculos(request):
+    """Vista para que el cliente vea sus vehículos y su historial."""
+    from .models import VehiculoCliente
+    
+    vehiculos = VehiculoCliente.objects.filter(usuario=request.user).prefetch_related('historial')
+    
+    return render(request, 'taller/mis_vehiculos.html', {
+        'vehiculos': vehiculos
+    })
+
+
+@login_required
+def agregar_vehiculo(request):
+    """Agregar un nuevo vehículo."""
+    from .models import VehiculoCliente
+    
+    if request.method == 'POST':
+        VehiculoCliente.objects.create(
+            usuario=request.user,
+            patente=request.POST.get('patente').upper(),
+            marca=request.POST.get('marca'),
+            modelo=request.POST.get('modelo'),
+            año=int(request.POST.get('año')),
+            color=request.POST.get('color', ''),
+            kilometraje_actual=int(request.POST.get('kilometraje', 0))
+        )
+        messages.success(request, 'Vehículo agregado correctamente.')
+        return redirect('mis_vehiculos')
+    
+    return render(request, 'taller/agregar_vehiculo.html')
+
+
+@login_required
+def admin_historial_servicios(request):
+    """Vista de administración para ver todos los historiales de servicio."""
+    if request.user.rol not in ['ADMIN', 'MECANICO']:
+        messages.error(request, "No tienes permisos para acceder a esta página.")
+        return redirect('home')
+    
+    from .models import HistorialServicio
+    
+    historiales = HistorialServicio.objects.all().select_related(
+        'vehiculo', 'vehiculo__usuario', 'mecanico_asignado'
+    ).order_by('-fecha_ingreso')
+    
+    return render(request, 'taller/admin_historial_servicios.html', {
+        'historiales': historiales
+    })
+
+
+@login_required
+@require_POST
+def actualizar_historial_servicio(request, historial_id):
+    """Actualizar el estado de un servicio (para mecánicos)."""
+    if request.user.rol not in ['ADMIN', 'MECANICO']:
+        return JsonResponse({"ok": False, "msg": "No tienes permisos."}, status=403)
+    
+    from .models import HistorialServicio
+    
+    historial = get_object_or_404(HistorialServicio, id=historial_id)
+    
+    nuevo_estado = request.POST.get('estado')
+    comentario = request.POST.get('comentario_mecanico', '')
+    
+    if nuevo_estado:
+        historial.estado = nuevo_estado
+    if comentario:
+        historial.comentario_mecanico = comentario
+    if nuevo_estado == 'completado' and not historial.fecha_salida:
+        historial.fecha_salida = timezone.now()
+    
+    historial.save()
+    
+    messages.success(request, 'Historial actualizado correctamente.')
+    return redirect('admin_historial_servicios')
+
+
+# =============================
+#   SWITCH VISTA ADMIN/CLIENTE
+# =============================
+@login_required
+def toggle_vista_admin(request):
+    """Cambiar entre vista de administrador y vista de cliente."""
+    if request.user.rol != 'ADMIN':
+        messages.error(request, "No tienes permisos para cambiar de vista.")
+        return redirect('home')
+    
+    # Usar sesión para guardar la preferencia
+    vista_actual = request.session.get('vista_modo', 'cliente')
+    nueva_vista = 'admin' if vista_actual == 'cliente' else 'cliente'
+    request.session['vista_modo'] = nueva_vista
+    
+    messages.success(request, f'Cambiado a vista de {nueva_vista}.')
+    return redirect('home')
+
+
+# ==================== MARKETPLACE DE VEHÍCULOS ====================
+
+def vehiculos_venta(request):
+    """Vista pública para ver todos los vehículos en venta aprobados"""
+    vehiculos = VehiculoEnVenta.objects.filter(estado='aprobado').order_by('-fecha_publicacion')
+    
+    # Filtros
+    marca = request.GET.get('marca', '')
+    anio_desde = request.GET.get('anio_desde', '')
+    precio_max = request.GET.get('precio_max', '')
+    combustible = request.GET.get('combustible', '')
+    
+    if marca:
+        vehiculos = vehiculos.filter(marca__icontains=marca)
+    if anio_desde:
+        try:
+            vehiculos = vehiculos.filter(**{"año__gte": int(anio_desde)})
+        except ValueError:
+            pass
+    if precio_max:
+        try:
+            vehiculos = vehiculos.filter(precio__lte=int(precio_max))
+        except ValueError:
+            pass
+    if combustible:
+        # Mapear alias comunes a los valores del modelo
+        alias = {
+            'gasolina': 'bencina',
+            'bencina': 'bencina',
+            'diesel': 'diesel',
+            'diésel': 'diesel',
+        }
+        comb_val = alias.get(combustible.lower())
+        if comb_val:
+            vehiculos = vehiculos.filter(combustible=comb_val)
+    
+    # Paginación
+    from django.core.paginator import Paginator
+    paginator = Paginator(vehiculos, 9)  # 9 vehículos por página
+    page = request.GET.get('page')
+    vehiculos = paginator.get_page(page)
+    
+    return render(request, 'taller/vehiculos_venta.html', {
+        'vehiculos': vehiculos
+    })
+
+
+def vehiculo_detalle(request, vehiculo_id):
+    """Vista de detalle de un vehículo en venta"""
+    vehiculo = get_object_or_404(VehiculoEnVenta, id=vehiculo_id, estado='aprobado')
+    
+    # Cargar galería de imágenes adicionales
+    imagenes_galeria = vehiculo.imagenes.all().order_by('orden', 'fecha_subida')
+    
+    return render(request, 'taller/vehiculo_detalle.html', {
+        'vehiculo': vehiculo,
+        'imagenes_galeria': imagenes_galeria,
+    })

@@ -1,4 +1,4 @@
-from django import forms
+﻿from django import forms
 import unicodedata
 from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth import get_user_model, authenticate
@@ -480,15 +480,97 @@ class EmailAuthenticationForm(AuthenticationForm):
     )
 
 from .models import VehiculoEnVenta
+from datetime import datetime
+
 
 class VehiculoForm(forms.ModelForm):
+    imagenes = forms.FileField(
+        required=False,
+        widget=forms.FileInput(attrs={'accept': 'image/*', 'class': 'form-control', 'multiple': ''}),
+        label='Imágenes del vehículo (puedes seleccionar varias)',
+        help_text='Selecciona hasta 10 imágenes de tu vehículo. La primera será la imagen principal.'
+    )
+
     class Meta:
         model = VehiculoEnVenta
         fields = [
-            'marca', 'modelo', 'año', 'kilometraje',
-            'transmision', 'combustible', 'precio',
-            'descripcion', 'imagen'
+            'marca', 'modelo', 'año', 'patente', 'kilometraje',
+            'transmision', 'combustible', 'color', 'precio',
+            'descripcion'
         ]
         widgets = {
-            'descripcion': forms.Textarea(attrs={'rows': 3, 'class': 'form-control'}),
+            'marca': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Ej: Toyota, Ford, Chevrolet'}),
+            'modelo': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Ej: Corolla, Focus, Cruze'}),
+            'año': forms.NumberInput(attrs={'class': 'form-control', 'placeholder': '2020', 'min': '1900', 'max': '2025'}),
+            'patente': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Ej: ABCD12', 'style': 'text-transform: uppercase'}),
+            'kilometraje': forms.NumberInput(attrs={'class': 'form-control', 'placeholder': '50000', 'min': '0'}),
+            'transmision': forms.Select(attrs={'class': 'form-select'}),
+            'combustible': forms.Select(attrs={'class': 'form-select'}),
+            'color': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Ej: Blanco, Negro, Gris'}),
+            'precio': forms.NumberInput(attrs={'class': 'form-control', 'placeholder': '10000000', 'min': '0', 'step': '100000'}),
+            'descripcion': forms.Textarea(attrs={'rows': 4, 'class': 'form-control', 'placeholder': 'Describe las características y estado de tu vehículo...'}),
+            'imagen': forms.ClearableFileInput(attrs={'class': 'form-control', 'accept': 'image/*'}),
         }
+        labels = {
+            'año': 'Año',
+            'patente': 'Patente',
+            'kilometraje': 'Kilometraje (km)',
+            'precio': 'Precio (CLP)',
+            'descripcion': 'Descripción',
+        }
+
+    # -----------------
+    # Validaciones
+    # -----------------
+    def clean_año(self):
+        anio = self.cleaned_data.get('año')
+        if anio is None:
+            return anio
+        current_year = datetime.now().year
+        if anio < 1950 or anio > current_year + 1:
+            raise forms.ValidationError(f"El año debe estar entre 1950 y {current_year + 1}.")
+        return anio
+
+    def clean_precio(self):
+        precio = self.cleaned_data.get('precio')
+        if precio is None:
+            return precio
+        if precio < 0:
+            raise forms.ValidationError('El precio no puede ser negativo.')
+        return precio
+
+    def clean_kilometraje(self):
+        km = self.cleaned_data.get('kilometraje')
+        if km is None:
+            return km
+        if km < 0:
+            raise forms.ValidationError('El kilometraje no puede ser negativo.')
+        return km
+
+    def clean_patente(self):
+        patente = (self.cleaned_data.get('patente') or '').upper().strip()
+        # Normalizar, quitar espacios y guiones
+        patente = patente.replace(' ', '').replace('-', '')
+        # No obligatoria, pero si viene, validar formato básico chileno (6-7 caracteres alfanuméricos)
+        if patente and (len(patente) < 6 or len(patente) > 7):
+            raise forms.ValidationError('La patente debe tener 6 o 7 caracteres alfanuméricos.')
+        return patente
+
+    def clean_imagenes(self):
+        # Al ser un campo con multiple, Django no lo maneja automáticamente
+        # usamos self.files.getlist para validar todas
+        files = self.files.getlist('imagenes')
+        if not files:
+            return None
+        if len(files) > 10:
+            raise forms.ValidationError('Puedes subir como máximo 10 imágenes.')
+        allowed = {'image/jpeg', 'image/png', 'image/webp'}
+        max_mb = 5 * 1024 * 1024
+        for f in files:
+            if f.content_type not in allowed:
+                raise forms.ValidationError('Solo se permiten imágenes JPG, PNG o WEBP.')
+            if f.size > max_mb:
+                raise forms.ValidationError('Cada imagen debe pesar como máximo 5 MB.')
+        # Devolvemos la lista para poder usarla si el llamador la requiere
+        return files
+

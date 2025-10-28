@@ -56,10 +56,29 @@
           {% if v.imagen %}
             <img src="{{ v.imagen.url }}" class="card-img-top rounded-top-4" alt="{{ v.marca }}">
           {% endif %}
-          <div class="card-body text-center">
-            <h5>{{ v.marca }} {{ v.modelo }} ({{ v.año }})</h5>
-            <p>⚙️ {{ v.get_transmision_display }} | ⛽ {{ v.get_combustible_display }}</p>
-            <p class="text-success fw-bold mb-0">${{ v.precio|floatformat:0 }}</p>
+          <div class="card-body">
+            <h5 class="text-center mb-2">{{ v.marca }} {{ v.modelo }} ({{ v.año }})</h5>
+            <p class="text-center mb-2">⚙️ {{ v.get_transmision_display }} | ⛽ {{ v.get_combustible_display }}</p>
+            <p class="text-success fw-bold text-center mb-3">${{ v.precio|floatformat:0 }}</p>
+            
+            <!-- Estado del Vehículo -->
+            <div class="mb-3">
+              <label class="form-label small fw-bold">Estado:</label>
+              <div class="d-flex gap-2">
+                <select class="form-select form-select-sm" id="estado-{{ v.id }}" onchange="cambiarEstado({{ v.id }})">
+                  <option value="aprobado" {% if v.estado == 'aprobado' %}selected{% endif %}>✅ Aprobado</option>
+                  <option value="vendido" {% if v.estado == 'vendido' %}selected{% endif %}>💰 Vendido</option>
+                  <option value="oculto" {% if v.estado == 'oculto' %}selected{% endif %}>🔒 Oculto</option>
+                  <option value="rechazado" {% if v.estado == 'rechazado' %}selected{% endif %}>❌ Rechazar</option>
+                </select>
+              </div>
+            </div>
+            
+            <div class="text-center">
+              <a href="{% url 'vehiculo_detalle' v.id %}" class="btn btn-sm btn-outline-primary" target="_blank">
+                <i class="fas fa-eye"></i> Ver Detalle
+              </a>
+            </div>
           </div>
         </div>
       </div>
@@ -67,5 +86,136 @@
       <p class="text-center">No hay vehículos aprobados aún.</p>
     {% endfor %}
   </div>
+
+  <!-- Vehículos Vendidos -->
+  <hr class="my-5">
+  <h3 class="text-center mb-3">💰 Vehículos Vendidos</h3>
+  <div class="row">
+    {% for v in vendidos %}
+      <div class="col-md-4 mb-4">
+        <div class="card border-0 shadow-sm rounded-4" style="opacity: 0.7;">
+          {% if v.imagen %}
+            <img src="{{ v.imagen.url }}" class="card-img-top rounded-top-4" alt="{{ v.marca }}">
+          {% endif %}
+          <div class="card-body">
+            <h5 class="text-center mb-2">{{ v.marca }} {{ v.modelo }} ({{ v.año }})</h5>
+            <p class="text-center mb-2">⚙️ {{ v.get_transmision_display }} | ⛽ {{ v.get_combustible_display }}</p>
+            <p class="text-success fw-bold text-center mb-3">${{ v.precio|floatformat:0 }}</p>
+            <span class="badge bg-success w-100">VENDIDO</span>
+          </div>
+        </div>
+      </div>
+    {% empty %}
+      <p class="text-center">No hay vehículos vendidos aún.</p>
+    {% endfor %}
+  </div>
+
+  <!-- Vehículos Ocultos -->
+  <hr class="my-5">
+  <h3 class="text-center mb-3">🔒 Vehículos Ocultos</h3>
+  <div class="row">
+    {% for v in ocultos %}
+      <div class="col-md-4 mb-4">
+        <div class="card border-0 shadow-sm rounded-4" style="opacity: 0.6;">
+          {% if v.imagen %}
+            <img src="{{ v.imagen.url }}" class="card-img-top rounded-top-4" alt="{{ v.marca }}">
+          {% endif %}
+          <div class="card-body">
+            <h5 class="text-center mb-2">{{ v.marca }} {{ v.modelo }} ({{ v.año }})</h5>
+            <p class="text-center mb-2">⚙️ {{ v.get_transmision_display }} | ⛽ {{ v.get_combustible_display }}</p>
+            <p class="text-success fw-bold text-center mb-3">${{ v.precio|floatformat:0 }}</p>
+            
+            <div class="d-flex gap-2">
+              <button class="btn btn-sm btn-success flex-fill" onclick="cambiarEstadoDirecto({{ v.id }}, 'aprobado')">
+                Publicar
+              </button>
+              <button class="btn btn-sm btn-danger flex-fill" onclick="cambiarEstadoDirecto({{ v.id }}, 'rechazado')">
+                Eliminar
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    {% empty %}
+      <p class="text-center">No hay vehículos ocultos.</p>
+    {% endfor %}
+  </div>
 </div>
+
+<script>
+function cambiarEstado(vehiculoId) {
+  const nuevoEstado = document.getElementById(`estado-${vehiculoId}`).value;
+  
+  if (confirm(`¿Estás seguro de cambiar el estado del vehículo?`)) {
+    fetch(`/cambiar_estado_vehiculo/${vehiculoId}/`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-CSRFToken': getCookie('csrftoken')
+      },
+      body: JSON.stringify({ estado: nuevoEstado })
+    })
+    .then(response => response.json())
+    .then(data => {
+      if (data.success) {
+        alert('Estado actualizado correctamente');
+        location.reload();
+      } else {
+        alert('Error al actualizar: ' + data.error);
+      }
+    })
+    .catch(error => {
+      console.error('Error:', error);
+      alert('Error al actualizar el estado');
+    });
+  } else {
+    // Revertir el select al estado original
+    location.reload();
+  }
+}
+
+function cambiarEstadoDirecto(vehiculoId, nuevoEstado) {
+  const mensaje = nuevoEstado === 'aprobado' ? '¿Publicar este vehículo?' : '¿Eliminar este vehículo?';
+  
+  if (confirm(mensaje)) {
+    fetch(`/cambiar_estado_vehiculo/${vehiculoId}/`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-CSRFToken': getCookie('csrftoken')
+      },
+      body: JSON.stringify({ estado: nuevoEstado })
+    })
+    .then(response => response.json())
+    .then(data => {
+      if (data.success) {
+        alert('Estado actualizado correctamente');
+        location.reload();
+      } else {
+        alert('Error al actualizar: ' + data.error);
+      }
+    })
+    .catch(error => {
+      console.error('Error:', error);
+      alert('Error al actualizar el estado');
+    });
+  }
+}
+
+function getCookie(name) {
+  let cookieValue = null;
+  if (document.cookie && document.cookie !== '') {
+    const cookies = document.cookie.split(';');
+    for (let i = 0; i < cookies.length; i++) {
+      const cookie = cookies[i].trim();
+      if (cookie.substring(0, name.length + 1) === (name + '=')) {
+        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+        break;
+      }
+    }
+  }
+  return cookieValue;
+}
+</script>
+
 {% endblock %}
