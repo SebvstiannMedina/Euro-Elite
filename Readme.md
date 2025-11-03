@@ -21,7 +21,9 @@ Usuario: Patricio
 Email: mirandaservicespa@gmail.com
 Contraseña: MirandaService
 
-
+Usuario: Luis
+Email: eutaquioalvaradol25@gmail.com
+Contraseña: MirandaService2025
 
 
 

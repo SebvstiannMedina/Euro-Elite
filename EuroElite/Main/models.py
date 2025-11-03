@@ -315,12 +315,17 @@ from django.conf import settings
 from django.utils import timezone
 
 
+from django.db import models
+from django.conf import settings
+from django.utils import timezone
+from django.core.validators import FileExtensionValidator
+
 class Pedido(models.Model):
     class Estado(models.TextChoices):
         PENDIENTE = "PENDIENTE", "Pendiente"
         PAGADO = "PAGADO", "Pagado"
         PREPARACION = "PREPARACION", "En preparación"
-        EN_RUTA = "EN_RUTA", "En ruta"                
+        EN_RUTA = "EN_RUTA", "En ruta"
         ENVIADO = "ENVIADO", "Enviado"
         ENTREGADO = "ENTREGADO", "Entregado"
         CANCELADO = "CANCELADO", "Cancelado"
@@ -334,9 +339,7 @@ class Pedido(models.Model):
         TRANSFERENCIA = "TRANSFERENCIA", "Transferencia"
         PASARELA = "PASARELA", "Pasarela de pago"
 
-    # =============================
-    # 🔗 Relaciones principales
-    # =============================
+    # RELACIONES PRINCIPALES
     usuario = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.PROTECT,
@@ -350,78 +353,55 @@ class Pedido(models.Model):
         null=True,
         blank=True,
         related_name="entregas_asignadas",
-        verbose_name="Empleado asignado"  # 🆕 Nuevo campo
+        verbose_name="Empleado asignado"
     )
 
-    estado = models.CharField(
-        max_length=15,
-        choices=Estado.choices,
-        default=Estado.PENDIENTE,
-        db_index=True
-    )
+    # ESTADO / ENTREGA / PAGO
+    estado = models.CharField(max_length=15, choices=Estado.choices, default=Estado.PENDIENTE, db_index=True)
+    metodo_entrega = models.CharField(max_length=10, choices=MetodoEntrega.choices)
+    metodo_pago = models.CharField(max_length=30, choices=MetodoPago.choices)
 
-    metodo_entrega = models.CharField(
-        max_length=10,
-        choices=MetodoEntrega.choices
-    )
+    direccion_envio = models.ForeignKey("Direccion", null=True, blank=True, on_delete=models.SET_NULL, related_name="envios")
+    direccion_facturacion = models.ForeignKey("Direccion", null=True, blank=True, on_delete=models.SET_NULL, related_name="facturaciones")
 
-    metodo_pago = models.CharField(
-        max_length=30,
-        choices=MetodoPago.choices
-    )
-
-    direccion_envio = models.ForeignKey(
-        "Direccion",
-        null=True,
-        blank=True,
-        on_delete=models.SET_NULL,
-        related_name="envios"
-    )
-
-    direccion_facturacion = models.ForeignKey(
-        "Direccion",
-        null=True,
-        blank=True,
-        on_delete=models.SET_NULL,
-        related_name="facturaciones"
-    )
-
-    # =============================
-    #  Totales
-    # =============================
+    # TOTALES
     subtotal = models.DecimalField(max_digits=12, decimal_places=2, default=0)
     descuento = models.DecimalField(max_digits=12, decimal_places=2, default=0)
-    codigo_descuento = models.ForeignKey(
-        "CodigoDescuento",
-        null=True,
-        blank=True,
-        on_delete=models.SET_NULL,
-        related_name="pedidos"
-    )
+    codigo_descuento = models.ForeignKey("CodigoDescuento", null=True, blank=True, on_delete=models.SET_NULL, related_name="pedidos")
     envio = models.DecimalField(max_digits=12, decimal_places=2, default=0)
     total = models.DecimalField(max_digits=12, decimal_places=2, default=0)
 
-    # =============================
-    #  Control de entrega
-    # =============================
+    # ENTREGA REGISTRO
     entregado_por = models.CharField(max_length=100, blank=True, null=True)
     hora_entrega = models.TimeField(blank=True, null=True)
     observacion_entrega = models.TextField(blank=True, null=True)
 
-    # =============================
-    #  Tiempos
-    # =============================
+    receptor_nombre = models.CharField(max_length=200, blank=True, null=True)
+    receptor_rut = models.CharField(max_length=30, blank=True, null=True)
+
+    firma_entrega = models.ImageField(
+        upload_to="firmas/",
+        null=True,
+        blank=True,
+        validators=[FileExtensionValidator(['png','jpg','jpeg'])]
+    )
+
+    foto_entrega = models.ImageField(
+        upload_to="entregas/",
+        null=True,
+        blank=True,
+        validators=[FileExtensionValidator(['png','jpg','jpeg'])]
+    )
+
+    # TIEMPOS
     creado = models.DateTimeField(auto_now_add=True)
     actualizado = models.DateTimeField(auto_now=True)
 
-    # =============================
-    #  Métodos útiles
-    # =============================
+    # MÉTODOS ÚTILES
     def __str__(self):
         return f"Pedido #{self.id} - {self.usuario.email} ({self.get_estado_display()})"
 
     def recalcular_totales(self):
-        """Recalcula subtotales y totales según los ítems asociados."""
         s = sum(i.subtotal for i in self.items.all())
         self.subtotal = s
         self.total = s - self.descuento + self.envio
@@ -430,12 +410,10 @@ class Pedido(models.Model):
         self.save()
 
     def marcar_en_ruta(self):
-        """Cambia el estado a EN_RUTA."""
         self.estado = self.Estado.EN_RUTA
         self.save()
 
     def marcar_como_entregado(self, empleado_nombre):
-        """Marca el pedido como entregado y registra hora y empleado."""
         self.estado = self.Estado.ENTREGADO
         self.entregado_por = empleado_nombre
         self.hora_entrega = timezone.localtime().time()
@@ -445,6 +423,7 @@ class Pedido(models.Model):
         ordering = ["-creado"]
         verbose_name = "Pedido"
         verbose_name_plural = "Pedidos"
+
 
 
 

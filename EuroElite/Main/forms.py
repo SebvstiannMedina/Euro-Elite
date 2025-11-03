@@ -574,3 +574,42 @@ class VehiculoForm(forms.ModelForm):
         # Devolvemos la lista para poder usarla si el llamador la requiere
         return files
 
+from django import forms
+from .models import Pedido
+
+class ConfirmarEntregaForm(forms.ModelForm):
+
+    # Firmas viene desde un input hidden (base64)
+    firma_entrega_hidden = forms.CharField(widget=forms.HiddenInput(), required=False)
+
+    class Meta:
+        model = Pedido
+        fields = [
+            "receptor_nombre",
+            "receptor_rut",
+            "observacion_entrega",
+            "foto_entrega",
+            "firma_entrega_hidden",
+        ]
+
+        widgets = {
+            "receptor_nombre": forms.TextInput(attrs={
+                "class": "form-control",
+                "placeholder": "Nombre de quien recibe",
+                "required": True,
+            }),
+            "receptor_rut": forms.TextInput(attrs={
+                "class": "form-control",
+                "placeholder": "12345678-9 / DNI",
+            }),
+            "observacion_entrega": forms.Textarea(attrs={
+                "class": "form-control",
+                "rows": 2,
+                "placeholder": "Observación opcional",
+            }),
+            "foto_entrega": forms.FileInput(attrs={
+                "class": "form-control",
+                "accept": "image/*",
+                "capture": "camera",  # abre cámara en teléfono
+            }),
+        }

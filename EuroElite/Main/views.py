@@ -438,7 +438,7 @@ class CustomLogoutView(LogoutView):
 
 def registro(request):
     if request.user.is_authenticated:
-        return redirect('home')  # Redirige si ya está logueado
+        return redirect('home')  
 
     if request.method == 'POST':
         form = RegistroForm(request.POST)
@@ -460,7 +460,23 @@ def registro(request):
 @login_required
 def perfil(request):
     usuario = request.user
-    addr = Direccion.objects.filter(usuario=usuario).order_by('-predeterminada', '-id').first()
+    addr = Direccion.objects.filter(usuario=request.user, tipo="ENVIO")\
+        .order_by('-predeterminada', '-id').first()
+
+# Si no existe dirección en DB, crear una con los datos del checkout
+    if not addr and metodo_entrega == Pedido.MetodoEntrega.DESPACHO:
+        addr = Direccion.objects.create(
+            usuario=request.user,
+            tipo="ENVIO",
+            nombre_completo=f"{request.user.first_name} {request.user.last_name}",
+            telefono=request.POST.get("telefono_envio", ""),
+            linea1=request.POST.get("direccion_envio", ""),
+            linea2=request.POST.get("direccion_envio2", ""),
+            comuna=request.POST.get("comuna_envio", ""),
+            ciudad=request.POST.get("ciudad_envio", "Santiago"),
+            region=request.POST.get("region_envio", ""),
+            predeterminada=True
+        )
 
     if request.method == "POST":
         perfil_form = PerfilForm(request.POST, instance=usuario)
@@ -2343,3 +2359,54 @@ def vehiculo_detalle(request, vehiculo_id):
         'vehiculo': vehiculo,
         'imagenes_galeria': imagenes_galeria,
     })
+
+from django.shortcuts import render, get_object_or_404, redirect
+from django.contrib import messages
+from django.utils import timezone
+from django.contrib.auth.decorators import login_required
+from django.core.files.base import ContentFile
+import base64
+
+from .models import Pedido
+from .forms import ConfirmarEntregaForm
+
+@login_required
+def confirmar_entrega(request, pedido_id):
+    pedido = get_object_or_404(Pedido, id=pedido_id)
+
+ 
+    if pedido.metodo_entrega == Pedido.MetodoEntrega.RETIRO:
+        pedido.estado = Pedido.Estado.ENTREGADO
+        pedido.entregado_por = request.user.get_full_name() or request.user.username
+        pedido.hora_entrega = timezone.localtime().time()
+        pedido.save()
+        messages.success(request, "✅ Pedido marcado como entregado (retiro en tienda)")
+        return redirect("admin_entregas")
+
+
+    if request.method == "POST":
+        form = ConfirmarEntregaForm(request.POST, request.FILES, instance=pedido)
+
+        # Capturar firma en base64
+        firma_base64 = request.POST.get("firma_entrega_hidden")
+
+        if form.is_valid():
+            pedido = form.save(commit=False)
+            pedido.estado = Pedido.Estado.ENTREGADO
+            pedido.entregado_por = request.user.get_full_name() or request.user.username
+            pedido.hora_entrega = timezone.localtime().time()
+
+            # Convertir base64 → archivo si existe
+            if firma_base64:
+                format, imgstr = firma_base64.split(';base64,')
+                ext = format.split('/')[-1]
+                pedido.firma_entrega = ContentFile(base64.b64decode(imgstr), name=f"firma_{pedido.id}.{ext}")
+
+            pedido.save()
+
+            messages.success(request, "✅ Entrega registrada con evidencia")
+            return redirect("admin_entrega")
+
+        messages.error(request, "❌ Revisa los datos del formulario")
+
+    return redirect("admin_entrega")

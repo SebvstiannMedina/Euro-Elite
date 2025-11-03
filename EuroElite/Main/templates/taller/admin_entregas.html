@@ -18,137 +18,185 @@
   </div>
 
   {% if messages %}
-    <div class="mb-3">
-      {% for message in messages %}
-        <div class="alert alert-{{ message.tags }} alert-dismissible fade show shadow-sm rounded-3" role="alert">
-          {{ message }}
-          <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-        </div>
-      {% endfor %}
+  <div class="mb-3">
+    {% for message in messages %}
+    <div class="alert alert-{{ message.tags }} alert-dismissible fade show shadow-sm rounded-3" role="alert">
+      {{ message }}
+      <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
     </div>
+    {% endfor %}
+  </div>
   {% endif %}
 
   {% if pedidos %}
-    <div class="row g-4">
-      {% for pedido in pedidos %}
-        <div class="col-12 col-md-6 col-lg-4">
-          <div class="pedido-card shadow-sm">
-            <div class="pedido-header d-flex align-items-center justify-content-between">
-              <div class="d-flex align-items-center gap-3">
-                <div class="pedido-avatar">
-                  <span>{{ pedido.usuario.first_name|default:pedido.usuario.email|first|upper }}</span>
-                </div>
-                <div>
-                  <h6 class="mb-0 fw-bold text-dark">
-                    {{ pedido.usuario.get_full_name|default:pedido.usuario.email }}
-                  </h6>
-                  <small class="text-muted">#{{ pedido.id }} • {{ pedido.get_estado_display }}</small>
-                </div>
-              </div>
-              <span class="estado-badge {{ pedido.estado|lower }}">
-                {{ pedido.get_estado_display }}
-              </span>
+  <div class="row g-4">
+    {% for pedido in pedidos %}
+    <div class="col-12 col-md-6 col-lg-4">
+      <div class="pedido-card shadow-sm">
+
+        <!-- HEADER -->
+        <div class="pedido-header d-flex align-items-center justify-content-between">
+          <div class="d-flex align-items-center gap-3">
+            <div class="pedido-avatar">
+              <span>{{ pedido.usuario.first_name|default:pedido.usuario.email|first|upper }}</span>
             </div>
-
-            <div class="pedido-body mt-3">
-              <p class="mb-1"><strong>Dirección:</strong> {{ pedido.direccion_envio|default:"Sin dirección registrada" }}</p>
-              <p class="mb-1"><strong>Entrega:</strong> {{ pedido.get_metodo_entrega_display }}</p>
-              <p class="mb-1"><strong>Pago:</strong> {{ pedido.get_metodo_pago_display }}</p>
-              <p class="mb-2"><strong>Total:</strong> ${{ pedido.total|floatformat:0|intcomma }}</p>
-
-              {% if pedido.estado != "ENTREGADO" %}
-                <div class="d-flex flex-wrap gap-2 mt-3">
-                  <a href="{% url 'actualizar_estado_pedido' pedido.id 'EN_RUTA' %}"
-                     class="btn btn-sm btn-outline-primary">
-                    <i class="fa-solid fa-truck-fast me-1"></i> En ruta
-                  </a>
-                  <a href="{% url 'actualizar_estado_pedido' pedido.id 'ENTREGADO' %}"
-                     class="btn btn-sm btn-success">
-                    <i class="fa-solid fa-box-open me-1"></i> Marcar entregado
-                  </a>
-                </div>
-              {% else %}
-                <div class="entregado-info mt-3 p-3 rounded bg-light border">
-                  <p class="mb-1">
-                    <i class="fa-solid fa-clock text-success me-2"></i>
-                    Entregado a las <strong>{{ pedido.hora_entrega|default:"—" }}</strong>
-                  </p>
-                  <p class="mb-1">
-                    <i class="fa-solid fa-user-check text-success me-2"></i>
-                    Por: <strong>{{ pedido.entregado_por|default:"—" }}</strong>
-                  </p>
-                  {% if pedido.observacion_entrega %}
-                    <p class="mb-0"><i class="fa-solid fa-note-sticky me-2"></i>{{ pedido.observacion_entrega }}</p>
-                  {% endif %}
-                </div>
-              {% endif %}
-            </div>
-
-            <div class="pedido-footer mt-3 text-end small text-muted">
-              Creado: {{ pedido.creado|date:"d/m/Y H:i" }}
+            <div>
+              <h6 class="mb-0 fw-bold text-dark">{{ pedido.usuario.get_full_name|default:pedido.usuario.email }}</h6>
+              <small class="text-muted">#{{ pedido.id }} ▪ {{ pedido.get_estado_display }}</small>
             </div>
           </div>
+          <span class="estado-badge {{ pedido.estado|lower }}">
+            {{ pedido.get_estado_display }}
+          </span>
         </div>
-      {% endfor %}
+
+        <!-- BODY -->
+        <div class="pedido-body mt-3">
+
+         
+          {% if pedido.metodo_entrega == "DESPACHO" %}
+            {% if pedido.direccion_envio %}
+              <p class="mb-1">
+                <strong>Dirección:</strong><br>
+                {{ pedido.direccion_envio.linea1 }}
+                {% if pedido.direccion_envio.linea2 %}, {{ pedido.direccion_envio.linea2 }}{% endif %}<br>
+                {{ pedido.direccion_envio.comuna }}, {{ pedido.direccion_envio.ciudad }}<br>
+                {{ pedido.direccion_envio.region }}
+              </p>
+            {% else %}
+              <p class="mb-1 text-danger fw-bold">
+                ⚠️ Pedido de despacho sin dirección — verificar antes de entregar
+              </p>
+            {% endif %}
+          {% else %}
+            <p class="mb-1"><strong>Entrega:</strong> Retiro en tienda</p>
+          {% endif %}
+
+          <p class="mb-1"><strong>Pago:</strong> {{ pedido.get_metodo_pago_display }}</p>
+          <p class="mb-2"><strong>Total:</strong> ${{ pedido.total|floatformat:0|intcomma }}</p>
+
+          <!-- BOTONES -->
+          {% if pedido.estado != "ENTREGADO" %}
+          <div class="d-flex flex-wrap gap-2 mt-3">
+            <a href="{% url 'actualizar_estado_pedido' pedido.id 'EN_RUTA' %}" class="btn btn-sm btn-outline-primary">
+              <i class="fa-solid fa-truck-fast me-1"></i> En ruta
+            </a>
+
+            {% if pedido.metodo_entrega == "DESPACHO" %}
+            <button class="btn btn-sm btn-success" data-bs-toggle="modal" data-bs-target="#modalEntrega{{ pedido.id }}">
+              <i class="fa-solid fa-box me-1"></i> Registrar entrega
+            </button>
+            {% else %}
+            <a href="{% url 'confirmar_entrega' pedido.id %}" class="btn btn-sm btn-success">
+              <i class="fa-solid fa-handshake me-1"></i> Entregar (retiro)
+            </a>
+            {% endif %}
+          </div>
+
+          {% else %}
+      
+          <div class="entregado-info mt-3 p-3 rounded bg-light border">
+
+            <p class="mb-1">
+              <i class="fa-solid fa-clock text-success me-2"></i>
+              Entregado: <strong>{{ pedido.hora_entrega|default:"—" }}</strong>
+            </p>
+
+            <p class="mb-1">
+              <i class="fa-solid fa-user-check text-success me-2"></i>
+              Por: <strong>{{ pedido.entregado_por|default:"—" }}</strong>
+            </p>
+
+            {% if pedido.receptor_nombre %}
+            <p class="mb-1">
+              <i class="fa-solid fa-user text-primary me-2"></i>
+              Recibido por: <strong>{{ pedido.receptor_nombre }}</strong>
+            </p>
+            {% endif %}
+
+            {% if pedido.receptor_rut %}
+            <p class="mb-1">
+              <i class="fa-solid fa-id-card text-secondary me-2"></i>
+              RUT / DNI: <strong>{{ pedido.receptor_rut }}</strong>
+            </p>
+            {% endif %}
+
+            {% if pedido.foto_entrega %}
+            <p class="mt-2"><strong>Foto evidencia:</strong><br>
+              <img src="{{ pedido.foto_entrega.url }}" class="img-fluid rounded shadow-sm" style="max-height:150px;">
+            </p>
+            {% endif %}
+
+            {% if pedido.observacion_entrega %}
+            <p class="mb-0">
+              <i class="fa-solid fa-note-sticky me-2"></i>{{ pedido.observacion_entrega }}
+            </p>
+            {% endif %}
+          </div>
+          {% endif %}
+        </div>
+
+        <div class="pedido-footer mt-3 text-end small text-muted">
+          Creado: {{ pedido.creado|date:"d/m/Y H:i" }}
+        </div>
+      </div>
     </div>
+
+    <!-- MODAL: REGISTRAR ENTREGA -->
+    <div class="modal fade" id="modalEntrega{{ pedido.id }}" tabindex="-1">
+      <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content rounded-3 p-2">
+
+          <form method="POST" enctype="multipart/form-data" action="{% url 'confirmar_entrega' pedido.id %}">
+            {% csrf_token %}
+
+            <div class="modal-header border-0">
+              <h5 class="modal-title">Confirmar entrega #{{ pedido.id }}</h5>
+              <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+
+            <div class="modal-body">
+              <label class="form-label">Nombre quien recibe</label>
+              <input type="text" name="receptor_nombre" class="form-control mb-2" required>
+
+              <label class="form-label">RUT / DNI</label>
+              <input type="text" name="receptor_rut" class="form-control mb-2">
+
+              <label class="form-label">Observación</label>
+              <textarea name="observacion_entrega" class="form-control mb-2" rows="2"></textarea>
+
+              <label class="form-label">Foto evidencia</label>
+              <input type="file" name="foto_entrega" class="form-control mb-3" accept="image/*" capture="camera" required>
+            </div>
+
+            <div class="modal-footer border-0">
+              <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
+              <button type="submit" class="btn btn-success">Guardar entrega ✅</button>
+            </div>
+
+          </form>
+
+        </div>
+      </div>
+    </div>
+
+    {% endfor %}
+  </div>
+
   {% else %}
-    <div class="text-center text-muted py-5">
-      <h5 class="fw-semibold mb-2">No hay entregas registradas.</h5>
-      <p class="mb-0">Aquí aparecerán los pedidos listos para despacho o entregados.</p>
-    </div>
+  <div class="text-center text-muted py-5">
+    <h5 class="fw-semibold mb-2">No hay entregas registradas.</h5>
+    <p class="mb-0">Aquí aparecerán los pedidos listos para despacho o entregados.</p>
+  </div>
   {% endif %}
 </section>
 
 <style>
-  .pedido-card {
-    background: #fff;
-    border-radius: 18px;
-    border: 1px solid rgba(0, 0, 0, 0.05);
-    padding: 1.4rem 1.5rem;
-    transition: all 0.25s ease;
-  }
-  .pedido-card:hover {
-    transform: translateY(-4px);
-    box-shadow: 0 16px 32px rgba(0,0,0,0.08);
-  }
-  .pedido-header {
-    border-bottom: 1px solid rgba(0, 0, 0, 0.06);
-    padding-bottom: 0.6rem;
-  }
-  .pedido-avatar {
-    width: 46px;
-    height: 46px;
-    border-radius: 14px;
-    background: linear-gradient(135deg, #4f46e5, #2563eb);
-    color: #fff;
-    font-weight: 700;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 1rem;
-    box-shadow: 0 5px 15px rgba(79,70,229,0.3);
-  }
-  .pedido-body {
-    font-size: 0.92rem;
-    color: #374151;
-  }
-  .estado-badge {
-    padding: 0.35rem 0.65rem;
-    border-radius: 999px;
-    font-size: 0.75rem;
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 0.04em;
-  }
-  .estado-badge.pendiente { background: rgba(255,193,7,0.2); color: #8c6d1f; }
-  .estado-badge.enviado { background: rgba(59,130,246,0.2); color: #1d4ed8; }
-  .estado-badge.entregado { background: rgba(16,185,129,0.2); color: #059669; }
-  .estado-badge.en_ruta { background: rgba(99,102,241,0.2); color: #4338ca; }
-  .estado-badge.preparacion { background: rgba(147,51,234,0.15); color: #6b21a8; }
-  .entregado-info {
-    font-size: 0.9rem;
-    color: #065f46;
-  }
+.pedido-card {background:#fff; border-radius:18px; border:1px solid rgba(0,0,0,0.05); padding:1.4rem 1.5rem; transition:0.25s;}
+.pedido-card:hover {transform:translateY(-4px);}
+.pedido-avatar {width:46px;height:46px;border-radius:14px;background:linear-gradient(135deg,#4f46e5,#2563eb);color:#fff;font-weight:700;display:flex;align-items:center;justify-content:center;}
+.estado-badge.entregado {background:rgba(16,185,129,0.2);color:#059669;}
+.estado-badge.en_ruta {background:rgba(99,102,241,0.2);color:#4338ca;}
 </style>
 
 {% endblock %}

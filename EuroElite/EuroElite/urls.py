@@ -154,6 +154,9 @@ urlpatterns = [
 
     # Switch vista
     path('toggle-vista-admin/', main_views.toggle_vista_admin, name='toggle_vista_admin'),
+    # entrega
+    path("entrega/<int:pedido_id>/confirmar/", main_views.confirmar_entrega, name="confirmar_entrega"),
+
 
     
 
