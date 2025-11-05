@@ -544,26 +544,76 @@ document.addEventListener("click", function (e) {
 });
 
 // =============== PRODUCTO DETALLE ===============
-function showProductDetail(name, description, price, image) {
-    const modal = document.createElement('div');
-    modal.innerHTML = `
-    <div style="position: fixed; top:0; left:0; width:100%; height:100%; background: rgba(0,0,0,0.6);
-        display:flex; align-items:center; justify-content:center; z-index:10000;" onclick="this.remove()">
-        <div style="background:white; padding:30px; border-radius:12px; max-width:500px; width:90%; position:relative;"
-             onclick="event.stopPropagation()">
-            <button onclick="this.closest('div').parentElement.remove()" style="
-                position:absolute; top:10px; right:10px; font-size:1.5rem; border:none; background:none; cursor:pointer;">×</button>
-            <img src="${image}" alt="${name}" style="width:100%; border-radius:8px; margin-bottom:15px;">
-            <h3>${name}</h3>
-            <p>${description}</p>
-            <h4>$${price.toLocaleString()}</h4>
-            <button class="btn btn-danger w-100"
-                onclick="addToCart('${name}', ${price}); this.closest('div').parentElement.remove()">
-                <i class="fas fa-shopping-cart me-2"></i>Añadir al Carrito
-            </button>
-        </div>
-    </div>`;
-    document.body.appendChild(modal);
+function showProductDetail(name, description, price, image, productId, stock, originalPrice) {
+  const modal = document.createElement('div');
+  // Asegurar que price sea número para formateo
+  const priceNum = (typeof price === 'number') ? price : parsePriceStringGlobal(price);
+  const priceText = '$' + (Number.isFinite(priceNum) ? priceNum.toLocaleString('es-CL', { maximumFractionDigits: 0 }) : '0');
+
+  modal.innerHTML = `
+  <div style="position: fixed; top:0; left:0; width:100%; height:100%; background: rgba(0,0,0,0.6);
+    display:flex; align-items:center; justify-content:center; z-index:10000;" onclick="this.remove()">
+    <div style="background:white; padding:30px; border-radius:12px; max-width:500px; width:90%; position:relative;"
+       onclick="event.stopPropagation()">
+      <button id="modal-close-btn" style="
+        position:absolute; top:10px; right:10px; font-size:1.5rem; border:none; background:none; cursor:pointer;">×</button>
+      <img src="${image}" alt="${name}" style="width:100%; border-radius:8px; margin-bottom:15px;">
+      <h3>${name}</h3>
+      <p>${description}</p>
+      <div style="margin-top:8px;">
+        <h4 id="modal-price-display" style="margin:0;">${priceText}</h4>
+        <div id="modal-original-price" style="color:#777; text-decoration:line-through; font-size:0.95rem; margin-top:6px; display:none;"></div>
+      </div>
+      <button class="btn btn-danger w-100" id="modal-add-to-cart">
+        <i class="fas fa-shopping-cart me-2"></i>Añadir al Carrito
+      </button>
+    </div>
+  </div>`;
+  document.body.appendChild(modal);
+
+  // configurar botones (evitar inline onclick para manejar productId y stock)
+  try {
+    const closeBtn = modal.querySelector('#modal-close-btn');
+    if (closeBtn) closeBtn.addEventListener('click', () => modal.remove());
+    const addBtn = modal.querySelector('#modal-add-to-cart');
+    if (addBtn) {
+      addBtn.addEventListener('click', function () {
+        try {
+          // Enviar price como string/num parseable; el addToCart maneja parseo
+          addToCart(name, String(priceNum), productId || '', stock || '');
+        } catch (e) {
+          console.warn('Error al añadir desde modal', e);
+        }
+        modal.remove();
+      });
+    }
+
+    // Mostrar precio original tachado si aplica y colorear precio activo como oferta
+    try {
+      const originalEl = modal.querySelector('#modal-original-price');
+      const priceEl = modal.querySelector('#modal-price-display');
+      const origNum = (typeof originalPrice === 'number') ? originalPrice : parsePriceStringGlobal(originalPrice);
+      if (originalEl && origNum && Number.isFinite(origNum) && origNum !== priceNum) {
+        originalEl.textContent = '$' + origNum.toLocaleString('es-CL', { maximumFractionDigits: 0 });
+        originalEl.style.display = 'block';
+        // aplicar estilo de oferta (rojo) y clase similar a la página principal
+        if (priceEl) {
+          priceEl.style.color = '#dc3545';
+          priceEl.classList.add('current-price');
+        }
+      } else {
+        // asegurarnos de que no quede estilo si no es oferta
+        if (priceEl) {
+          priceEl.style.color = '';
+          priceEl.classList.remove('current-price');
+        }
+      }
+    } catch (e) {
+      // no crítico
+    }
+  } catch (e) {
+    console.warn('Error configuring modal buttons', e);
+  }
 }
 
 function showProductDetailFromButton(btn) {
@@ -592,9 +642,12 @@ function showProductDetailFromButton(btn) {
   }
 
   const price = parsePriceString(rawPrice);
+  const id = btn.getAttribute('data-id') || '';
+  const stock = btn.getAttribute('data-stock') || '';
+  const originalPriceRaw = (btn.getAttribute('data-original-price') || '').toString().trim();
 
   try {
-    showProductDetail(name, description, price, image);
+    showProductDetail(name, description, price, image, id, stock, originalPriceRaw);
   } catch (e) {
     console.warn('Error showing product detail', e);
   }
