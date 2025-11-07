@@ -18,7 +18,7 @@ class UsuarioAdmin(admin.ModelAdmin):
 
 @admin.register(CodigoDescuento)
 class CodigoDescuentoAdmin(admin.ModelAdmin):
-    list_display = ('codigo', 'tipo', 'valor', 'activo', 'usos_actuales', 'usos_maximos', 'inicio', 'fin')
+    list_display = ('codigo', 'tipo', 'valor', 'activo', 'usos_actuales', 'usos_maximos', 'usos_por_usuario', 'inicio', 'fin')
     search_fields = ('codigo',)
     list_filter = ('activo', 'tipo')
 

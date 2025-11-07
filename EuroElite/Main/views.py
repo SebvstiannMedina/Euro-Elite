@@ -942,10 +942,21 @@ def admin_dashboard(request):
 
 @staff_member_required
 def admin_pedidos(request):
-    # Obtener todos los pedidos con sus relaciones necesarias
-    pedidos = Pedido.objects.select_related(
+    # Obtener solo pedidos pagados correctamente (excluyendo pendientes y cancelados)
+    estados_validos = [
+        Pedido.Estado.PAGADO,
+        Pedido.Estado.PREPARACION,
+        Pedido.Estado.EN_RUTA,
+        Pedido.Estado.ENVIADO,
+        Pedido.Estado.ENTREGADO,
+    ]
+    
+    pedidos = Pedido.objects.filter(
+        estado__in=estados_validos
+    ).select_related(
         'usuario', 
         'direccion_envio',
+        'direccion_facturacion',
         'pago'
     ).prefetch_related(
         'items__producto'
@@ -1045,7 +1056,22 @@ def mis_pedidos(request):
     if not request.user.is_authenticated:
         return redirect('login')
     
-    pedidos_qs = request.user.pedidos.select_related('pago').prefetch_related('items__producto__imagenes').order_by('-creado')
+    # Mostrar solo pedidos realmente comprados o en proceso de despacho
+    estados_visibles = [
+        Pedido.Estado.PAGADO,
+        Pedido.Estado.PREPARACION,
+        Pedido.Estado.EN_RUTA if hasattr(Pedido.Estado, 'EN_RUTA') else 'EN_RUTA',
+        Pedido.Estado.ENVIADO if hasattr(Pedido.Estado, 'ENVIADO') else 'ENVIADO',
+        Pedido.Estado.ENTREGADO,
+    ]
+
+    pedidos_qs = (
+        request.user.pedidos
+        .filter(estado__in=estados_visibles)
+        .select_related('pago')
+        .prefetch_related('items__producto__imagenes')
+        .order_by('-creado')
+    )
     
     pedidos = []
     for p in pedidos_qs:
@@ -1590,11 +1616,39 @@ def entregas_view(request):
     """
     Muestra los pedidos asignados al usuario.
     Si el usuario es superusuario, muestra todos los pedidos.
+    Excluye pedidos pendientes y cancelados.
     """
+    estados_validos = [
+        Pedido.Estado.PAGADO,
+        Pedido.Estado.PREPARACION,
+        Pedido.Estado.EN_RUTA,
+        Pedido.Estado.ENVIADO,
+        Pedido.Estado.ENTREGADO,
+    ]
+    
     if request.user.is_superuser:
-        pedidos = Pedido.objects.all().order_by('-creado')
+        pedidos = Pedido.objects.filter(
+            estado__in=estados_validos
+        ).select_related(
+            'usuario',
+            'direccion_envio',
+            'direccion_facturacion',
+            'pago'
+        ).prefetch_related(
+            'items__producto'
+        ).order_by('-creado')
     else:
-        pedidos = Pedido.objects.filter(asignado_a=request.user).order_by('-creado')
+        pedidos = Pedido.objects.filter(
+            asignado_a=request.user,
+            estado__in=estados_validos
+        ).select_related(
+            'usuario',
+            'direccion_envio',
+            'direccion_facturacion',
+            'pago'
+        ).prefetch_related(
+            'items__producto'
+        ).order_by('-creado')
 
     return render(request, 'taller/admin_entregas.html', {'pedidos': pedidos})
 
@@ -1934,7 +1988,7 @@ def gestionar_codigos_descuento(request):
 @require_POST
 def aplicar_codigo_descuento(request):
     """Aplicar código de descuento al carrito."""
-    from .models import CodigoDescuento
+    from .models import CodigoDescuento, Pedido
     
     codigo = request.POST.get('codigo', '').strip().upper()
     if not codigo:
@@ -1962,6 +2016,26 @@ def aplicar_codigo_descuento(request):
     
     # Calcular descuento
     descuento = codigo_obj.calcular_descuento(subtotal)
+
+    # Verificar límite por usuario (contabiliza usos con compras efectivas o en curso post-pago)
+    if codigo_obj.usos_por_usuario is not None:
+        estados_validos = [
+            Pedido.Estado.PAGADO,
+            Pedido.Estado.PREPARACION,
+            Pedido.Estado.EN_RUTA,
+            Pedido.Estado.ENVIADO,
+            Pedido.Estado.ENTREGADO,
+        ]
+        usos_usuario = Pedido.objects.filter(
+            usuario=request.user,
+            codigo_descuento=codigo_obj,
+            estado__in=estados_validos,
+        ).count()
+        if usos_usuario >= codigo_obj.usos_por_usuario:
+            return JsonResponse({
+                "ok": False,
+                "msg": f"Ya has utilizado este código el máximo de {codigo_obj.usos_por_usuario} veces."
+            }, status=400)
     
     # Guardar en sesión
     request.session['codigo_descuento'] = codigo
@@ -1991,6 +2065,7 @@ def crear_codigo_descuento(request):
             valor=Decimal(request.POST.get('valor', 0)),
             monto_minimo=Decimal(request.POST.get('monto_minimo', 0)),
             usos_maximos=int(request.POST.get('usos_maximos')) if request.POST.get('usos_maximos') else None,
+            usos_por_usuario=int(request.POST.get('usos_por_usuario')) if request.POST.get('usos_por_usuario') else None,
             inicio=request.POST.get('inicio') or None,
             fin=request.POST.get('fin') or None,
         )

@@ -244,6 +244,7 @@ class CodigoDescuento(MarcaTiempo):
     activo = models.BooleanField(default=True)
     usos_maximos = models.PositiveIntegerField(null=True, blank=True, help_text="Cantidad máxima de veces que se puede usar este código")
     usos_actuales = models.PositiveIntegerField(default=0)
+    usos_por_usuario = models.PositiveIntegerField(null=True, blank=True, help_text="Veces máximas que un mismo usuario puede usar este código")
     monto_minimo = models.DecimalField(max_digits=10, decimal_places=2, default=0, help_text="Monto mínimo de compra para aplicar el descuento")
 
     def __str__(self):

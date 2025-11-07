@@ -9,6 +9,9 @@
       {% if pedido.creado %}
         <span class="text-muted small ms-2">{{ pedido.creado|date:'DATETIME_FORMAT' }}</span>
       {% endif %}
+      {% if pedido.usuario.telefono %}
+        <div class="text-muted small mt-1">Número: {{ pedido.usuario.telefono }}</div>
+      {% endif %}
       {% if pedido.metodo_pago %}
         <div class="text-muted small mt-1">Pago: {{ pedido.get_metodo_pago_display|default:pedido.metodo_pago }}</div>
       {% endif %}

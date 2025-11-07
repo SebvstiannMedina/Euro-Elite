@@ -254,16 +254,18 @@ document.addEventListener("DOMContentLoaded", () => {
 
   shippingBase = parseInt(sidebar.dataset.envio || '0', 10) || 0;
 
-  // Cargar código de descuento guardado
-  const codigoGuardado = localStorage.getItem('codigo_descuento');
-  const descuentoGuardado = parseFloat(localStorage.getItem('descuento_aplicado') || '0');
-  if (codigoGuardado) {
-    document.getElementById('codigo-descuento').value = codigoGuardado;
-    descuentoAplicado = descuentoGuardado;
-    codigoAplicado = codigoGuardado;
-    document.getElementById('codigo-mensaje').textContent = 'Código aplicado';
-    document.getElementById('codigo-mensaje').className = 'text-success';
-  }
+  // Limpiar completamente el campo y el estado de descuento al cargar
+  document.getElementById('codigo-descuento').value = '';
+  document.getElementById('codigo-mensaje').textContent = '';
+  document.getElementById('codigo-mensaje').className = 'text-muted';
+  
+  // Resetear variables de descuento
+  descuentoAplicado = 0;
+  codigoAplicado = '';
+  
+  // Limpiar localStorage de descuentos previos
+  localStorage.removeItem('codigo_descuento');
+  localStorage.removeItem('descuento_aplicado');
 
   const radioEnvio = document.getElementById('delivery-envio');
   const radioRetiro = document.getElementById('delivery-retiro');

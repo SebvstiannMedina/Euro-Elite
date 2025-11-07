@@ -72,6 +72,7 @@
             <p class="mb-1"><strong>Entrega:</strong> Retiro en tienda</p>
           {% endif %}
 
+          <p class="mb-1"><strong>Número:</strong> {{ pedido.usuario.telefono|default:"—" }}</p>
           <p class="mb-1"><strong>Pago:</strong> {{ pedido.get_metodo_pago_display }}</p>
           <p class="mb-2"><strong>Total:</strong> ${{ pedido.total|floatformat:0|intcomma }}</p>
 

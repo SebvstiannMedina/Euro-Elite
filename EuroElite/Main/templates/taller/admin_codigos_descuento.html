@@ -22,6 +22,7 @@
                         <th>Valor</th>
                         <th>Monto Mínimo</th>
                         <th>Usos</th>
+                        <th>Usos/Usuario</th>
                         <th>Vigencia</th>
                         <th>Estado</th>
                     </tr>
@@ -66,6 +67,13 @@
                                 ∞
                             {% endif %}
                         </td>
+                                <td>
+                                    {% if codigo.usos_por_usuario %}
+                                        {{ codigo.usos_por_usuario }}
+                                    {% else %}
+                                        ∞
+                                    {% endif %}
+                                </td>
                         <td>
                             {% if codigo.activo %}
                                 <span class="badge bg-success">Activo</span>
@@ -126,6 +134,12 @@
                         <label class="form-label">Usos Máximos</label>
                         <input type="number" class="form-control" name="usos_maximos" min="1">
                         <small class="text-muted">Dejar vacío para usos ilimitados</small>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Usos por Usuario</label>
+                        <input type="number" class="form-control" name="usos_por_usuario" min="1">
+                        <small class="text-muted">Dejar vacío para ilimitados por usuario</small>
                     </div>
 
                     <div class="mb-3">
