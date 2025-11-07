@@ -3,13 +3,34 @@
 {% block title %}Administrar Agendamientos - Euro Elite{% endblock %}
 {% block content %}
 
-<div class="container my-4" style="margin-top: 1rem;"> 
-  <h3 class="mb-4 fw-semibold">Administrar Agendamientos</h3>
+<section class="admin-agenda container-fluid py-4 px-3 px-md-4">
+  <div class="admin-hero rounded-4 mb-4 position-relative overflow-hidden">
+    <div class="row align-items-center g-4">
+      <div class="col-lg-7">
+        <p class="hero-eyebrow text-uppercase mb-2">Panel interno</p>
+        <h3 class="hero-title mb-3">Administrar agendamientos</h3>
+        <p class="hero-text mb-0">Coordina servicios, confirma modalidades y mantén informados a tus clientes en segundos.</p>
+      </div>
+      <div class="col-lg-5">
+        <div class="hero-metrics">
+          <div class="metric-pill">
+            <span>Agendamientos activos</span>
+            <strong>{{ agendamientos_activos|default_if_none:"0" }}</strong>
+          </div>
+          <div class="metric-pill">
+            <span>Última actualización</span>
+            <strong>{% now "d/m/Y" %}</strong>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="hero-glow"></div>
+  </div>
 
   {% if messages %}
-    <div class="mb-3">
+    <div class="alerts-stack mb-4">
       {% for message in messages %}
-        <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+        <div class="alert admin-alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
           {{ message }}
           <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
         </div>
@@ -17,20 +38,28 @@
     </div>
   {% endif %}
 
-  <div class="card shadow-sm border-0 rounded-4">
-    {% if citas %}
+  {% if citas %}
+    <div class="status-legend d-flex flex-wrap align-items-center gap-3 mb-3">
+      <span class="legend-label text-uppercase">Estados</span>
+      <span class="legend-item legend-reservada"><span class="legend-dot"></span>Reservada</span>
+      <span class="legend-item legend-proceso"><span class="legend-dot"></span>En proceso</span>
+      <span class="legend-item legend-completada"><span class="legend-dot"></span>Completada</span>
+      <span class="legend-item legend-cancelada"><span class="legend-dot"></span>Cancelada</span>
+    </div>
+
+    <div class="card schedule-card border-0 shadow-sm rounded-4">
       <div class="table-responsive">
-        <table class="table align-middle table-hover mb-0">
-          <thead class="table-light">
+        <table class="table align-middle table-hover admin-table mb-0">
+          <thead>
             <tr>
-              <th>#</th>
-              <th>Cliente</th>
-              <th>Servicio</th>
-              <th>Fecha</th>
-              <th>Horario</th>
-              <th>Modalidad</th>
-              <th>Estado</th>
-              <th class="text-end">Acciones</th>
+              <th scope="col">#</th>
+              <th scope="col">Cliente</th>
+              <th scope="col">Servicio</th>
+              <th scope="col">Fecha</th>
+              <th scope="col">Horario</th>
+              <th scope="col">Modalidad</th>
+              <th scope="col">Estado</th>
+              <th scope="col" class="text-end">Acciones</th>
             </tr>
           </thead>
           <tbody>
@@ -42,57 +71,48 @@
               {% elif c.estado == 'RESERVADA' %}row-reservada
               {% endif %}
             ">
-              <td>{{ forloop.counter }}</td>
-              <td>{{ c.usuario.first_name }}</td>
-              <td>{{ c.servicio.nombre }}</td>
-
-              <td>
+              <td data-label="#">{{ forloop.counter }}</td>
+              <td data-label="Cliente" class="fw-semibold">{{ c.usuario.first_name }}</td>
+              <td data-label="Servicio">{{ c.servicio.nombre }}</td>
+              <td data-label="Fecha">
                 {% if c.bloque.inicio|date:"j" == c.bloque.fin|date:"j" %}
                   {{ c.bloque.inicio|date:"j" }} de {{ c.bloque.inicio|date:"F Y"|capfirst }}
                 {% else %}
                   {{ c.bloque.inicio|date:"j" }} - {{ c.bloque.fin|date:"j" }} de {{ c.bloque.inicio|date:"F Y"|capfirst }}
                 {% endif %}
               </td>
-
-           
-              <td>{{ c.bloque.inicio|date:"H:i" }} - {{ c.bloque.fin|date:"H:i" }}</td>
-
-              
-              <td>
+              <td data-label="Horario">{{ c.bloque.inicio|date:"H:i" }} - {{ c.bloque.fin|date:"H:i" }}</td>
+              <td data-label="Modalidad">
                 {% if c.a_domicilio %}
-                  <span class="badge bg-info">
+                  <span class="badge modality-pill bg-info">
                     <i class="fas fa-truck"></i> Domicilio
                   </span>
                   <br><small class="text-muted">{{ c.direccion_domicilio|default:"Sin dirección" }}</small>
                 {% else %}
-                  <span class="badge bg-secondary">
+                  <span class="badge modality-pill bg-secondary">
                     <i class="fas fa-warehouse"></i> Taller
                   </span>
                 {% endif %}
               </td>
-
-             
-              <td>
+              <td data-label="Estado">
                 {% if c.estado == 'RESERVADA' %}
-                  <span class="badge bg-primary">Reservada</span>
+                  <span class="badge status-pill bg-primary">Reservada</span>
                 {% elif c.estado == 'EN_PROCESO' %}
-                  <span class="badge bg-warning text-dark">En proceso</span>
+                  <span class="badge status-pill bg-warning text-dark">En proceso</span>
                 {% elif c.estado == 'COMPLETADA' %}
-                  <span class="badge bg-success">Completada</span>
+                  <span class="badge status-pill bg-success">Completada</span>
                 {% elif c.estado == 'CANCELADA' %}
-                  <span class="badge bg-danger">Cancelada</span>
+                  <span class="badge status-pill bg-danger">Cancelada</span>
                 {% endif %}
               </td>
-
-      
-              <td class="text-end">
+              <td class="text-end" data-label="Acciones">
                 {% if c.estado == 'RESERVADA' %}
-                  <a href="{% url 'anular_cita' c.id %}" class="btn btn-sm btn-outline-danger"
+                  <a href="{% url 'anular_cita' c.id %}?next={{ request.get_full_path|urlencode }}" class="btn btn-sm btn-outline-danger"
                      onclick="return confirm('¿Seguro que deseas cancelar esta cita?');">
                     <i class="fas fa-times"></i>
                   </a>
                 {% else %}
-                  <span class="text-muted">—</span>
+                  <span class="text-muted">&mdash;</span>
                 {% endif %}
               </td>
             </tr>
@@ -100,119 +120,280 @@
           </tbody>
         </table>
       </div>
-    {% else %}
-      <p class="text-center text-muted my-4">No hay agendamientos registrados.</p>
-    {% endif %}
-  </div>
-</div>
+    </div>
+  {% else %}
+    <div class="empty-state text-center py-5 px-3">
+      <div class="empty-icon mb-3">
+        <i class="fas fa-calendar-alt"></i>
+      </div>
+      <h5 class="fw-semibold mb-2">Sin agendamientos disponibles</h5>
+      <p class="text-muted mb-0">Las reservas confirmadas aparecerán aquí para que puedas gestionarlas al instante.</p>
+    </div>
+  {% endif %}
+</section>
 
 <style>
-.card {
-  border: 0;
-  border-radius: 20px;
-  background: linear-gradient(160deg, #ffffff 0%, #f6f7ff 100%);
-  box-shadow: 0 16px 35px rgba(15, 23, 42, 0.08);
+:root {
+  --ee-primary: #5777b8;
+  --ee-primary-dark: #0b1f3a;
+  --ee-accent: #72d6ff;
+  --ee-soft: #eef2ff;
+}
+
+.admin-agenda {
+  max-width: 1200px;
+}
+
+.admin-hero {
+  background: radial-gradient(circle at top right, rgba(114, 214, 255, 0.35), transparent 40%),
+              linear-gradient(135deg, #020617, var(--ee-primary-dark) 55%, var(--ee-primary));
+  color: #f1f5f9;
+  padding: 2.5rem;
+  position: relative;
   overflow: hidden;
-  transition: transform 0.25s ease, box-shadow 0.25s ease;
+  box-shadow: 0 30px 80px rgba(6, 24, 44, 0.45);
 }
-.card:hover {
-  transform: translateY(-6px);
-  box-shadow: 0 22px 45px rgba(79, 70, 229, 0.12);
+
+.hero-glow {
+  position: absolute;
+  right: -60px;
+  bottom: -60px;
+  width: 240px;
+  height: 240px;
+  background: radial-gradient(circle, rgba(255, 255, 255, 0.25), transparent 65%);
+  filter: blur(2px);
+  pointer-events: none;
 }
-h3 {
-  color: #312e81;
-  font-weight: 700;
-  background: linear-gradient(135deg, #4f46e5, #8b5cf6);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-}
-.table {
-  border-collapse: separate;
-  border-spacing: 0 0.75rem;
-  margin-bottom: 0;
-}
-.table thead th {
-  background: rgba(79, 70, 229, 0.06);
-  border: none;
-  color: #4338ca;
-  text-transform: uppercase;
+
+.hero-eyebrow {
+  letter-spacing: 0.25em;
   font-size: 0.75rem;
-  letter-spacing: 0.05em;
-  padding: 1rem 1.2rem;
+  color: rgba(255, 255, 255, 0.7);
 }
-.table tbody tr {
-  background: #ffffff;
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
-  border-radius: 12px;
-  box-shadow: 0 6px 15px rgba(79, 70, 229, 0.05);
+
+.hero-title {
+  color: #fff;
+  font-weight: 700;
 }
-.table tbody tr:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 10px 25px rgba(79, 70, 229, 0.12);
+
+.hero-text {
+  color: rgba(255, 255, 255, 0.85);
+  max-width: 540px;
 }
-.table td {
-  padding: 1rem 1.2rem;
-  vertical-align: middle;
-  border-top: 1px solid rgba(148, 163, 184, 0.1);
-  font-size: 0.92rem;
-  color: #1f2937;
+
+.hero-metrics {
+  display: grid;
+  gap: 1rem;
 }
-.row-cancelada {
-  background: rgba(239, 68, 68, 0.05);
-  border-left: 5px solid rgba(239, 68, 68, 0.4);
+
+.metric-pill {
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 1.25rem;
+  padding: 1rem 1.25rem;
+  color: #fff;
+  backdrop-filter: blur(6px);
 }
-.row-completada {
-  background: rgba(16, 185, 129, 0.05);
-  border-left: 5px solid rgba(16, 185, 129, 0.4);
+
+.metric-pill span {
+  font-size: 0.85rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: rgba(255, 255, 255, 0.75);
 }
-.row-proceso {
-  background: rgba(251, 191, 36, 0.08);
-  border-left: 5px solid rgba(251, 191, 36, 0.4);
+
+.metric-pill strong {
+  display: block;
+  font-size: 1.4rem;
+  margin-top: 0.3rem;
 }
-.row-reservada {
-  background: rgba(79, 70, 229, 0.05);
-  border-left: 5px solid rgba(79, 70, 229, 0.5);
+
+.alerts-stack .alert {
+  border-radius: 16px;
+  border: none;
+  box-shadow: 0 10px 30px rgba(15, 23, 42, 0.1);
+  font-size: 0.9rem;
 }
-.badge {
-  font-size: 0.78rem;
-  font-weight: 600;
+
+.status-legend {
+  border: 1px solid rgba(15, 23, 42, 0.08);
   border-radius: 999px;
-  padding: 0.45rem 0.8rem;
-  letter-spacing: 0.04em;
+  padding: 0.6rem 1.5rem;
+  background: #fff;
+  box-shadow: 0 12px 30px rgba(15, 23, 42, 0.06);
+}
+
+.legend-label {
+  font-size: 0.78rem;
+  letter-spacing: 0.25em;
+  color: #475569;
+}
+
+.legend-item {
   display: inline-flex;
   align-items: center;
   gap: 0.35rem;
-  box-shadow: 0 6px 15px rgba(79, 70, 229, 0.08);
+  font-size: 0.88rem;
+  font-weight: 500;
+  color: #1e293b;
 }
-.badge i {
-  font-size: 0.8rem;
+
+.legend-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  display: inline-block;
 }
-.bg-primary { background: rgba(79, 70, 229, 0.18) !important; color: #4338ca !important; }
-.bg-warning { background: rgba(251, 191, 36, 0.18) !important; color: #92400e !important; }
-.bg-success { background: rgba(16, 185, 129, 0.18) !important; color: #047857 !important; }
+
+.legend-reservada .legend-dot { background: #6366f1; }
+.legend-proceso .legend-dot { background: #facc15; }
+.legend-completada .legend-dot { background: #22c55e; }
+.legend-cancelada .legend-dot { background: #ef4444; }
+
+.schedule-card {
+  background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
+  box-shadow: 0 20px 60px rgba(15, 23, 42, 0.08);
+  border: 1px solid rgba(15, 23, 42, 0.05);
+}
+
+.admin-table thead th {
+  background: var(--ee-soft);
+  border: none;
+  color: #475569;
+  text-transform: uppercase;
+  font-size: 0.75rem;
+  letter-spacing: 0.1em;
+  padding: 1.1rem 1rem;
+  font-weight: 600;
+}
+
+.admin-table tbody tr {
+  background-color: #fff;
+  border-radius: 16px;
+  box-shadow: 0 8px 25px rgba(15, 23, 42, 0.04);
+}
+
+.admin-table tbody tr:not(:last-child) {
+  border-bottom: 1px solid rgba(15, 23, 42, 0.02);
+}
+
+.admin-table td {
+  padding: 1rem;
+  vertical-align: middle;
+  border-top: none;
+  font-size: 0.95rem;
+  color: #0f172a;
+}
+
+.admin-table tbody tr:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 18px 30px rgba(15, 23, 42, 0.08);
+}
+
+.row-reservada { border-left: 5px solid #6366f1; background: rgba(99, 102, 241, 0.05); }
+.row-proceso { border-left: 5px solid #facc15; background: rgba(250, 204, 21, 0.07); }
+.row-completada { border-left: 5px solid #22c55e; background: rgba(34, 197, 94, 0.06); }
+.row-cancelada { border-left: 5px solid #ef4444; background: rgba(239, 68, 68, 0.05); }
+
+.badge {
+  font-size: 0.82rem;
+  font-weight: 600;
+  border-radius: 999px;
+  padding: 0.45rem 0.85rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  border: none;
+}
+
+.status-pill {
+  box-shadow: 0 8px 18px rgba(15, 23, 42, 0.08);
+}
+
+.modality-pill {
+  background: #e2e8f0;
+  color: #0f172a;
+}
+
+.bg-primary { background: rgba(99, 102, 241, 0.18) !important; color: #4338ca !important; }
+.bg-warning { background: rgba(250, 204, 21, 0.18) !important; color: #92400e !important; }
+.bg-success { background: rgba(34, 197, 94, 0.18) !important; color: #065f46 !important; }
 .bg-danger { background: rgba(239, 68, 68, 0.18) !important; color: #991b1b !important; }
 .bg-info { background: rgba(56, 189, 248, 0.18) !important; color: #075985 !important; }
-.bg-secondary { background: rgba(148, 163, 184, 0.18) !important; color: #334155 !important; }
+.bg-secondary { background: rgba(148, 163, 184, 0.25) !important; color: #334155 !important; }
+
 .btn-outline-danger {
   border-radius: 999px;
-  border: 1px solid rgba(239, 68, 68, 0.5);
+  border: 1px solid rgba(239, 68, 68, 0.6);
   color: #b91c1c;
-  background: linear-gradient(135deg, #ffffff 0%, #fef2f2 100%);
-  box-shadow: 0 8px 18px rgba(239, 68, 68, 0.15);
+  background: #fff;
+  box-shadow: 0 8px 18px rgba(239, 68, 68, 0.25);
   transition: all 0.2s ease;
 }
-.btn-outline-danger:hover {
-  background: rgba(239, 68, 68, 0.12);
-  color: #7f1d1d;
-  transform: translateY(-2px);
-}
-.alert {
-  border-radius: 14px;
-  font-size: 0.9rem;
-  box-shadow: 0 8px 20px rgba(15, 23, 42, 0.08);
-}
-.text-muted { color: #6b7280 !important; }
-</style>
 
+.btn-outline-danger:hover {
+  background: rgba(239, 68, 68, 0.08);
+  color: #7f1d1d;
+  transform: translateY(-1px);
+}
+
+.empty-state {
+  background: #fff;
+  border-radius: 24px;
+  border: 1px dashed rgba(87, 119, 184, 0.4);
+  box-shadow: 0 10px 40px rgba(15, 23, 42, 0.08);
+}
+
+.empty-icon {
+  width: 80px;
+  height: 80px;
+  margin: 0 auto;
+  border-radius: 50%;
+  background: rgba(87, 119, 184, 0.15);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #5777b8;
+  font-size: 2rem;
+}
+
+@media (max-width: 768px) {
+  .admin-hero { padding: 1.8rem; }
+  .hero-metrics { grid-template-columns: 1fr; }
+  .status-legend {
+    border-radius: 24px;
+    padding: 0.75rem 1rem;
+  }
+  .admin-table thead {
+    display: none;
+  }
+  .admin-table tbody tr {
+    display: block;
+    margin-bottom: 1.5rem;
+    border-left-width: 0;
+  }
+  .admin-table td {
+    display: flex;
+    justify-content: space-between;
+    padding: 0.75rem 0.25rem;
+    font-size: 0.92rem;
+    border-bottom: 1px solid rgba(15, 23, 42, 0.05);
+  }
+  .admin-table td:last-child {
+    border-bottom: none;
+  }
+  .admin-table td:before {
+    content: attr(data-label);
+    font-weight: 600;
+    color: #64748b;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    margin-right: 1rem;
+  }
+  .metric-pill {
+    text-align: center;
+  }
+}
+</style>
 
 {% endblock %}

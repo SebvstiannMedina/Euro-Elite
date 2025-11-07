@@ -12,6 +12,7 @@ from django.http import HttpResponseBadRequest, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
 from django.utils import timezone
+from django.utils.http import url_has_allowed_host_and_scheme
 from django.views.decorators.csrf import ensure_csrf_cookie
 from django.views.decorators.http import require_POST
 from django.contrib.auth import login, logout
@@ -589,19 +590,42 @@ def mis_citas(request):
 
 @login_required
 def anular_cita(request, cita_id):
-    cita = get_object_or_404(Cita, id=cita_id, usuario=request.user)
+    base_queryset = Cita.objects.select_related("bloque")
+    if request.user.is_staff:
+        cita = get_object_or_404(base_queryset, id=cita_id)
+    else:
+        cita = get_object_or_404(base_queryset, id=cita_id, usuario=request.user)
 
     if cita.estado == Cita.Estado.RESERVADA:
         cita.estado = Cita.Estado.CANCELADA
-        cita.bloque.bloqueado = False
-        cita.bloque.save()
-        cita.save()
-        messages.success(request, "La cita fue cancelada correctamente ❌")
+        if cita.bloque:
+            cita.bloque.bloqueado = False
+            cita.bloque.save(update_fields=["bloqueado"])
+        cita.save(update_fields=["estado"])
+        messages.success(request, "La cita fue cancelada correctamente.")
     else:
         messages.warning(request, "Solo puedes cancelar citas que estén reservadas.")
 
-    return redirect("mis_citas")
+    redirect_to = request.GET.get("next")
+    allowed_hosts = {request.get_host()}
 
+    if redirect_to and not url_has_allowed_host_and_scheme(
+        url=redirect_to,
+        allowed_hosts=allowed_hosts,
+        require_https=request.is_secure(),
+    ):
+        redirect_to = None
+
+    if not redirect_to:
+        referer = request.META.get("HTTP_REFERER")
+        if referer and url_has_allowed_host_and_scheme(
+            url=referer,
+            allowed_hosts=allowed_hosts,
+            require_https=request.is_secure(),
+        ):
+            redirect_to = referer
+
+    return redirect(redirect_to or "mis_citas")
 
 def nueva_contrasena(request):
     return render(request, 'taller/nueva_contrasena.html')
@@ -922,17 +946,23 @@ from django.contrib.admin.views.decorators import staff_member_required
 
 @staff_member_required
 def admin_agendamientos(request):
-    citas = Cita.objects.all().order_by('-bloque__inicio')
+    citas = (
+        Cita.objects
+        .select_related('usuario', 'servicio', 'bloque')
+        .order_by('-bloque__inicio')
+    )
+    agendamientos_activos = citas.filter(
+        estado__in=[Cita.Estado.RESERVADA, Cita.Estado.EN_PROCESO]
+    ).count()
 
-    return render(request, 'taller/admin_agendamientos.html', {'citas': citas})
-
-def anular_cita(request, cita_id):
-    cita = get_object_or_404(Cita, id=cita_id)
-    if cita.estado == "RESERVADA":
-        cita.estado = "CANCELADA"
-        cita.save()
-        messages.success(request, "La cita fue cancelada correctamente.")
-    return redirect("mis_citas")
+    return render(
+        request,
+        'taller/admin_agendamientos.html',
+        {
+            'citas': citas,
+            'agendamientos_activos': agendamientos_activos,
+        },
+    )
 
 def admin_configuracion(request):
     return render(request, 'taller/admin_configuracion.html')
