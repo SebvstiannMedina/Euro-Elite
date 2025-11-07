@@ -25,6 +25,7 @@ from .forms import CitaForm, ProductoForm
 from .models import Cita, Producto, BloqueHorario
 from django.views.decorators.csrf import csrf_exempt
 from decimal import Decimal
+from django.contrib.admin.views.decorators import staff_member_required
 
 # Local apps
 from .forms import CitaForm, DireccionForm, PerfilForm, RegistroForm, EmailLoginForm
@@ -48,6 +49,30 @@ def _get_active_cart(user):
     """Devuelve (o crea) el carrito activo del usuario."""
     cart, _ = Carrito.objects.get_or_create(usuario=user, activo=True)
     return cart
+
+
+def _redirect_back(request, fallback_name):
+    """Devuelve un redirect seguro usando next, referer o un fallback."""
+    redirect_to = request.POST.get("next") or request.GET.get("next")
+    allowed_hosts = {request.get_host()}
+
+    if redirect_to and not url_has_allowed_host_and_scheme(
+        url=redirect_to,
+        allowed_hosts=allowed_hosts,
+        require_https=request.is_secure(),
+    ):
+        redirect_to = None
+
+    if not redirect_to:
+        referer = request.META.get("HTTP_REFERER")
+        if referer and url_has_allowed_host_and_scheme(
+            url=referer,
+            allowed_hosts=allowed_hosts,
+            require_https=request.is_secure(),
+        ):
+            redirect_to = referer
+
+    return redirect(redirect_to or fallback_name)
 
 
 # ---------- Endpoints de carrito (server) ----------
@@ -606,26 +631,31 @@ def anular_cita(request, cita_id):
     else:
         messages.warning(request, "Solo puedes cancelar citas que estén reservadas.")
 
-    redirect_to = request.GET.get("next")
-    allowed_hosts = {request.get_host()}
+    return _redirect_back(request, "mis_citas")
 
-    if redirect_to and not url_has_allowed_host_and_scheme(
-        url=redirect_to,
-        allowed_hosts=allowed_hosts,
-        require_https=request.is_secure(),
-    ):
-        redirect_to = None
 
-    if not redirect_to:
-        referer = request.META.get("HTTP_REFERER")
-        if referer and url_has_allowed_host_and_scheme(
-            url=referer,
-            allowed_hosts=allowed_hosts,
-            require_https=request.is_secure(),
-        ):
-            redirect_to = referer
+@staff_member_required
+@require_POST
+def avanzar_estado_cita(request, cita_id):
+    cita = get_object_or_404(Cita, id=cita_id)
 
-    return redirect(redirect_to or "mis_citas")
+    transiciones = {
+        Cita.Estado.RESERVADA: (Cita.Estado.EN_PROCESO, "La cita ahora está en proceso."),
+        Cita.Estado.EN_PROCESO: (Cita.Estado.COMPLETADA, "La cita fue completada."),
+    }
+
+    siguiente = transiciones.get(cita.estado)
+
+    if not siguiente:
+        messages.warning(request, "Esta cita no puede avanzar de estado.")
+        return _redirect_back(request, "admin_agendamiento")
+
+    nuevo_estado, mensaje = siguiente
+    cita.estado = nuevo_estado
+    cita.save(update_fields=["estado"])
+    messages.success(request, mensaje)
+
+    return _redirect_back(request, "admin_agendamiento")
 
 def nueva_contrasena(request):
     return render(request, 'taller/nueva_contrasena.html')

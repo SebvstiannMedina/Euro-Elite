@@ -27,6 +27,7 @@ urlpatterns = [
     path('agendar', main_views.agendar, name='agendar'),
     path('mis_citas', main_views.mis_citas, name='mis_citas'),
     path('citas/<int:cita_id>/anular/', main_views.anular_cita, name='anular_cita'),
+    path('citas/<int:cita_id>/avanzar/', main_views.avanzar_estado_cita, name='avanzar_estado_cita'),
     path('mis_pedidos', main_views.mis_pedidos, name='mis_pedidos'),
     path('resumen_compra', main_views.resumen_compra, name='resumen_compra'),
     path('confirmacion_datos', main_views.confirmacion_datos, name='confirmacion_datos'),

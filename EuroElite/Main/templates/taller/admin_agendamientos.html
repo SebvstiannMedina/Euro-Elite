@@ -107,10 +107,27 @@
               </td>
               <td class="text-end" data-label="Acciones">
                 {% if c.estado == 'RESERVADA' %}
-                  <a href="{% url 'anular_cita' c.id %}?next={{ request.get_full_path|urlencode }}" class="btn btn-sm btn-outline-danger"
-                     onclick="return confirm('¿Seguro que deseas cancelar esta cita?');">
-                    <i class="fas fa-times"></i>
-                  </a>
+                  <div class="action-stack">
+                    <form method="post" action="{% url 'avanzar_estado_cita' c.id %}">
+                      {% csrf_token %}
+                      <input type="hidden" name="next" value="{{ request.get_full_path }}">
+                      <button type="submit" class="btn btn-sm btn-progress">
+                        <i class="fas fa-play"></i> Iniciar
+                      </button>
+                    </form>
+                    <a href="{% url 'anular_cita' c.id %}?next={{ request.get_full_path|urlencode }}" class="btn btn-sm btn-outline-danger"
+                       onclick="return confirm('¿Seguro que deseas cancelar esta cita?');">
+                      <i class="fas fa-times"></i>
+                    </a>
+                  </div>
+                {% elif c.estado == 'EN_PROCESO' %}
+                  <form method="post" action="{% url 'avanzar_estado_cita' c.id %}" class="action-stack">
+                    {% csrf_token %}
+                    <input type="hidden" name="next" value="{{ request.get_full_path }}">
+                    <button type="submit" class="btn btn-sm btn-progress">
+                      <i class="fas fa-check"></i> Completar
+                    </button>
+                  </form>
                 {% else %}
                   <span class="text-muted">&mdash;</span>
                 {% endif %}
@@ -335,6 +352,35 @@
   background: rgba(239, 68, 68, 0.08);
   color: #7f1d1d;
   transform: translateY(-1px);
+}
+
+.btn-progress {
+  border-radius: 999px;
+  border: none;
+  background: linear-gradient(135deg, #4f46e5, #2dd4bf);
+  color: #fff;
+  box-shadow: 0 10px 18px rgba(79, 70, 229, 0.25);
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.btn-progress:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 16px 26px rgba(79, 70, 229, 0.35);
+}
+
+.action-stack {
+  display: inline-flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 0.5rem;
+}
+
+.action-stack form {
+  margin: 0;
 }
 
 .empty-state {
