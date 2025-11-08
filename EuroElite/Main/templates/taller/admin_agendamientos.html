@@ -39,103 +39,122 @@
   {% endif %}
 
   {% if citas %}
-    <div class="status-legend d-flex flex-wrap align-items-center gap-3 mb-3">
-      <span class="legend-label text-uppercase">Estados</span>
-      <span class="legend-item legend-reservada"><span class="legend-dot"></span>Reservada</span>
-      <span class="legend-item legend-proceso"><span class="legend-dot"></span>En proceso</span>
-      <span class="legend-item legend-completada"><span class="legend-dot"></span>Completada</span>
-      <span class="legend-item legend-cancelada"><span class="legend-dot"></span>Cancelada</span>
-    </div>
+    <div class="panel-stack">
+      <div class="status-legend d-flex flex-wrap align-items-center gap-3">
+        <div class="legend-heading me-auto">
+          <span class="legend-label text-uppercase">Estados</span>
+          <small class="legend-subtitle">Seguimiento en tiempo real</small>
+        </div>
+        <div class="legend-items">
+          <span class="legend-item legend-reservada"><span class="legend-dot"></span>Reservada</span>
+          <span class="legend-item legend-proceso"><span class="legend-dot"></span>En proceso</span>
+          <span class="legend-item legend-completada"><span class="legend-dot"></span>Completada</span>
+          <span class="legend-item legend-cancelada"><span class="legend-dot"></span>Cancelada</span>
+        </div>
+      </div>
 
-    <div class="card schedule-card border-0 shadow-sm rounded-4">
-      <div class="table-responsive">
-        <table class="table align-middle table-hover admin-table mb-0">
-          <thead>
-            <tr>
-              <th scope="col">#</th>
-              <th scope="col">Cliente</th>
-              <th scope="col">Servicio</th>
-              <th scope="col">Fecha</th>
-              <th scope="col">Horario</th>
-              <th scope="col">Modalidad</th>
-              <th scope="col">Estado</th>
-              <th scope="col" class="text-end">Acciones</th>
-            </tr>
-          </thead>
-          <tbody>
-            {% for c in citas %}
-            <tr class="
-              {% if c.estado == 'CANCELADA' %}row-cancelada
-              {% elif c.estado == 'COMPLETADA' %}row-completada
-              {% elif c.estado == 'EN_PROCESO' %}row-proceso
-              {% elif c.estado == 'RESERVADA' %}row-reservada
-              {% endif %}
-            ">
-              <td data-label="#">{{ forloop.counter }}</td>
-              <td data-label="Cliente" class="fw-semibold">{{ c.usuario.first_name }}</td>
-              <td data-label="Servicio">{{ c.servicio.nombre }}</td>
-              <td data-label="Fecha">
-                {% if c.bloque.inicio|date:"j" == c.bloque.fin|date:"j" %}
-                  {{ c.bloque.inicio|date:"j" }} de {{ c.bloque.inicio|date:"F Y"|capfirst }}
-                {% else %}
-                  {{ c.bloque.inicio|date:"j" }} - {{ c.bloque.fin|date:"j" }} de {{ c.bloque.inicio|date:"F Y"|capfirst }}
+      <div class="card schedule-card border-0 shadow-sm rounded-4">
+        <div class="table-responsive admin-table-wrapper">
+          <table class="table align-middle table-hover admin-table mb-0">
+            <thead>
+              <tr>
+                <th scope="col">#</th>
+                <th scope="col">Cliente</th>
+                <th scope="col">Servicio</th>
+                <th scope="col">Fecha</th>
+                <th scope="col">Horario</th>
+                <th scope="col">Modalidad</th>
+                <th scope="col">Estado</th>
+                <th scope="col" class="text-end">Acciones</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for c in citas %}
+              <tr class="row-card
+                {% if c.estado == 'CANCELADA' %} row-cancelada
+                {% elif c.estado == 'COMPLETADA' %} row-completada
+                {% elif c.estado == 'EN_PROCESO' %} row-proceso
+                {% elif c.estado == 'RESERVADA' %} row-reservada
                 {% endif %}
-              </td>
-              <td data-label="Horario">{{ c.bloque.inicio|date:"H:i" }} - {{ c.bloque.fin|date:"H:i" }}</td>
-              <td data-label="Modalidad">
-                {% if c.a_domicilio %}
-                  <span class="badge modality-pill bg-info">
-                    <i class="fas fa-truck"></i> Domicilio
+              ">
+                <td data-label="#" class="cell-index">
+                  <span class="index-pill">{{ forloop.counter|stringformat:"02d" }}</span>
+                </td>
+                <td data-label="Cliente" class="cell-primary">
+                  <span class="client-name">{{ c.usuario.first_name }}</span>
+                </td>
+                <td data-label="Servicio" class="cell-service">
+                  {{ c.servicio.nombre }}
+                </td>
+                <td data-label="Fecha" class="cell-date">
+                  {% if c.bloque.inicio|date:"j" == c.bloque.fin|date:"j" %}
+                    {{ c.bloque.inicio|date:"j" }} de {{ c.bloque.inicio|date:"F Y"|capfirst }}
+                  {% else %}
+                    {{ c.bloque.inicio|date:"j" }} - {{ c.bloque.fin|date:"j" }} de {{ c.bloque.inicio|date:"F Y"|capfirst }}
+                  {% endif %}
+                  <small class="cell-note">{{ c.bloque.inicio|date:"l"|capfirst }}</small>
+                </td>
+                <td data-label="Horario" class="cell-time">
+                  <span class="time-pill">
+                    <i class="fas fa-clock"></i>
+                    {{ c.bloque.inicio|date:"H:i" }} - {{ c.bloque.fin|date:"H:i" }}
                   </span>
-                  <br><small class="text-muted">{{ c.direccion_domicilio|default:"Sin dirección" }}</small>
-                {% else %}
-                  <span class="badge modality-pill bg-secondary">
-                    <i class="fas fa-warehouse"></i> Taller
-                  </span>
-                {% endif %}
-              </td>
-              <td data-label="Estado">
-                {% if c.estado == 'RESERVADA' %}
-                  <span class="badge status-pill bg-primary">Reservada</span>
-                {% elif c.estado == 'EN_PROCESO' %}
-                  <span class="badge status-pill bg-warning text-dark">En proceso</span>
-                {% elif c.estado == 'COMPLETADA' %}
-                  <span class="badge status-pill bg-success">Completada</span>
-                {% elif c.estado == 'CANCELADA' %}
-                  <span class="badge status-pill bg-danger">Cancelada</span>
-                {% endif %}
-              </td>
-              <td class="text-end" data-label="Acciones">
-                {% if c.estado == 'RESERVADA' %}
-                  <div class="action-stack">
-                    <form method="post" action="{% url 'avanzar_estado_cita' c.id %}">
+                </td>
+                <td data-label="Modalidad" class="cell-modality">
+                  {% if c.a_domicilio %}
+                    <span class="badge modality-pill bg-info">
+                      <i class="fas fa-truck"></i> Domicilio
+                    </span>
+                    <small class="cell-note">{{ c.direccion_domicilio|default:"Sin dirección" }}</small>
+                  {% else %}
+                    <span class="badge modality-pill bg-secondary">
+                      <i class="fas fa-warehouse"></i> Taller
+                    </span>
+                  {% endif %}
+                </td>
+                <td data-label="Estado" class="cell-status">
+                  {% if c.estado == 'RESERVADA' %}
+                    <span class="badge status-pill bg-primary">Reservada</span>
+                  {% elif c.estado == 'EN_PROCESO' %}
+                    <span class="badge status-pill bg-warning text-dark">En proceso</span>
+                  {% elif c.estado == 'COMPLETADA' %}
+                    <span class="badge status-pill bg-success">Completada</span>
+                  {% elif c.estado == 'CANCELADA' %}
+                    <span class="badge status-pill bg-danger">Cancelada</span>
+                  {% endif %}
+                </td>
+                <td class="cell-actions text-end" data-label="Acciones">
+                  {% if c.estado == 'RESERVADA' %}
+                    <div class="action-stack">
+                      <form method="post" action="{% url 'avanzar_estado_cita' c.id %}">
+                        {% csrf_token %}
+                        <input type="hidden" name="next" value="{{ request.get_full_path }}">
+                        <button type="submit" class="btn btn-sm btn-progress">
+                          <i class="fas fa-play"></i> Iniciar
+                        </button>
+                      </form>
+                      <a href="{% url 'anular_cita' c.id %}?next={{ request.get_full_path|urlencode }}" class="btn btn-sm btn-outline-danger"
+                         onclick="return confirm('¿Seguro que deseas cancelar esta cita?');">
+                        <i class="fas fa-times"></i>
+                      </a>
+                    </div>
+                  {% elif c.estado == 'EN_PROCESO' %}
+                    <form method="post" action="{% url 'avanzar_estado_cita' c.id %}" class="action-stack">
                       {% csrf_token %}
                       <input type="hidden" name="next" value="{{ request.get_full_path }}">
                       <button type="submit" class="btn btn-sm btn-progress">
-                        <i class="fas fa-play"></i> Iniciar
+                        <i class="fas fa-check"></i> Completar
                       </button>
                     </form>
-                    <a href="{% url 'anular_cita' c.id %}?next={{ request.get_full_path|urlencode }}" class="btn btn-sm btn-outline-danger"
-                       onclick="return confirm('¿Seguro que deseas cancelar esta cita?');">
-                      <i class="fas fa-times"></i>
-                    </a>
-                  </div>
-                {% elif c.estado == 'EN_PROCESO' %}
-                  <form method="post" action="{% url 'avanzar_estado_cita' c.id %}" class="action-stack">
-                    {% csrf_token %}
-                    <input type="hidden" name="next" value="{{ request.get_full_path }}">
-                    <button type="submit" class="btn btn-sm btn-progress">
-                      <i class="fas fa-check"></i> Completar
-                    </button>
-                  </form>
-                {% else %}
-                  <span class="text-muted">&mdash;</span>
-                {% endif %}
-              </td>
-            </tr>
-            {% endfor %}
-          </tbody>
-        </table>
+                  {% else %}
+                    <span class="text-muted">&mdash;</span>
+                  {% endif %}
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
       </div>
     </div>
   {% else %}
@@ -155,37 +174,61 @@
   --ee-primary-dark: #0b1f3a;
   --ee-accent: #72d6ff;
   --ee-soft: #eef2ff;
+  --ee-ink: #0f172a;
 }
 
 .admin-agenda {
-  max-width: 1200px;
+  max-width: 1280px;
+  margin: 0 auto;
 }
 
 .admin-hero {
-  background: radial-gradient(circle at top right, rgba(114, 214, 255, 0.35), transparent 40%),
-              linear-gradient(135deg, #020617, var(--ee-primary-dark) 55%, var(--ee-primary));
+  background: radial-gradient(circle at top right, rgba(114, 214, 255, 0.3), transparent 35%),
+              linear-gradient(135deg, #020617, var(--ee-primary-dark) 60%, var(--ee-primary));
   color: #f1f5f9;
-  padding: 2.5rem;
+  padding: clamp(2rem, 3vw, 2.75rem);
   position: relative;
   overflow: hidden;
-  box-shadow: 0 30px 80px rgba(6, 24, 44, 0.45);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  box-shadow: 0 24px 55px rgba(2, 6, 23, 0.6);
+  isolation: isolate;
+}
+
+.admin-hero::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(120deg, rgba(114, 214, 255, 0.35), transparent 55%);
+  opacity: 0;
+  transition: opacity 0.4s ease;
+  z-index: 0;
+}
+
+.admin-hero:hover::after {
+  opacity: 1;
 }
 
 .hero-glow {
   position: absolute;
   right: -60px;
   bottom: -60px;
-  width: 240px;
-  height: 240px;
-  background: radial-gradient(circle, rgba(255, 255, 255, 0.25), transparent 65%);
+  width: 260px;
+  height: 260px;
+  background: radial-gradient(circle, rgba(255, 255, 255, 0.28), transparent 70%);
   filter: blur(2px);
   pointer-events: none;
+  z-index: 0;
+}
+
+.admin-hero > .row {
+  position: relative;
+  z-index: 1;
 }
 
 .hero-eyebrow {
   letter-spacing: 0.25em;
   font-size: 0.75rem;
-  color: rgba(255, 255, 255, 0.7);
+  color: rgba(255, 255, 255, 0.75);
 }
 
 .hero-title {
@@ -195,25 +238,26 @@
 
 .hero-text {
   color: rgba(255, 255, 255, 0.85);
-  max-width: 540px;
+  max-width: 560px;
 }
 
 .hero-metrics {
   display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
   gap: 1rem;
 }
 
 .metric-pill {
-  background: rgba(255, 255, 255, 0.08);
+  background: rgba(6, 12, 34, 0.55);
   border: 1px solid rgba(255, 255, 255, 0.2);
-  border-radius: 1.25rem;
+  border-radius: 1.35rem;
   padding: 1rem 1.25rem;
   color: #fff;
-  backdrop-filter: blur(6px);
+  backdrop-filter: blur(8px);
 }
 
 .metric-pill span {
-  font-size: 0.85rem;
+  font-size: 0.78rem;
   text-transform: uppercase;
   letter-spacing: 0.08em;
   color: rgba(255, 255, 255, 0.75);
@@ -221,38 +265,82 @@
 
 .metric-pill strong {
   display: block;
-  font-size: 1.4rem;
+  font-size: 1.45rem;
   margin-top: 0.3rem;
 }
 
 .alerts-stack .alert {
-  border-radius: 16px;
-  border: none;
-  box-shadow: 0 10px 30px rgba(15, 23, 42, 0.1);
+  border-radius: 18px;
+  border: 1px solid rgba(148, 163, 184, 0.35);
+  box-shadow: 0 14px 28px rgba(15, 23, 42, 0.12);
   font-size: 0.9rem;
+  background: linear-gradient(120deg, rgba(255, 255, 255, 0.9), rgba(248, 250, 252, 0.95));
+}
+
+.panel-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
 }
 
 .status-legend {
-  border: 1px solid rgba(15, 23, 42, 0.08);
-  border-radius: 999px;
-  padding: 0.6rem 1.5rem;
-  background: #fff;
-  box-shadow: 0 12px 30px rgba(15, 23, 42, 0.06);
+  border-radius: 28px;
+  padding: 1rem 1.5rem;
+  background: linear-gradient(120deg, rgba(255, 255, 255, 0.95), rgba(236, 244, 255, 0.95));
+  border: 1px solid rgba(99, 102, 241, 0.1);
+  box-shadow: 0 18px 40px rgba(15, 23, 42, 0.08);
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+}
+
+.status-legend::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle at right, rgba(114, 214, 255, 0.25), transparent 60%);
+  z-index: 0;
+}
+
+.status-legend > * {
+  position: relative;
+  z-index: 1;
+}
+
+.legend-heading {
+  min-width: 160px;
 }
 
 .legend-label {
   font-size: 0.78rem;
-  letter-spacing: 0.25em;
+  letter-spacing: 0.35em;
   color: #475569;
+  display: block;
+}
+
+.legend-subtitle {
+  font-size: 0.85rem;
+  color: #94a3b8;
+}
+
+.legend-items {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.85rem;
 }
 
 .legend-item {
   display: inline-flex;
   align-items: center;
-  gap: 0.35rem;
-  font-size: 0.88rem;
-  font-weight: 500;
-  color: #1e293b;
+  gap: 0.45rem;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #1f2937;
+  padding: 0.45rem 0.95rem;
+  border-radius: 999px;
+  border: 1px solid rgba(15, 23, 42, 0.08);
+  background: rgba(255, 255, 255, 0.85);
+  box-shadow: 0 12px 30px rgba(15, 23, 42, 0.08);
 }
 
 .legend-dot {
@@ -268,49 +356,173 @@
 .legend-cancelada .legend-dot { background: #ef4444; }
 
 .schedule-card {
-  background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
-  box-shadow: 0 20px 60px rgba(15, 23, 42, 0.08);
-  border: 1px solid rgba(15, 23, 42, 0.05);
+  border: 1px solid rgba(15, 23, 42, 0.08);
+  border-radius: 28px !important;
+  background: linear-gradient(180deg, #ffffff 0%, #f8fbff 100%);
+  box-shadow: 0 22px 55px rgba(15, 23, 42, 0.09);
+  padding: 1.5rem;
+  position: relative;
+  isolation: isolate;
+}
+
+.schedule-card .table-responsive {
+  margin: 0;
+}
+
+.admin-table-wrapper {
+  padding: 0.5rem 0;
+}
+
+.admin-table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0 14px;
+}
+
+.admin-table thead {
+  border: none;
 }
 
 .admin-table thead th {
-  background: var(--ee-soft);
+  background: transparent;
   border: none;
-  color: #475569;
+  color: #94a3b8;
   text-transform: uppercase;
-  font-size: 0.75rem;
-  letter-spacing: 0.1em;
-  padding: 1.1rem 1rem;
+  font-size: 0.72rem;
+  letter-spacing: 0.18em;
+  padding: 0 1.4rem 0.35rem;
   font-weight: 600;
 }
 
 .admin-table tbody tr {
-  background-color: #fff;
-  border-radius: 16px;
-  box-shadow: 0 8px 25px rgba(15, 23, 42, 0.04);
-}
-
-.admin-table tbody tr:not(:last-child) {
-  border-bottom: 1px solid rgba(15, 23, 42, 0.02);
-}
-
-.admin-table td {
-  padding: 1rem;
-  vertical-align: middle;
-  border-top: none;
-  font-size: 0.95rem;
-  color: #0f172a;
+  position: relative;
+  border-left: 4px solid transparent;
+  border-radius: 22px;
+  background: linear-gradient(135deg, #ffffff 0%, #f7f9ff 100%);
+  border: 1px solid rgba(15, 23, 42, 0.06);
+  box-shadow: 0 14px 32px rgba(15, 23, 42, 0.08);
+  transition: transform 0.25s ease, box-shadow 0.25s ease;
 }
 
 .admin-table tbody tr:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 18px 30px rgba(15, 23, 42, 0.08);
+  transform: translateY(-4px);
+  box-shadow: 0 20px 38px rgba(15, 23, 42, 0.12);
 }
 
-.row-reservada { border-left: 5px solid #6366f1; background: rgba(99, 102, 241, 0.05); }
-.row-proceso { border-left: 5px solid #facc15; background: rgba(250, 204, 21, 0.07); }
-.row-completada { border-left: 5px solid #22c55e; background: rgba(34, 197, 94, 0.06); }
-.row-cancelada { border-left: 5px solid #ef4444; background: rgba(239, 68, 68, 0.05); }
+.admin-table td {
+  padding: 1.15rem 1.4rem;
+  vertical-align: middle;
+  font-size: 0.95rem;
+  color: var(--ee-ink);
+  border-left: 1px solid rgba(15, 23, 42, 0.04);
+  background: transparent;
+}
+
+.admin-table td:first-child {
+  border-left: none;
+}
+
+.admin-table td:last-child {
+  text-align: right;
+  white-space: nowrap;
+}
+
+.cell-index {
+  width: 1%;
+  text-align: center;
+}
+
+.index-pill {
+  min-width: 44px;
+  height: 44px;
+  border-radius: 14px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 0.95rem;
+  background: rgba(99, 102, 241, 0.15);
+  color: #4338ca;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.5), 0 6px 18px rgba(79, 70, 229, 0.15);
+}
+
+.cell-primary .client-name {
+  font-weight: 600;
+  color: #0f172a;
+}
+
+.cell-service {
+  font-weight: 500;
+  color: #1e293b;
+}
+
+.cell-date,
+.cell-modality {
+  color: #475569;
+}
+
+.cell-note {
+  display: block;
+  font-size: 0.78rem;
+  color: #94a3b8;
+  margin-top: 0.3rem;
+}
+
+.time-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0.45rem 0.95rem;
+  border-radius: 999px;
+  background: rgba(99, 102, 241, 0.08);
+  font-weight: 600;
+  color: #312e81;
+  font-size: 0.9rem;
+}
+
+.time-pill i {
+  color: #475569;
+}
+
+.cell-status .badge {
+  margin-top: 0.15rem;
+}
+
+.cell-actions {
+  text-align: right;
+}
+
+.cell-actions .action-stack {
+  justify-content: flex-end;
+}
+
+.row-reservada { border-left-color: #6366f1; }
+.row-proceso { border-left-color: #facc15; }
+.row-completada { border-left-color: #22c55e; }
+.row-cancelada { border-left-color: #ef4444; }
+
+.row-reservada .index-pill {
+  background: rgba(99, 102, 241, 0.22);
+  color: #312e81;
+}
+
+.row-proceso .index-pill {
+  background: rgba(250, 204, 21, 0.3);
+  color: #92400e;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.4), 0 6px 18px rgba(250, 204, 21, 0.25);
+}
+
+.row-completada .index-pill {
+  background: rgba(34, 197, 94, 0.25);
+  color: #065f46;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.4), 0 6px 18px rgba(34, 197, 94, 0.2);
+}
+
+.row-cancelada .index-pill {
+  background: rgba(239, 68, 68, 0.22);
+  color: #991b1b;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.4), 0 6px 18px rgba(239, 68, 68, 0.2);
+}
 
 .badge {
   font-size: 0.82rem;
@@ -327,12 +539,7 @@
   box-shadow: 0 8px 18px rgba(15, 23, 42, 0.08);
 }
 
-.modality-pill {
-  background: #e2e8f0;
-  color: #0f172a;
-}
-
-.bg-primary { background: rgba(99, 102, 241, 0.18) !important; color: #4338ca !important; }
+.bg-primary { background: rgba(99, 102, 241, 0.15) !important; color: #4338ca !important; }
 .bg-warning { background: rgba(250, 204, 21, 0.18) !important; color: #92400e !important; }
 .bg-success { background: rgba(34, 197, 94, 0.18) !important; color: #065f46 !important; }
 .bg-danger { background: rgba(239, 68, 68, 0.18) !important; color: #991b1b !important; }
@@ -344,7 +551,7 @@
   border: 1px solid rgba(239, 68, 68, 0.6);
   color: #b91c1c;
   background: #fff;
-  box-shadow: 0 8px 18px rgba(239, 68, 68, 0.25);
+  box-shadow: 0 10px 20px rgba(239, 68, 68, 0.18);
   transition: all 0.2s ease;
 }
 
@@ -359,7 +566,7 @@
   border: none;
   background: linear-gradient(135deg, #4f46e5, #2dd4bf);
   color: #fff;
-  box-shadow: 0 10px 18px rgba(79, 70, 229, 0.25);
+  box-shadow: 0 12px 22px rgba(79, 70, 229, 0.25);
   font-weight: 600;
   display: inline-flex;
   align-items: center;
@@ -369,7 +576,7 @@
 
 .btn-progress:hover {
   transform: translateY(-1px);
-  box-shadow: 0 16px 26px rgba(79, 70, 229, 0.35);
+  box-shadow: 0 18px 28px rgba(79, 70, 229, 0.35);
 }
 
 .action-stack {
@@ -384,18 +591,20 @@
 }
 
 .empty-state {
-  background: #fff;
-  border-radius: 24px;
-  border: 1px dashed rgba(87, 119, 184, 0.4);
-  box-shadow: 0 10px 40px rgba(15, 23, 42, 0.08);
+  background: linear-gradient(160deg, rgba(255, 255, 255, 0.95), rgba(236, 243, 255, 0.9));
+  border-radius: 28px;
+  border: 1px dashed rgba(87, 119, 184, 0.45);
+  box-shadow: 0 18px 45px rgba(15, 23, 42, 0.08);
+  position: relative;
+  isolation: isolate;
 }
 
 .empty-icon {
-  width: 80px;
-  height: 80px;
+  width: 90px;
+  height: 90px;
   margin: 0 auto;
   border-radius: 50%;
-  background: rgba(87, 119, 184, 0.15);
+  background: rgba(87, 119, 184, 0.2);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -403,43 +612,101 @@
   font-size: 2rem;
 }
 
-@media (max-width: 768px) {
-  .admin-hero { padding: 1.8rem; }
-  .hero-metrics { grid-template-columns: 1fr; }
+@media (max-width: 992px) {
   .status-legend {
-    border-radius: 24px;
-    padding: 0.75rem 1rem;
+    flex-direction: column;
+    align-items: flex-start !important;
   }
+
+  .legend-heading {
+    width: 100%;
+  }
+
+}
+
+@media (max-width: 768px) {
+  .admin-hero {
+    padding: 1.8rem;
+  }
+
+  .hero-metrics {
+    grid-template-columns: 1fr;
+  }
+
+  .status-legend {
+    padding: 1rem;
+  }
+
+  .legend-items {
+    width: 100%;
+  }
+
   .admin-table thead {
     display: none;
   }
+
+  .admin-table {
+    border-spacing: 0;
+  }
+
+  .admin-table tbody {
+    gap: 0;
+  }
+
   .admin-table tbody tr {
     display: block;
-    margin-bottom: 1.5rem;
-    border-left-width: 0;
+    margin-bottom: 1.25rem;
   }
+
   .admin-table td {
     display: flex;
-    justify-content: space-between;
-    padding: 0.75rem 0.25rem;
-    font-size: 0.92rem;
-    border-bottom: 1px solid rgba(15, 23, 42, 0.05);
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.35rem;
+    padding: 1rem;
+    font-size: 0.94rem;
+    border-bottom: 1px solid rgba(15, 23, 42, 0.08);
+    border-right: none;
+    border-left: none;
+    width: 100%;
   }
+
   .admin-table td:last-child {
     border-bottom: none;
+    align-items: flex-start;
   }
+
   .admin-table td:before {
     content: attr(data-label);
     font-weight: 600;
-    color: #64748b;
+    color: #94a3b8;
     text-transform: uppercase;
-    letter-spacing: 0.08em;
-    margin-right: 1rem;
+    letter-spacing: 0.12em;
+    margin-right: 0;
+    margin-bottom: 0.35rem;
+    font-size: 0.72rem;
   }
+
+  .cell-index {
+    flex-direction: row;
+    align-items: center;
+  }
+
+  .cell-index:before {
+    margin-bottom: 0;
+    margin-right: 0.5rem;
+  }
+
+  .cell-actions {
+    align-items: flex-start;
+    width: 100%;
+  }
+
   .metric-pill {
     text-align: center;
   }
 }
 </style>
+
 
 {% endblock %}
