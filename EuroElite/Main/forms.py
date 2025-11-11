@@ -187,11 +187,13 @@ class RegistroForm(UserCreationForm):
 # ================= CITA =================
 from django import forms
 from django.utils import timezone
+from django.db.models import Q, Count
 from datetime import datetime, timedelta
-from .models import Cita, Servicio, BloqueHorario, Direccion
+
+from .models import Cita, Servicio, BloqueHorario
+
 
 class CitaForm(forms.ModelForm):
-    """Formulario de agendamiento sin depender de profesionales."""
 
     class Meta:
         model = Cita
@@ -207,44 +209,52 @@ class CitaForm(forms.ModelForm):
         user = kwargs.pop("user", None)
         super().__init__(*args, **kwargs)
 
-        # ✅ Crear servicios base si no existen
+
         servicios_base = [
             ("Diagnóstico general", 25000),
             ("Mantención básica", 35000),
             ("Cambio de aceite", 20000),
         ]
         for nombre, precio in servicios_base:
-            Servicio.objects.get_or_create(nombre=nombre, defaults={"precio_base": precio, "activo": True})
+            Servicio.objects.get_or_create(
+                nombre=nombre,
+                defaults={"precio_base": precio, "activo": True}
+            )
 
-        # ✅ Generar bloques si no hay
-        self._generar_bloques_automaticos()
-
-        # Mostrar solo servicios activos
         self.fields["servicio"].queryset = Servicio.objects.filter(activo=True)
 
-        # ✅ Bloques disponibles (en hora local)
-        ahora_local = timezone.localtime(timezone.now())
-        self.fields["bloque"].queryset = BloqueHorario.objects.filter(
-            bloqueado=False,
-            cita__isnull=True,
-            inicio__gte=ahora_local
-        ).order_by("inicio")
 
-        # ✅ Si el usuario tiene direcciones
-        if user and user.is_authenticated:
-            self.fields["direccion_domicilio"].queryset = Direccion.objects.filter(usuario=user)
-        else:
-            self.fields["direccion_domicilio"].queryset = Direccion.objects.none()
+        self._generar_bloques_automaticos()
+
+        ahora_local = timezone.localtime(timezone.now())
+
+
+        bloques = (
+            BloqueHorario.objects.annotate(
+                activas=Count("citas", filter=Q(citas__estado="RESERVADA"))
+            )
+            .filter(
+                bloqueado=False,
+                inicio__gte=ahora_local,
+                activas=0
+            )
+            .order_by("inicio")
+        )
+
+        self.fields["bloque"].queryset = bloques
+
+
 
     def _generar_bloques_automaticos(self):
-        """Crea horarios automáticos (09:00 a 17:00) en zona local."""
+        """Genera horarios si no existen desde hoy hacia adelante."""
         hoy = timezone.localdate()
-        if not BloqueHorario.objects.exists():
-            tz = timezone.get_current_timezone()
+        tz = timezone.get_current_timezone()
+
+        if not BloqueHorario.objects.filter(inicio__date__gte=hoy).exists():
             for dia in [hoy, hoy + timedelta(days=1)]:
-                for hora in range(9, 18):  # 9 a 17
+                for hora in range(9, 18):  # 09:00 a 17:00
                     inicio_naive = datetime.combine(dia, datetime.min.time()) + timedelta(hours=hora)
-                    inicio = timezone.make_aware(inicio_naive, tz)  # 👈 usa zona horaria local
+                    inicio = timezone.make_aware(inicio_naive, tz)
                     fin = inicio + timedelta(hours=1)
                     BloqueHorario.objects.get_or_create(inicio=inicio, fin=fin, bloqueado=False)
 
@@ -253,17 +263,17 @@ class CitaForm(forms.ModelForm):
         bloque = cleaned_data.get("bloque")
 
         if bloque and bloque.inicio <= timezone.now():
-            raise forms.ValidationError("No puedes agendar en un bloque de tiempo pasado.")
+            raise forms.ValidationError("No puedes agendar un horario del pasado.")
 
-        if bloque and hasattr(bloque, "cita"):
+
+        if bloque and bloque.citas.filter(estado="RESERVADA").exists():
             raise forms.ValidationError("Este bloque ya está reservado.")
 
-        # Validar domicilio
+ 
         if cleaned_data.get("a_domicilio") and not cleaned_data.get("direccion_domicilio"):
-            self.add_error("direccion_domicilio", "Debes ingresar una dirección para el servicio a domicilio.")
+            self.add_error("direccion_domicilio", "Debes ingresar la dirección donde se realizará el servicio.")
 
         return cleaned_data
-
 
 # ================= PRODUCTO =================
 class ProductoForm(forms.ModelForm):

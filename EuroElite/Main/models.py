@@ -506,7 +506,6 @@ class BloqueHorario(models.Model):
         return f"{self.inicio.strftime('%d/%m/%Y %H:%M')} - {self.fin.strftime('%H:%M')}"
 
 
-
 class Cita(MarcaTiempo):
     class Estado(models.TextChoices):
         RESERVADA = "RESERVADA", "Reservada"
@@ -516,7 +515,13 @@ class Cita(MarcaTiempo):
 
     usuario = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.PROTECT, related_name="citas")
     servicio = models.ForeignKey(Servicio, on_delete=models.PROTECT, related_name="citas")
-    bloque = models.OneToOneField(BloqueHorario, on_delete=models.PROTECT, related_name="cita")
+
+    bloque = models.ForeignKey(
+        BloqueHorario,
+        on_delete=models.PROTECT,
+        related_name="citas"
+    )
+
     estado = models.CharField(max_length=12, choices=Estado.choices, default=Estado.RESERVADA)
     a_domicilio = models.BooleanField(default=False)
     direccion_domicilio = models.CharField(max_length=255, null=True, blank=True)
