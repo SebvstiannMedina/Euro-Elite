@@ -496,6 +496,8 @@ class Profesional(MarcaTiempo):
     especialidad = models.CharField(max_length=120, blank=True)
     activo = models.BooleanField(default=True)
 
+from django.db import models
+from django.utils.timezone import localtime
 
 class BloqueHorario(models.Model):
     inicio = models.DateTimeField(db_index=True)
@@ -503,7 +505,9 @@ class BloqueHorario(models.Model):
     bloqueado = models.BooleanField(default=False)
 
     def __str__(self):
-        return f"{self.inicio.strftime('%d/%m/%Y %H:%M')} - {self.fin.strftime('%H:%M')}"
+        inicio_local = localtime(self.inicio)
+        fin_local = localtime(self.fin)
+        return f"{inicio_local.strftime('%d/%m/%Y %H:%M')} - {fin_local.strftime('%H:%M')}"
 
 
 class Cita(MarcaTiempo):

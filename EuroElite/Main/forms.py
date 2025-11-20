@@ -223,11 +223,9 @@ class CitaForm(forms.ModelForm):
 
         self.fields["servicio"].queryset = Servicio.objects.filter(activo=True)
 
-
         self._generar_bloques_automaticos()
 
         ahora_local = timezone.localtime(timezone.now())
-
 
         bloques = (
             BloqueHorario.objects.annotate(
@@ -243,10 +241,7 @@ class CitaForm(forms.ModelForm):
 
         self.fields["bloque"].queryset = bloques
 
-
-
     def _generar_bloques_automaticos(self):
-        """Genera horarios si no existen desde hoy hacia adelante."""
         hoy = timezone.localdate()
         tz = timezone.get_current_timezone()
 
@@ -265,15 +260,33 @@ class CitaForm(forms.ModelForm):
         if bloque and bloque.inicio <= timezone.now():
             raise forms.ValidationError("No puedes agendar un horario del pasado.")
 
-
         if bloque and bloque.citas.filter(estado="RESERVADA").exists():
             raise forms.ValidationError("Este bloque ya está reservado.")
 
- 
         if cleaned_data.get("a_domicilio") and not cleaned_data.get("direccion_domicilio"):
             self.add_error("direccion_domicilio", "Debes ingresar la dirección donde se realizará el servicio.")
 
         return cleaned_data
+
+    
+    def save(self, commit=True):
+        cita = super().save(commit=False)
+
+        bloque = cita.bloque
+        tz = timezone.get_current_timezone()
+
+        if bloque.inicio.tzinfo is None:
+            bloque.inicio = timezone.make_aware(bloque.inicio, tz)
+        if bloque.fin.tzinfo is None:
+            bloque.fin = timezone.make_aware(bloque.fin, tz)
+
+        bloque.save()
+
+        if commit:
+            cita.save()
+
+        return cita
+
 
 # ================= PRODUCTO =================
 class ProductoForm(forms.ModelForm):
