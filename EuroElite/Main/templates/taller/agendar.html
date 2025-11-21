@@ -77,10 +77,10 @@
             {% endif %}
           </div>
 
-          <!-- Telefono de contacto -->
+          <!-- Teléfono de contacto -->
           <div class="mb-3">
             <label class="form-label fw-semibold" for="telefono_contacto">
-              <i class="fa-solid fa-phone me-2 text-primary"></i>Telefono de contacto
+              <i class="fa-solid fa-phone me-2 text-primary"></i>Teléfono de contacto
             </label>
             <input
               type="tel"
@@ -261,14 +261,14 @@
       const valor = sanitizarTelefono();
       if (!valor) {
         if (mostrarFeedback) {
-          marcarInvalido(telefonoInput, telefonoFeedback, 'Anade tu numero telefonico para confirmar la reserva.');
+          marcarInvalido(telefonoInput, telefonoFeedback, 'Añade tu número telefónico para confirmar la reserva.');
         }
         return false;
       }
       const digits = valor.replace(/\D/g, '');
       if (digits.length !== DIGITOS_TELEFONO) {
         if (mostrarFeedback) {
-          marcarInvalido(telefonoInput, telefonoFeedback, 'Ingresa un numero valido de ' + DIGITOS_TELEFONO + ' digitos.');
+          marcarInvalido(telefonoInput, telefonoFeedback, 'Ingresa un número válido de ' + DIGITOS_TELEFONO + ' dígitos.');
         }
         return false;
       }
