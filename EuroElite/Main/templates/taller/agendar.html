@@ -34,9 +34,10 @@
             </label>
             {{ form.servicio }}
             {% if form.servicio.errors %}
-              <div class="invalid-feedback d-block">{{ form.servicio.errors }}</div>
+              <div id="servicioFeedback" class="invalid-feedback d-block" data-feedback-field="servicio">{{ form.servicio.errors }}</div>
             {% else %}
               <div class="form-text">Ejemplo: Mantención, Revisión, Diagnóstico</div>
+              <div id="servicioFeedback" class="invalid-feedback d-none" data-feedback-field="servicio"></div>
             {% endif %}
           </div>
 
@@ -47,9 +48,10 @@
             </label>
             {{ form.bloque }}
             {% if form.bloque.errors %}
-              <div class="invalid-feedback d-block">{{ form.bloque.errors }}</div>
+              <div id="bloqueFeedback" class="invalid-feedback d-block" data-feedback-field="bloque">{{ form.bloque.errors }}</div>
             {% else %}
               <div class="form-text">Horarios disponibles desde hoy en adelante.</div>
+              <div id="bloqueFeedback" class="invalid-feedback d-none" data-feedback-field="bloque"></div>
             {% endif %}
           </div>
 
@@ -68,10 +70,34 @@
             </label>
             {{ form.direccion_domicilio }}
             {% if form.direccion_domicilio.errors %}
-              <div class="invalid-feedback d-block">{{ form.direccion_domicilio.errors }}</div>
+              <div id="direccionFeedback" class="invalid-feedback d-block" data-feedback-field="direccion">{{ form.direccion_domicilio.errors }}</div>
             {% else %}
               <div class="form-text">Selecciona una de tus direcciones guardadas.</div>
+              <div id="direccionFeedback" class="invalid-feedback d-none" data-feedback-field="direccion"></div>
             {% endif %}
+          </div>
+
+          <!-- Telefono de contacto -->
+          <div class="mb-3">
+            <label class="form-label fw-semibold" for="telefono_contacto">
+              <i class="fa-solid fa-phone me-2 text-primary"></i>Telefono de contacto
+            </label>
+            <input
+              type="tel"
+              class="form-control"
+              id="telefono_contacto"
+              name="telefono_contacto"
+              placeholder="+56912345678"
+              inputmode="tel"
+              autocomplete="tel"
+              pattern="^\+?\d{11}$"
+              maxlength="12"
+              title="Formato permitido: +56912345678"
+              value="{% if request.method == 'POST' %}{{ request.POST.telefono_contacto|default_if_none:'' }}{% else %}{{ request.user.telefono|default_if_none:'' }}{% endif %}"
+              required
+            >
+            <div id="telefonoFeedback" class="invalid-feedback d-none" data-feedback-field="telefono"></div>
+            <div class="form-text">Lo usaremos para confirmar detalles de tu cita.</div>
           </div>
 
           <!-- Botones -->
@@ -141,15 +167,293 @@
 <!-- Script -->
 <script>
   document.addEventListener('DOMContentLoaded', function () {
-    const domicilio = document.getElementById("id_a_domicilio");
-    const dirWrap = document.getElementById("direccionWrapper");
+    const formulario = document.querySelector('form[method="POST"]');
+    if (!formulario) {
+      return;
+    }
 
-    if (domicilio) {
-      dirWrap.style.display = domicilio.checked ? "" : "none";
-      domicilio.addEventListener("change", () => {
-        dirWrap.style.display = domicilio.checked ? "" : "none";
+    const domicilio = document.getElementById('id_a_domicilio');
+    const dirWrap = document.getElementById('direccionWrapper');
+    const servicioSelect = document.getElementById('id_servicio');
+    const servicioFeedback = document.getElementById('servicioFeedback');
+    const bloqueSelect = document.getElementById('id_bloque');
+    const bloqueFeedback = document.getElementById('bloqueFeedback');
+    const direccionSelect = document.getElementById('id_direccion_domicilio');
+    const direccionFeedback = document.getElementById('direccionFeedback');
+    const telefonoInput = document.getElementById('telefono_contacto');
+    const telefonoFeedback = document.getElementById('telefonoFeedback');
+    const submitBtn = formulario.querySelector('button[type="submit"]');
+    const feedbackElements = document.querySelectorAll('[data-feedback-field]');
+    const DIGITOS_TELEFONO = 11;
+
+    function validarServicio(opciones = {}) {
+      if (!servicioSelect || !servicioFeedback) return true;
+      const mostrarFeedback = opciones.mostrarFeedback !== false;
+      const valor = (servicioSelect.value || '').trim();
+      if (!valor) {
+        if (mostrarFeedback) {
+          marcarInvalido(servicioSelect, servicioFeedback, 'Selecciona el servicio requerido.');
+        }
+        return false;
+      }
+      if (mostrarFeedback) {
+        limpiarInvalido(servicioSelect, servicioFeedback);
+      }
+      return true;
+    }
+
+    function validarBloque(opciones = {}) {
+      if (!bloqueSelect || !bloqueFeedback) return true;
+      const mostrarFeedback = opciones.mostrarFeedback !== false;
+      const valor = (bloqueSelect.value || '').trim();
+      if (!valor) {
+        if (mostrarFeedback) {
+          marcarInvalido(bloqueSelect, bloqueFeedback, 'Selecciona un horario disponible.');
+        }
+        return false;
+      }
+      if (mostrarFeedback) {
+        limpiarInvalido(bloqueSelect, bloqueFeedback);
+      }
+      return true;
+    }
+
+    function validarDireccion(opciones = {}) {
+      if (!direccionSelect || !direccionFeedback) return true;
+      const mostrarFeedback = opciones.mostrarFeedback !== false;
+      if (!domicilio || !domicilio.checked) {
+        if (mostrarFeedback) {
+          limpiarInvalido(direccionSelect, direccionFeedback);
+        }
+        return true;
+      }
+      const valor = (direccionSelect.value || '').trim();
+      if (!valor) {
+        if (mostrarFeedback) {
+          marcarInvalido(direccionSelect, direccionFeedback, 'Selecciona la direccion para la visita.');
+        }
+        return false;
+      }
+      if (mostrarFeedback) {
+        limpiarInvalido(direccionSelect, direccionFeedback);
+      }
+      return true;
+    }
+
+    function sanitizarTelefono() {
+      if (!telefonoInput) return '';
+      const valor = telefonoInput.value || '';
+      const empiezaConPlus = valor.trim().startsWith('+');
+      let digitos = valor.replace(/\D/g, '');
+      if (digitos.length > DIGITOS_TELEFONO) {
+        digitos = digitos.slice(0, DIGITOS_TELEFONO);
+      }
+      const nuevoValor = (empiezaConPlus ? '+' : '') + digitos;
+      if (telefonoInput.value !== nuevoValor) {
+        telefonoInput.value = nuevoValor;
+      }
+      return nuevoValor;
+    }
+
+    function validarTelefono(opciones = {}) {
+      if (!telefonoInput || !telefonoFeedback) return true;
+      const mostrarFeedback = opciones.mostrarFeedback !== false;
+      const valor = sanitizarTelefono();
+      if (!valor) {
+        if (mostrarFeedback) {
+          marcarInvalido(telefonoInput, telefonoFeedback, 'Anade tu numero telefonico para confirmar la reserva.');
+        }
+        return false;
+      }
+      const digits = valor.replace(/\D/g, '');
+      if (digits.length !== DIGITOS_TELEFONO) {
+        if (mostrarFeedback) {
+          marcarInvalido(telefonoInput, telefonoFeedback, 'Ingresa un numero valido de ' + DIGITOS_TELEFONO + ' digitos.');
+        }
+        return false;
+      }
+      if (mostrarFeedback) {
+        limpiarInvalido(telefonoInput, telefonoFeedback);
+      }
+      return true;
+    }
+
+    function hayAlertasActivas() {
+      const mensajesActivos = Array.from(feedbackElements).some((el) => {
+        return el.classList.contains('d-block') && el.textContent.trim().length > 0;
+      });
+      const camposInvalidos = Boolean(formulario.querySelector('.is-invalid'));
+      const validacionesPendientes = [
+        () => validarServicio({ mostrarFeedback: false }),
+        () => validarBloque({ mostrarFeedback: false }),
+        () => validarDireccion({ mostrarFeedback: false }),
+        () => validarTelefono({ mostrarFeedback: false }),
+      ].some((fn) => fn() === false);
+      return mensajesActivos || camposInvalidos || validacionesPendientes;
+    }
+
+    function actualizarEstadoEnvio() {
+      if (!submitBtn) return;
+      const bloquear = hayAlertasActivas();
+      submitBtn.disabled = bloquear;
+      submitBtn.classList.toggle('disabled', bloquear);
+      submitBtn.setAttribute('aria-disabled', bloquear ? 'true' : 'false');
+    }
+
+    function marcarInvalido(campo, feedback, mensaje) {
+      if (!campo || !feedback) return;
+      campo.classList.add('is-invalid');
+      feedback.textContent = mensaje;
+      feedback.classList.remove('d-none');
+      feedback.classList.add('d-block');
+      actualizarEstadoEnvio();
+    }
+
+    function limpiarInvalido(campo, feedback) {
+      if (!campo || !feedback) return;
+      campo.classList.remove('is-invalid');
+      feedback.textContent = '';
+      feedback.classList.remove('d-block');
+      feedback.classList.add('d-none');
+      actualizarEstadoEnvio();
+    }
+
+    function sincronizarErroresServidor() {
+      [
+        [servicioSelect, servicioFeedback],
+        [bloqueSelect, bloqueFeedback],
+        [direccionSelect, direccionFeedback],
+        [telefonoInput, telefonoFeedback],
+      ].forEach(([campo, feedback]) => {
+        if (!campo || !feedback) {
+          return;
+        }
+        if (feedback.classList.contains('d-block') && feedback.textContent.trim().length > 0) {
+          campo.classList.add('is-invalid');
+        }
       });
     }
+
+    function actualizarDireccionVisible() {
+      if (!dirWrap) return;
+      const visible = domicilio && domicilio.checked;
+      dirWrap.style.display = visible ? '' : 'none';
+      if (direccionSelect) {
+        if (visible) {
+          direccionSelect.setAttribute('required', 'required');
+        } else {
+          direccionSelect.removeAttribute('required');
+          limpiarInvalido(direccionSelect, direccionFeedback);
+        }
+      }
+      actualizarEstadoEnvio();
+    }
+
+    sincronizarErroresServidor();
+    actualizarEstadoEnvio();
+
+    if (domicilio) {
+      actualizarDireccionVisible();
+      domicilio.addEventListener('change', () => {
+        actualizarDireccionVisible();
+        validarDireccion();
+      });
+    } else {
+      actualizarEstadoEnvio();
+    }
+
+    if (servicioSelect) {
+      servicioSelect.addEventListener('change', () => {
+        validarServicio();
+      });
+    }
+
+    if (bloqueSelect) {
+      bloqueSelect.addEventListener('change', () => {
+        validarBloque();
+      });
+    }
+
+    if (direccionSelect) {
+      direccionSelect.addEventListener('change', () => {
+        validarDireccion();
+      });
+    }
+
+    if (telefonoInput) {
+      telefonoInput.addEventListener('keydown', (event) => {
+        const key = event.key || '';
+        if (key.length > 1) {
+          return;
+        }
+
+        const start = telefonoInput.selectionStart != null ? telefonoInput.selectionStart : telefonoInput.value.length;
+        const end = telefonoInput.selectionEnd != null ? telefonoInput.selectionEnd : telefonoInput.value.length;
+
+        if (key === '+') {
+          const tienePlus = telefonoInput.value.includes('+');
+          const plusSeleccionado = telefonoInput.value.slice(start, end).includes('+');
+          if (start !== 0 || (tienePlus && !plusSeleccionado)) {
+            event.preventDefault();
+          }
+          return;
+        }
+
+        if (!/^\d$/.test(key)) {
+          event.preventDefault();
+          return;
+        }
+
+        const selectedDigits = telefonoInput.value.slice(start, end).replace(/\D/g, '');
+        const existingDigits = telefonoInput.value.replace(/\D/g, '');
+        if (existingDigits.length - selectedDigits.length >= DIGITOS_TELEFONO) {
+          event.preventDefault();
+        }
+      });
+
+      telefonoInput.addEventListener('input', () => {
+        sanitizarTelefono();
+        if (telefonoInput.classList.contains('is-invalid')) {
+          validarTelefono();
+        } else {
+          actualizarEstadoEnvio();
+        }
+      });
+
+      telefonoInput.addEventListener('blur', () => {
+        validarTelefono();
+      });
+
+      validarTelefono();
+    }
+
+    formulario.addEventListener('submit', (event) => {
+      let esValido = true;
+      let primerCampo = null;
+
+      const revisar = (fn, campo) => {
+        if (!fn()) {
+          esValido = false;
+          if (!primerCampo && campo) {
+            primerCampo = campo;
+          }
+        }
+      };
+
+      revisar(validarServicio, servicioSelect);
+      revisar(validarBloque, bloqueSelect);
+      revisar(validarDireccion, direccionSelect);
+      revisar(validarTelefono, telefonoInput);
+
+      if (!esValido || hayAlertasActivas()) {
+        event.preventDefault();
+        if (primerCampo) {
+          primerCampo.focus();
+        }
+      }
+    });
+
+    actualizarEstadoEnvio();
   });
 </script>
 {% endblock %}
