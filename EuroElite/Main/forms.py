@@ -185,19 +185,20 @@ class RegistroForm(UserCreationForm):
 
 
 # ================= CITA =================
-from django import forms
-from django.utils import timezone
 from django.db.models import Q, Count
 from datetime import datetime, timedelta
-
-from .models import Cita, Servicio, BloqueHorario
-
+from .models import Cita, Servicio, BloqueHorario, HorarioDia
 
 class CitaForm(forms.ModelForm):
 
+    fecha = forms.DateField(
+        widget=forms.DateInput(attrs={"type": "date", "class": "form-control"}),
+        required=True
+    )
+
     class Meta:
         model = Cita
-        fields = ["servicio", "bloque", "a_domicilio", "direccion_domicilio"]
+        fields = ["servicio", "fecha", "bloque", "a_domicilio", "direccion_domicilio"]
         widgets = {
             "servicio": forms.Select(attrs={"class": "form-control"}),
             "bloque": forms.Select(attrs={"class": "form-control"}),
@@ -209,7 +210,7 @@ class CitaForm(forms.ModelForm):
         user = kwargs.pop("user", None)
         super().__init__(*args, **kwargs)
 
-
+        # --- Servicios Base ---
         servicios_base = [
             ("Diagnóstico general", 25000),
             ("Mantención básica", 35000),
@@ -220,73 +221,95 @@ class CitaForm(forms.ModelForm):
                 nombre=nombre,
                 defaults={"precio_base": precio, "activo": True}
             )
-
         self.fields["servicio"].queryset = Servicio.objects.filter(activo=True)
 
-        self._generar_bloques_automaticos()
+        # --- Bloques vacíos por defecto ---
+        self.fields["bloque"].queryset = BloqueHorario.objects.none()
 
-        ahora_local = timezone.localtime(timezone.now())
+        # --- Cuando el usuario selecciona una fecha ---
+        if "fecha" in self.data:
+            try:
+                fecha_str = self.data.get("fecha")
+                fecha = datetime.strptime(fecha_str, "%Y-%m-%d").date()
 
-        bloques = (
-            BloqueHorario.objects.annotate(
-                activas=Count("citas", filter=Q(citas__estado="RESERVADA"))
+                # Genera bloques según el horario del admin
+                self._generar_bloques_para_fecha(fecha)
+
+                # Carga bloques disponibles
+                self.fields["bloque"].queryset = (
+                    BloqueHorario.objects.annotate(
+                        activas=Count("citas", filter=Q(citas__estado="RESERVADA"))
+                    )
+                    .filter(
+                        inicio__date=fecha,
+                        bloqueado=False,
+                        activas=0,
+                        inicio__gte=timezone.now()
+                    )
+                    .order_by("inicio")
+                )
+            except:
+                pass
+
+        # --- En caso de edición ---
+        elif self.instance.pk and self.instance.bloque:
+            fecha = self.instance.bloque.inicio.date()
+            self.fields["fecha"].initial = fecha
+            self.fields["bloque"].queryset = (
+                BloqueHorario.objects.filter(inicio__date=fecha, bloqueado=False)
             )
-            .filter(
-                bloqueado=False,
-                inicio__gte=ahora_local,
-                activas=0
-            )
-            .order_by("inicio")
-        )
 
-        self.fields["bloque"].queryset = bloques
+    # ===================== MÉTODO INTERNO =====================
+    def _generar_bloques_para_fecha(self, fecha):
+        """Genera bloques según HorarioDia configurado por admins."""
+        dia_semana = fecha.weekday()  # 0 = Lunes ... 6 = Domingo
+        rangos = HorarioDia.objects.filter(dia_semana=dia_semana, activo=True)
 
-    def _generar_bloques_automaticos(self):
-        hoy = timezone.localdate()
         tz = timezone.get_current_timezone()
 
-        if not BloqueHorario.objects.filter(inicio__date__gte=hoy).exists():
-            for dia in [hoy, hoy + timedelta(days=1)]:
-                for hora in range(9, 18):  # 09:00 a 17:00
-                    inicio_naive = datetime.combine(dia, datetime.min.time()) + timedelta(hours=hora)
-                    inicio = timezone.make_aware(inicio_naive, tz)
-                    fin = inicio + timedelta(hours=1)
-                    BloqueHorario.objects.get_or_create(inicio=inicio, fin=fin, bloqueado=False)
+        for rango in rangos:
+            hora_inicio = datetime.combine(fecha, rango.hora_inicio)
+            hora_fin = datetime.combine(fecha, rango.hora_fin)
 
+            hora_actual = hora_inicio
+            while hora_actual < hora_fin:
+                inicio = timezone.make_aware(hora_actual, tz)
+                fin = inicio + timedelta(hours=1)
+
+                BloqueHorario.objects.get_or_create(
+                    inicio=inicio,
+                    fin=fin,
+                    bloqueado=False
+                )
+
+                hora_actual += timedelta(hours=1)
+
+    # ===================== VALIDACIONES =====================
     def clean(self):
         cleaned_data = super().clean()
+        fecha = cleaned_data.get("fecha")
         bloque = cleaned_data.get("bloque")
 
+        if fecha and fecha < timezone.localdate():
+            raise forms.ValidationError("No puedes seleccionar una fecha pasada.")
+
         if bloque and bloque.inicio <= timezone.now():
-            raise forms.ValidationError("No puedes agendar un horario del pasado.")
+            raise forms.ValidationError("El horario ya pasó.")
 
         if bloque and bloque.citas.filter(estado="RESERVADA").exists():
             raise forms.ValidationError("Este bloque ya está reservado.")
 
         if cleaned_data.get("a_domicilio") and not cleaned_data.get("direccion_domicilio"):
-            self.add_error("direccion_domicilio", "Debes ingresar la dirección donde se realizará el servicio.")
+            self.add_error("direccion_domicilio", "Debes ingresar la dirección.")
 
         return cleaned_data
 
-    
+    # ===================== SAVE =====================
     def save(self, commit=True):
         cita = super().save(commit=False)
-
-        bloque = cita.bloque
-        tz = timezone.get_current_timezone()
-
-        if bloque.inicio.tzinfo is None:
-            bloque.inicio = timezone.make_aware(bloque.inicio, tz)
-        if bloque.fin.tzinfo is None:
-            bloque.fin = timezone.make_aware(bloque.fin, tz)
-
-        bloque.save()
-
         if commit:
             cita.save()
-
         return cita
-
 
 # ================= PRODUCTO =================
 class ProductoForm(forms.ModelForm):
@@ -635,4 +658,15 @@ class ConfirmarEntregaForm(forms.ModelForm):
                 "accept": "image/*",
                 "capture": "camera",  # abre cámara en teléfono
             }),
+        }
+
+class HorarioDiaForm(forms.ModelForm):
+    class Meta:
+        model = HorarioDia
+        fields = ["dia_semana", "hora_inicio", "hora_fin", "activo"]
+        widgets = {
+            "dia_semana": forms.Select(attrs={"class": "form-select"}),
+            "hora_inicio": forms.TimeInput(attrs={"type": "time", "class": "form-control"}),
+            "hora_fin": forms.TimeInput(attrs={"type": "time", "class": "form-control"}),
+            "activo": forms.CheckboxInput(attrs={"class": "form-check-input"}),
         }

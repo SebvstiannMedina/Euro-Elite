@@ -1,0 +1,222 @@
+{% extends "base.html" %}
+{% load static %}
+{% block content %}
+
+
+<!-- =========================== -->
+<!--         HERO SECTION        -->
+<!-- =========================== -->
+<section class="admin-hero mb-5">
+    <div class="hero-glow"></div>
+    <div class="row align-items-center">
+        <div class="col-lg-8">
+            <div class="hero-eyebrow">PANEL DE ADMINISTRACIÓN</div>
+            <h1 class="hero-title display-5 mb-3">
+                Horarios Semanales
+            </h1>
+            <p class="hero-text">
+                Configura los horarios disponibles para cada día de la semana.
+                Estos horarios serán utilizados automáticamente por el sistema de agendamiento.
+            </p>
+        </div>
+    </div>
+</section>
+
+<!-- =========================== -->
+<!--       LISTA DE DÍAS         -->
+<!-- =========================== -->
+
+<div class="admin-agenda panel-stack">
+
+    {% for dia_id, data in dias.items %}
+    <div class="schedule-card">
+
+        <!-- Título del día -->
+        <div class="d-flex align-items-center mb-3">
+            <span class="legend-dot me-2" style="background: var(--ee-primary);"></span>
+            <h4 class="fw-bold m-0" style="color: var(--ee-ink);">
+                {{ data.nombre }}
+            </h4>
+        </div>
+
+        <!-- Si tiene horarios -->
+        {% if data.horarios %}
+            <div class="list-group mb-3">
+                {% for h in data.horarios %}
+                <div class="list-group-item d-flex justify-content-between align-items-center"
+                    style="border-radius: 18px; border: 1px solid rgba(15,23,42,0.08); background: #fff;">
+
+                    <!-- Hora -->
+                    <div class="d-flex align-items-center gap-2">
+                        <div class="time-pill">
+                            <i class="fa-solid fa-clock"></i>
+                            {{ h.hora_inicio }} – {{ h.hora_fin }}
+                        </div>
+                    </div>
+
+                    <!-- Botones -->
+                    <div class="action-stack">
+                        <a href="{% url 'admin:Main_horariodia_change' h.id %}"
+                        class="btn btn-progress px-3 py-2">
+                            <i class="fa-solid fa-pen-to-square"></i>
+                            Editar
+                        </a>
+
+                        <a href="{% url 'admin:Main_horariodia_delete' h.id %}"
+                        class="btn btn-outline-danger px-3 py-2">
+                            <i class="fa-solid fa-trash"></i>
+                            Eliminar
+                        </a>
+                    </div>
+
+                </div>
+                {% endfor %}
+            </div>
+
+        {% else %}
+            <!-- EMPTY STATE -->
+            <div class="empty-state p-4 text-center mt-3">
+                <div class="empty-icon mb-3">
+                    <i class="fa-solid fa-calendar-xmark"></i>
+                </div>
+                <p class="text-muted mb-1">No hay horarios registrados para este día.</p>
+                <p class="text-muted small">Agrega uno para habilitar reservas este día.</p>
+            </div>
+        {% endif %}
+
+        <!-- Botón agregar -->
+        <div class="mt-4">
+            <a href="{% url 'admin:Main_horariodia_add' %}"
+            class="btn btn-progress px-4 py-3">
+                <i class="fa-solid fa-plus"></i>
+                Agregar horario para {{ data.nombre }}
+            </a>
+        </div>
+
+    </div>
+    {% endfor %}
+
+</div>
+
+<!-- =========================== -->
+<!--          CSS STYLE          -->
+<!-- =========================== -->
+<style>
+:root {
+  --ee-primary: #5777b8;
+  --ee-primary-dark: #0b1f3a;
+  --ee-accent: #72d6ff;
+  --ee-soft: #eef2ff;
+  --ee-ink: #0f172a;
+}
+
+/* Hero */
+.admin-hero {
+  background: radial-gradient(circle at top right, rgba(114, 214, 255, 0.3), transparent 35%),
+              linear-gradient(135deg, #020617, var(--ee-primary-dark) 60%, var(--ee-primary));
+  color: #f1f5f9;
+  padding: clamp(2rem, 3vw, 2.75rem);
+  position: relative;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  box-shadow: 0 24px 55px rgba(2, 6, 23, 0.6);
+}
+
+.hero-glow {
+  position: absolute;
+  right: -60px;
+  bottom: -60px;
+  width: 260px;
+  height: 260px;
+  background: radial-gradient(circle, rgba(255, 255, 255, 0.28), transparent 70%);
+  filter: blur(2px);
+}
+
+.hero-eyebrow {
+  letter-spacing: 0.25em;
+  font-size: 0.75rem;
+  color: rgba(255, 255, 255, 0.75);
+}
+.hero-title {
+  color: white;
+  font-weight: 700;
+}
+.hero-text {
+  color: rgba(255, 255, 255, 0.85);
+}
+
+/* Lista de días */
+.schedule-card {
+  border-radius: 28px;
+  border: 1px solid rgba(15,23,42,0.08);
+  background: linear-gradient(180deg, #ffffff 0%, #f8fbff 100%);
+  padding: 1.5rem;
+  box-shadow: 0 22px 55px rgba(15,23,42,0.09);
+}
+
+.legend-dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+}
+
+/* Horas */
+.time-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.45rem 0.9rem;
+  border-radius: 999px;
+  background: rgba(99,102,241,0.12);
+  font-weight: 600;
+  color: #312e81;
+}
+
+/* Botones */
+.btn-progress {
+  border-radius: 999px;
+  border: none;
+  background: linear-gradient(135deg, #4f46e5, #2dd4bf);
+  color: white;
+  font-weight: 600;
+  box-shadow: 0 12px 22px rgba(79,70,229,0.25);
+}
+.btn-progress:hover {
+  transform: translateY(-1px);
+}
+
+.btn-outline-danger {
+  border-radius: 999px;
+  border: 1px solid rgba(239, 68, 68, 0.6);
+  color: #b91c1c;
+  background: white;
+  box-shadow: 0 10px 20px rgba(239, 68, 68, 0.18);
+}
+
+.action-stack {
+  display: flex;
+  gap: 0.7rem;
+}
+
+/* Empty State */
+.empty-state {
+  border-radius: 28px;
+  border: 1px dashed rgba(87, 119, 184, 0.45);
+  background: linear-gradient(160deg, rgba(255,255,255,0.95), rgba(236,243,255,0.9));
+  box-shadow: 0 18px 45px rgba(15, 23, 42, 0.08);
+}
+.empty-icon {
+  width: 90px;
+  height: 90px;
+  margin: 0 auto;
+  border-radius: 50%;
+  background: rgba(87,119,184,0.2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #5777b8;
+  font-size: 2rem;
+}
+</style>
+
+{% endblock %}

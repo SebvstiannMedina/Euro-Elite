@@ -5,7 +5,7 @@ from .models import (
     Pago, Boleta, Resena, Servicio, Profesional,
     BloqueHorario, Cita, Banner, ConfigSitio, VehiculoEnVenta,
     VehiculoCliente, HistorialServicio, FotoNosotros, Contacto,
-    RecordatorioMantenimiento
+    RecordatorioMantenimiento,HorarioDia
 )
 
 # Usuarios personalizados
@@ -82,6 +82,12 @@ class ResenaAdmin(admin.ModelAdmin):
         queryset.update(aprobada=False)
     rechazar_resenas.short_description = "Rechazar reseñas seleccionadas"
 
+@admin.register(HorarioDia)
+class HorarioDiaAdmin(admin.ModelAdmin):
+    list_display = ("dia_semana", "hora_inicio", "hora_fin", "activo")
+    list_filter = ("dia_semana", "activo")
+    ordering = ("dia_semana", "hora_inicio")
+
 
 # Otros modelos (registrados de manera básica)
 admin.site.register(Direccion)
@@ -101,4 +107,5 @@ admin.site.register(BloqueHorario)
 admin.site.register(Cita)
 admin.site.register(Banner)
 admin.site.register(ConfigSitio)
+
 

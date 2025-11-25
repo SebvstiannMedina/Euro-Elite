@@ -555,52 +555,47 @@ def logout_view(request):
 @login_required
 def agendar(request):
     if request.method == "POST":
-        form = CitaForm(request.POST)
+        form = CitaForm(request.POST, user=request.user)
+
         if form.is_valid():
             try:
                 with transaction.atomic():
+
                     bloque_id = form.cleaned_data["bloque"].id
+                    bloque = BloqueHorario.objects.select_for_update().get(id=bloque_id)
 
-                    # 1) Lock a nivel fila:
-                    bloque = (
-                        BloqueHorario.objects
-                        .select_for_update()
-                        .get(id=bloque_id)
-                    )
-
-                    # 2) Doble chequeo con el lock tomado:
                     if bloque.bloqueado or Cita.objects.filter(bloque=bloque).exists():
                         form.add_error("bloque", "Este bloque ya está reservado.")
-                        raise ValueError("Bloque ya reservado")
+                        raise ValueError("Bloque reservado")
 
-                    # 3) Crear la cita (única por bloque):
                     cita = Cita(
                         usuario=request.user,
                         servicio=form.cleaned_data["servicio"],
                         bloque=bloque,
                         estado=Cita.Estado.RESERVADA,
                         a_domicilio=form.cleaned_data.get("a_domicilio", False),
-                        direccion_domicilio=form.cleaned_data.get("direccion_domicilio", ""),
+                        direccion_domicilio=form.cleaned_data.get("direccion_domicilio", "")
                     )
                     cita.save()
 
-                    # 4) Marcar bloque como ocupado:
                     bloque.bloqueado = True
                     bloque.save(update_fields=["bloqueado"])
 
             except ValueError:
-                # Ya añadimos error en el form; seguimos mostrando el form.
                 pass
+
             except IntegrityError:
-                # Por si, a pesar del lock, colisiona la unicidad:
                 form.add_error("bloque", "Este bloque ya está reservado.")
+
             else:
                 messages.success(request, "Tu cita fue reservada correctamente ✅")
                 return redirect("mis_citas")
+
     else:
-        form = CitaForm()
+        form = CitaForm(user=request.user)
 
     return render(request, "taller/agendar.html", {"form": form})
+
 
 @login_required
 def mis_citas(request):
@@ -2047,20 +2042,23 @@ from django.contrib import messages
 from .forms import CitaForm
 from .models import Cita
 
+@login_required
 def agendar_servicio(request):
-    """Vista de agendamiento simple sin depender de profesionales."""
     if request.method == "POST":
         form = CitaForm(request.POST, user=request.user)
+
         if form.is_valid():
             cita = form.save(commit=False)
             cita.usuario = request.user
             cita.save()
-            messages.success(request, "✅ Tu cita fue agendada correctamente. Te contactaremos pronto.")
+
+            messages.success(request, "✅ Tu cita fue agendada correctamente.")
             return redirect("mis_citas")
     else:
         form = CitaForm(user=request.user)
 
     return render(request, "agendar.html", {"form": form})
+
 
 
 from django.utils import timezone
@@ -2641,3 +2639,31 @@ def confirmar_entrega(request, pedido_id):
         messages.error(request, "❌ Revisa los datos del formulario")
 
     return redirect("admin_entrega")
+
+from django.contrib.admin.views.decorators import staff_member_required
+from django.shortcuts import render, redirect
+from .models import HorarioDia
+from .forms import HorarioDiaForm  # Lo crearemos abajo
+
+@staff_member_required
+def admin_horarios(request):
+    dias_semana = {
+        0: "Lunes",
+        1: "Martes",
+        2: "Miércoles",
+        3: "Jueves",
+        4: "Viernes",
+        5: "Sábado",
+        6: "Domingo",
+    }
+
+    dias = {}
+    for numero, nombre in dias_semana.items():
+        dias[numero] = {
+            "nombre": nombre,
+            "horarios": HorarioDia.objects.filter(dia_semana=numero).order_by("hora_inicio")
+        }
+
+    return render(request, "Taller/admin_horarios.html", {
+        "dias": dias,
+    })

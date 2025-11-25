@@ -56,6 +56,7 @@ urlpatterns = [
     path('admin_usuarios/bloquear/<int:user_id>/', main_views.toggle_bloqueo_usuario, name='toggle_bloqueo_usuario'),
     path('admin_entregas/', main_views.entregas_view, name='admin_entregas'),
     path("pedidos/<int:pedido_id>/estado/<str:nuevo_estado>/", main_views.actualizar_estado_pedido, name="actualizar_estado_pedido"),
+    path("admin_horarios/", main_views.admin_horarios, name="administrar_horarios"),
 
 
 

@@ -745,3 +745,22 @@ class RecordatorioMantenimiento(MarcaTiempo):
     
     def __str__(self):
         return f"Recordatorio para {self.usuario.email} - {self.fecha_programada}"
+
+class HorarioDia(models.Model):
+    DIA_CHOICES = [
+        (0, "Lunes"),
+        (1, "Martes"),
+        (2, "Miércoles"),
+        (3, "Jueves"),
+        (4, "Viernes"),
+        (5, "Sábado"),
+        (6, "Domingo"),
+    ]
+
+    dia_semana = models.IntegerField(choices=DIA_CHOICES)
+    hora_inicio = models.TimeField()
+    hora_fin = models.TimeField()
+    activo = models.BooleanField(default=True)
+
+    def __str__(self):
+        return f"{self.get_dia_semana_display()}: {self.hora_inicio} - {self.hora_fin}"

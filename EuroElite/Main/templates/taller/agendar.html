@@ -4,15 +4,14 @@
 
 {% block content %}
 
-
-<!-- Hero -->
+<!-- Hero Azul -->
 <section class="container mb-4" style="margin-top: 1rem;">
   <div class="hero-agendar p-4 p-md-5 rounded-4 text-white">
     <div class="d-flex align-items-center gap-3">
       <div class="hero-icon"><i class="fa-solid fa-calendar-check"></i></div>
       <div>
         <h2 class="mb-1">Agendar servicio</h2>
-        <p class="mb-0 text-white-50">Elige el servicio, selecciona un horario y confirma tu reserva.</p>
+        <p class="mb-0 text-white-50">Elige el servicio, selecciona el día y horario, y confirma tu reserva.</p>
       </div>
     </div>
   </div>
@@ -21,9 +20,11 @@
 <!-- Contenido -->
 <main class="container mb-5">
   <div class="row g-4">
+
     <!-- Formulario -->
     <div class="col-12 col-lg-7">
       <div class="card shadow-sm p-4 border-0 rounded-4">
+
         <form method="POST" novalidate>
           {% csrf_token %}
 
@@ -34,10 +35,22 @@
             </label>
             {{ form.servicio }}
             {% if form.servicio.errors %}
-              <div id="servicioFeedback" class="invalid-feedback d-block" data-feedback-field="servicio">{{ form.servicio.errors }}</div>
+              <div class="invalid-feedback d-block">{{ form.servicio.errors }}</div>
             {% else %}
-              <div class="form-text">Ejemplo: Mantención, Revisión, Diagnóstico</div>
-              <div id="servicioFeedback" class="invalid-feedback d-none" data-feedback-field="servicio"></div>
+              <div class="form-text">Ej: Diagnóstico, Mantención, Cambio de Aceite</div>
+            {% endif %}
+          </div>
+
+          <!-- Fecha -->
+          <div class="mb-3">
+            <label class="form-label fw-semibold">
+              <i class="fa-solid fa-calendar-day me-2 text-primary"></i>Fecha del servicio
+            </label>
+            {{ form.fecha }}
+            {% if form.fecha.errors %}
+              <div class="invalid-feedback d-block">{{ form.fecha.errors }}</div>
+            {% else %}
+              <div class="form-text">Selecciona una fecha (solo días futuros).</div>
             {% endif %}
           </div>
 
@@ -46,12 +59,19 @@
             <label class="form-label fw-semibold">
               <i class="fa-solid fa-clock me-2 text-primary"></i>Horario disponible
             </label>
-            {{ form.bloque }}
-            {% if form.bloque.errors %}
-              <div id="bloqueFeedback" class="invalid-feedback d-block" data-feedback-field="bloque">{{ form.bloque.errors }}</div>
+
+            {% if not form.fields.bloque.queryset %}
+              <select class="form-control" disabled>
+                <option value="">Seleccione una fecha primero</option>
+              </select>
             {% else %}
-              <div class="form-text">Horarios disponibles desde hoy en adelante.</div>
-              <div id="bloqueFeedback" class="invalid-feedback d-none" data-feedback-field="bloque"></div>
+              {{ form.bloque }}
+            {% endif %}
+
+            {% if form.bloque.errors %}
+              <div class="invalid-feedback d-block">{{ form.bloque.errors }}</div>
+            {% else %}
+              <div class="form-text">Los horarios dependen de la fecha seleccionada.</div>
             {% endif %}
           </div>
 
@@ -59,7 +79,7 @@
           <div class="form-check form-switch mb-3">
             {{ form.a_domicilio }}
             <label class="form-check-label fw-semibold" for="id_a_domicilio">
-              <i class="fa-solid fa-house me-2 text-primary"></i>¿Quieres el servicio a domicilio?
+              <i class="fa-solid fa-house me-2 text-primary"></i>¿Servicio a domicilio?
             </label>
           </div>
 
@@ -70,34 +90,21 @@
             </label>
             {{ form.direccion_domicilio }}
             {% if form.direccion_domicilio.errors %}
-              <div id="direccionFeedback" class="invalid-feedback d-block" data-feedback-field="direccion">{{ form.direccion_domicilio.errors }}</div>
+              <div class="invalid-feedback d-block">{{ form.direccion_domicilio.errors }}</div>
             {% else %}
-              <div class="form-text">Selecciona una de tus direcciones guardadas.</div>
-              <div id="direccionFeedback" class="invalid-feedback d-none" data-feedback-field="direccion"></div>
+              <div class="form-text">Ingresa la dirección donde se realizará el servicio.</div>
             {% endif %}
           </div>
 
-          <!-- Teléfono de contacto -->
+          <!-- Teléfono -->
           <div class="mb-3">
             <label class="form-label fw-semibold" for="telefono_contacto">
               <i class="fa-solid fa-phone me-2 text-primary"></i>Teléfono de contacto
             </label>
-            <input
-              type="tel"
-              class="form-control"
-              id="telefono_contacto"
-              name="telefono_contacto"
-              placeholder="+56912345678"
-              inputmode="tel"
-              autocomplete="tel"
-              pattern="^\+?\d{11}$"
-              maxlength="12"
-              title="Formato permitido: +56912345678"
-              value="{% if request.method == 'POST' %}{{ request.POST.telefono_contacto|default_if_none:'' }}{% else %}{{ request.user.telefono|default_if_none:'' }}{% endif %}"
-              required
-            >
-            <div id="telefonoFeedback" class="invalid-feedback d-none" data-feedback-field="telefono"></div>
-            <div class="form-text">Lo usaremos para confirmar detalles de tu cita.</div>
+            <input type="tel" class="form-control" id="telefono_contacto" name="telefono_contacto"
+              placeholder="+56912345678" maxlength="12" required
+              value="{% if request.method == 'POST' %}{{ request.POST.telefono_contacto }}{% else %}{{ request.user.telefono|default:'' }}{% endif %}">
+            <div class="form-text">Lo usaremos para contactarte si es necesario.</div>
           </div>
 
           <!-- Botones -->
@@ -109,34 +116,43 @@
               <i class="fa-solid fa-calendar-day me-2"></i>Ver mis citas
             </a>
           </div>
+
         </form>
       </div>
     </div>
 
-    <!-- Lateral informativo -->
+    <!-- Panel lateral -->
     <div class="col-12 col-lg-5">
+
       <div class="card border-0 shadow-sm rounded-4 mb-3">
         <div class="card-body p-4">
           <h5 class="mb-3"><i class="fa-solid fa-circle-info text-primary me-2"></i>¿Cómo funciona?</h5>
-          <ul class="list-unstyled timeline-steps mb-0">
-            <li><span class="dot"></span><div>Elige el servicio que necesitas.</div></li>
+          <ul class="list-unstyled timeline-steps">
+            <li><span class="dot"></span><div>Selecciona el servicio.</div></li>
+            <li><span class="dot"></span><div>Elige la fecha.</div></li>
             <li><span class="dot"></span><div>Selecciona un horario disponible.</div></li>
-            <li><span class="dot"></span><div>Confirma tu reserva y recibe un correo.</div></li>
+            <li><span class="dot"></span><div>Confirma tu reserva.</div></li>
           </ul>
         </div>
       </div>
+
       <div class="card border-0 shadow-sm rounded-4 mb-3">
         <div class="card-body p-4">
           <h6 class="fw-semibold mb-2"><i class="fa-solid fa-triangle-exclamation text-warning me-2"></i>Política de cancelación</h6>
-          <p class="text-muted mb-0">Puedes reprogramar o cancelar hasta 12 horas antes de tu cita sin costo.</p>
+          <p class="text-muted">Puedes cancelar o reprogramar hasta 12 horas antes sin costo.</p>
         </div>
       </div>
+
       <div class="card border-0 shadow-sm rounded-4">
         <div class="card-body p-4">
           <h6 class="fw-semibold mb-2"><i class="fa-solid fa-headset text-success me-2"></i>¿Necesitas ayuda?</h6>
-          <p class="text-muted mb-2">Escríbenos a <a href="mailto:mirandaservicespa@gmail.com">mirandaservicespa@gmail.com</a> o llama al +56 9 1234 5678.</p>
+          <p class="text-muted mb-2">
+            Escríbenos a <a href="mailto:mirandaservicespa@gmail.com">mirandaservicespa@gmail.com</a>
+            o llama al +56 9 1234 5678.
+          </p>
         </div>
       </div>
+
     </div>
   </div>
 </main>
@@ -160,300 +176,36 @@
   .timeline-steps .dot {
     width: 10px; height: 10px; border-radius: 50%; background: #0d6efd; margin-top: 7px;
   }
-  select.form-control { border-radius: 10px; }
-  .form-check-input { cursor: pointer; }
 </style>
 
 <!-- Script -->
 <script>
-  document.addEventListener('DOMContentLoaded', function () {
-    const formulario = document.querySelector('form[method="POST"]');
-    if (!formulario) {
-      return;
-    }
+document.addEventListener('DOMContentLoaded', function () {
 
+    // Mostrar / ocultar dirección
     const domicilio = document.getElementById('id_a_domicilio');
-    const dirWrap = document.getElementById('direccionWrapper');
-    const servicioSelect = document.getElementById('id_servicio');
-    const servicioFeedback = document.getElementById('servicioFeedback');
-    const bloqueSelect = document.getElementById('id_bloque');
-    const bloqueFeedback = document.getElementById('bloqueFeedback');
-    const direccionSelect = document.getElementById('id_direccion_domicilio');
-    const direccionFeedback = document.getElementById('direccionFeedback');
-    const telefonoInput = document.getElementById('telefono_contacto');
-    const telefonoFeedback = document.getElementById('telefonoFeedback');
-    const submitBtn = formulario.querySelector('button[type="submit"]');
-    const feedbackElements = document.querySelectorAll('[data-feedback-field]');
-    const DIGITOS_TELEFONO = 11;
+    const direccionWrapper = document.getElementById('direccionWrapper');
 
-    function validarServicio(opciones = {}) {
-      if (!servicioSelect || !servicioFeedback) return true;
-      const mostrarFeedback = opciones.mostrarFeedback !== false;
-      const valor = (servicioSelect.value || '').trim();
-      if (!valor) {
-        if (mostrarFeedback) {
-          marcarInvalido(servicioSelect, servicioFeedback, 'Selecciona el servicio requerido.');
-        }
-        return false;
-      }
-      if (mostrarFeedback) {
-        limpiarInvalido(servicioSelect, servicioFeedback);
-      }
-      return true;
+    function actualizarDireccion() {
+        direccionWrapper.style.display = domicilio.checked ? '' : 'none';
     }
-
-    function validarBloque(opciones = {}) {
-      if (!bloqueSelect || !bloqueFeedback) return true;
-      const mostrarFeedback = opciones.mostrarFeedback !== false;
-      const valor = (bloqueSelect.value || '').trim();
-      if (!valor) {
-        if (mostrarFeedback) {
-          marcarInvalido(bloqueSelect, bloqueFeedback, 'Selecciona un horario disponible.');
-        }
-        return false;
-      }
-      if (mostrarFeedback) {
-        limpiarInvalido(bloqueSelect, bloqueFeedback);
-      }
-      return true;
-    }
-
-    function validarDireccion(opciones = {}) {
-      if (!direccionSelect || !direccionFeedback) return true;
-      const mostrarFeedback = opciones.mostrarFeedback !== false;
-      if (!domicilio || !domicilio.checked) {
-        if (mostrarFeedback) {
-          limpiarInvalido(direccionSelect, direccionFeedback);
-        }
-        return true;
-      }
-      const valor = (direccionSelect.value || '').trim();
-      if (!valor) {
-        if (mostrarFeedback) {
-          marcarInvalido(direccionSelect, direccionFeedback, 'Selecciona la direccion para la visita.');
-        }
-        return false;
-      }
-      if (mostrarFeedback) {
-        limpiarInvalido(direccionSelect, direccionFeedback);
-      }
-      return true;
-    }
-
-    function sanitizarTelefono() {
-      if (!telefonoInput) return '';
-      const valor = telefonoInput.value || '';
-      const empiezaConPlus = valor.trim().startsWith('+');
-      let digitos = valor.replace(/\D/g, '');
-      if (digitos.length > DIGITOS_TELEFONO) {
-        digitos = digitos.slice(0, DIGITOS_TELEFONO);
-      }
-      const nuevoValor = (empiezaConPlus ? '+' : '') + digitos;
-      if (telefonoInput.value !== nuevoValor) {
-        telefonoInput.value = nuevoValor;
-      }
-      return nuevoValor;
-    }
-
-    function validarTelefono(opciones = {}) {
-      if (!telefonoInput || !telefonoFeedback) return true;
-      const mostrarFeedback = opciones.mostrarFeedback !== false;
-      const valor = sanitizarTelefono();
-      if (!valor) {
-        if (mostrarFeedback) {
-          marcarInvalido(telefonoInput, telefonoFeedback, 'Añade tu número telefónico para confirmar la reserva.');
-        }
-        return false;
-      }
-      const digits = valor.replace(/\D/g, '');
-      if (digits.length !== DIGITOS_TELEFONO) {
-        if (mostrarFeedback) {
-          marcarInvalido(telefonoInput, telefonoFeedback, 'Ingresa un número válido de ' + DIGITOS_TELEFONO + ' dígitos.');
-        }
-        return false;
-      }
-      if (mostrarFeedback) {
-        limpiarInvalido(telefonoInput, telefonoFeedback);
-      }
-      return true;
-    }
-
-    function hayAlertasActivas() {
-      const mensajesActivos = Array.from(feedbackElements).some((el) => {
-        return el.classList.contains('d-block') && el.textContent.trim().length > 0;
-      });
-      const camposInvalidos = Boolean(formulario.querySelector('.is-invalid'));
-      const validacionesPendientes = [
-        () => validarServicio({ mostrarFeedback: false }),
-        () => validarBloque({ mostrarFeedback: false }),
-        () => validarDireccion({ mostrarFeedback: false }),
-        () => validarTelefono({ mostrarFeedback: false }),
-      ].some((fn) => fn() === false);
-      return mensajesActivos || camposInvalidos || validacionesPendientes;
-    }
-
-    function actualizarEstadoEnvio() {
-      if (!submitBtn) return;
-      const bloquear = hayAlertasActivas();
-      submitBtn.disabled = bloquear;
-      submitBtn.classList.toggle('disabled', bloquear);
-      submitBtn.setAttribute('aria-disabled', bloquear ? 'true' : 'false');
-    }
-
-    function marcarInvalido(campo, feedback, mensaje) {
-      if (!campo || !feedback) return;
-      campo.classList.add('is-invalid');
-      feedback.textContent = mensaje;
-      feedback.classList.remove('d-none');
-      feedback.classList.add('d-block');
-      actualizarEstadoEnvio();
-    }
-
-    function limpiarInvalido(campo, feedback) {
-      if (!campo || !feedback) return;
-      campo.classList.remove('is-invalid');
-      feedback.textContent = '';
-      feedback.classList.remove('d-block');
-      feedback.classList.add('d-none');
-      actualizarEstadoEnvio();
-    }
-
-    function sincronizarErroresServidor() {
-      [
-        [servicioSelect, servicioFeedback],
-        [bloqueSelect, bloqueFeedback],
-        [direccionSelect, direccionFeedback],
-        [telefonoInput, telefonoFeedback],
-      ].forEach(([campo, feedback]) => {
-        if (!campo || !feedback) {
-          return;
-        }
-        if (feedback.classList.contains('d-block') && feedback.textContent.trim().length > 0) {
-          campo.classList.add('is-invalid');
-        }
-      });
-    }
-
-    function actualizarDireccionVisible() {
-      if (!dirWrap) return;
-      const visible = domicilio && domicilio.checked;
-      dirWrap.style.display = visible ? '' : 'none';
-      if (direccionSelect) {
-        if (visible) {
-          direccionSelect.setAttribute('required', 'required');
-        } else {
-          direccionSelect.removeAttribute('required');
-          limpiarInvalido(direccionSelect, direccionFeedback);
-        }
-      }
-      actualizarEstadoEnvio();
-    }
-
-    sincronizarErroresServidor();
-    actualizarEstadoEnvio();
 
     if (domicilio) {
-      actualizarDireccionVisible();
-      domicilio.addEventListener('change', () => {
-        actualizarDireccionVisible();
-        validarDireccion();
-      });
-    } else {
-      actualizarEstadoEnvio();
+        actualizarDireccion();
+        domicilio.addEventListener('change', actualizarDireccion);
     }
 
-    if (servicioSelect) {
-      servicioSelect.addEventListener('change', () => {
-        validarServicio();
-      });
+    // Bloquear fechas pasadas
+    const fechaInput = document.getElementById('id_fecha');
+    if (fechaInput) {
+        const hoy = new Date().toISOString().split("T")[0];
+        fechaInput.setAttribute("min", hoy);
+
+        fechaInput.addEventListener('change', function () {
+            this.form.submit();  
+        });
     }
-
-    if (bloqueSelect) {
-      bloqueSelect.addEventListener('change', () => {
-        validarBloque();
-      });
-    }
-
-    if (direccionSelect) {
-      direccionSelect.addEventListener('change', () => {
-        validarDireccion();
-      });
-    }
-
-    if (telefonoInput) {
-      telefonoInput.addEventListener('keydown', (event) => {
-        const key = event.key || '';
-        if (key.length > 1) {
-          return;
-        }
-
-        const start = telefonoInput.selectionStart != null ? telefonoInput.selectionStart : telefonoInput.value.length;
-        const end = telefonoInput.selectionEnd != null ? telefonoInput.selectionEnd : telefonoInput.value.length;
-
-        if (key === '+') {
-          const tienePlus = telefonoInput.value.includes('+');
-          const plusSeleccionado = telefonoInput.value.slice(start, end).includes('+');
-          if (start !== 0 || (tienePlus && !plusSeleccionado)) {
-            event.preventDefault();
-          }
-          return;
-        }
-
-        if (!/^\d$/.test(key)) {
-          event.preventDefault();
-          return;
-        }
-
-        const selectedDigits = telefonoInput.value.slice(start, end).replace(/\D/g, '');
-        const existingDigits = telefonoInput.value.replace(/\D/g, '');
-        if (existingDigits.length - selectedDigits.length >= DIGITOS_TELEFONO) {
-          event.preventDefault();
-        }
-      });
-
-      telefonoInput.addEventListener('input', () => {
-        sanitizarTelefono();
-        if (telefonoInput.classList.contains('is-invalid')) {
-          validarTelefono();
-        } else {
-          actualizarEstadoEnvio();
-        }
-      });
-
-      telefonoInput.addEventListener('blur', () => {
-        validarTelefono();
-      });
-
-      validarTelefono();
-    }
-
-    formulario.addEventListener('submit', (event) => {
-      let esValido = true;
-      let primerCampo = null;
-
-      const revisar = (fn, campo) => {
-        if (!fn()) {
-          esValido = false;
-          if (!primerCampo && campo) {
-            primerCampo = campo;
-          }
-        }
-      };
-
-      revisar(validarServicio, servicioSelect);
-      revisar(validarBloque, bloqueSelect);
-      revisar(validarDireccion, direccionSelect);
-      revisar(validarTelefono, telefonoInput);
-
-      if (!esValido || hayAlertasActivas()) {
-        event.preventDefault();
-        if (primerCampo) {
-          primerCampo.focus();
-        }
-      }
-    });
-
-    actualizarEstadoEnvio();
-  });
+});
 </script>
+
 {% endblock %}
