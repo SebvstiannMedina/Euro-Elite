@@ -65,3 +65,15 @@ def despacho_or_admin_required(view_func):
             return redirect('home')
         return view_func(request, *args, **kwargs)
     return wrapper
+
+
+def asignador_or_admin_required(view_func):
+    """Requiere que el usuario sea asignador de pedidos o administrador."""
+    @wraps(view_func)
+    @login_required
+    def wrapper(request, *args, **kwargs):
+        if request.user.rol not in ['ADMIN', 'ASIGNADOR']:
+            messages.error(request, "No tienes permisos para acceder a esta página.")
+            return redirect('home')
+        return view_func(request, *args, **kwargs)
+    return wrapper

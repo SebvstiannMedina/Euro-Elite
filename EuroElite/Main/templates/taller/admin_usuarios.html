@@ -63,10 +63,26 @@
                 </td>
                 <td>{{ u.email }}</td>
                 <td>
-                  {% if u.is_superuser or u.rol == 'ADMIN' %}
-                    <span class="badge rol-admin">Administrador</span>
+                  {% if u.is_superuser %}
+                    <span class="badge rol-admin">Superusuario</span>
                   {% else %}
-                    <span class="badge rol-cliente">Cliente</span>
+                    <form method="post" class="d-flex align-items-center gap-2">
+                      {% csrf_token %}
+                      <input type="hidden" name="action" value="change_role">
+                      <input type="hidden" name="usuario_id" value="{{ u.id }}">
+                      <select name="nuevo_rol" class="form-select form-select-sm" style="width: 160px;">
+                        <option value="CLIENTE" {% if u.rol == 'CLIENTE' %}selected{% endif %}>Cliente</option>
+                        <option value="ADMIN" {% if u.rol == 'ADMIN' %}selected{% endif %}>Administrador</option>
+                        <option value="MECANICO" {% if u.rol == 'MECANICO' %}selected{% endif %}>Mecánico</option>
+                        <option value="RETIRO" {% if u.rol == 'RETIRO' %}selected{% endif %}>Encargado Retiro</option>
+                        <option value="DESPACHO" {% if u.rol == 'DESPACHO' %}selected{% endif %}>Encargado Desp.</option>
+                        <option value="REPARTIDOR" {% if u.rol == 'REPARTIDOR' %}selected{% endif %}>Repartidor</option>
+                        <option value="ASIGNADOR" {% if u.rol == 'ASIGNADOR' %}selected{% endif %}>Asignador</option>
+                      </select>
+                      <button type="submit" class="btn btn-sm btn-primary" title="Cambiar rol">
+                        <i class="fas fa-user-cog"></i>
+                      </button>
+                    </form>
                   {% endif %}
                 </td>
                 <td>{{ u.date_joined|date:"d/m/Y" }}</td>

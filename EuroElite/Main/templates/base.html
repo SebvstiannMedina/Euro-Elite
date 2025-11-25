@@ -324,6 +324,19 @@
                         <a href="{% url 'mis_pedidos' %}"><i class="fas fa-shopping-bag"></i> Mis Pedidos</a>
                         <a href="{% url 'mis_citas' %}"><i class="fas fa-calendar-check"></i> Mis Citas</a>
                         <a href="{% url 'mis_vehiculos' %}"><i class="fas fa-car"></i> Mis Vehículos</a>
+                        
+                        <!-- Links para repartidores -->
+                        {% if user.rol == 'REPARTIDOR' %}
+                        <hr style="margin: 8px 0; border-color: #e0e0e0;">
+                        <a href="{% url 'admin_entregas' %}" style="color: #4CAF50;"><i class="fas fa-box"></i> Mis Entregas</a>
+                        {% endif %}
+                        
+                        <!-- Links para asignadores -->
+                        {% if user.rol == 'ASIGNADOR' %}
+                        <hr style="margin: 8px 0; border-color: #e0e0e0;">
+                        <a href="{% url 'admin_asignacion' %}" style="color: #FF9800;"><i class="fas fa-tasks"></i> Asignar Pedidos</a>
+                        {% endif %}
+                        
                         <hr style="margin: 8px 0; border-color: #e0e0e0;">
                         <a href="{% url 'publicar_vehiculo' %}"><i class="fas fa-plus-circle"></i> Vender mi Auto</a>
                         <a href="{% url 'estado_revi_vehiculos' %}"><i class="fas fa-eye"></i> Estado de Publicaciones</a>
@@ -339,6 +352,24 @@
                     </div>
                 </div>
 
+                <!-- Delivery Icon (solo visible para repartidores) -->
+                {% if user.is_authenticated and user.rol == 'REPARTIDOR' %}
+                <div class="delivery-icon d-none d-lg-block">
+                    <a href="{% url 'admin_entregas' %}" title="Mis Entregas" style="color: #4CAF50; text-decoration: none;">
+                        <i class="fas fa-box"></i>
+                    </a>
+                </div>
+                {% endif %}
+
+                <!-- Assignment Icon (solo visible para asignadores) -->
+                {% if user.is_authenticated and user.rol == 'ASIGNADOR' %}
+                <div class="assignment-icon d-none d-lg-block">
+                    <a href="{% url 'admin_asignacion' %}" title="Asignar Pedidos" style="color: #FF9800; text-decoration: none;">
+                        <i class="fas fa-tasks"></i>
+                    </a>
+                </div>
+                {% endif %}
+
                 <!-- Admin Icon (solo visible para administradores) -->
                 {% if user.is_authenticated and user.rol == 'ADMIN' %}
                 <div class="admin-icon d-none d-lg-block" onclick="toggleAdminMenu()" role="button" aria-haspopup="true"
@@ -348,14 +379,14 @@
                         <div class="dropdown-header">Panel Administrativo</div>
                         
                         <!-- Dashboard y Reportes -->
-                        <a href="{% url 'admin_dashboard' %}">
-                            <i class="fas fa-tachometer-alt"></i> Dashboard
+                        <a href="{% url 'admin_asignacion' %}">
+                            <i class="fas fa-file-alt"></i> Asignación Dashboard
                         </a>
                         <a href="{% url 'estadisticas' %}">
                             <i class="fa-solid fa-chart-pie"></i> Estadísticas
                         </a>
-                        <a href="{% url 'admin_reportes' %}">
-                            <i class="fas fa-file-alt"></i> Reportes
+                        <a href="{% url 'asignar_pedidos' %}">
+                            <i class="fas fa-file-alt"></i> Sin uso
                         </a>
                         
                         <hr style="margin: 8px 0; border-color: #e0e0e0;">

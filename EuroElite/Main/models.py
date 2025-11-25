@@ -71,6 +71,7 @@ class Usuario(AbstractUser):
         RETIRO = "RETIRO", "Encargado de Retiro"
         DESPACHO = "DESPACHO", "Encargado de Despacho"
         REPARTIDOR = "REPARTIDOR", "Repartidor"
+        ASIGNADOR = "ASIGNADOR", "Asignador de pedidos"
 
     rol = models.CharField(max_length=12, choices=Rol.choices, default=Rol.CLIENTE, db_index=True)
     bloqueado = models.BooleanField(default=False)
@@ -355,6 +356,15 @@ class Pedido(models.Model):
         blank=True,
         related_name="entregas_asignadas",
         verbose_name="Empleado asignado"
+    )
+
+    asignado_por = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="asignaciones_realizadas",
+        verbose_name="Asignador"
     )
 
     # ESTADO / ENTREGA / PAGO

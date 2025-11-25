@@ -7,6 +7,10 @@ python -m pip install Pillow
 pip install requests
 pip install pandas
 pip install openpyxl
+pip install psycopg2-binary
+pip install resend
+pip install google-cloud-bigquery google-cloud-storage google-auth
+
 python manage.py runserver
 
 

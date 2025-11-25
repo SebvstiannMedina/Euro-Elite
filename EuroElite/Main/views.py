@@ -30,7 +30,7 @@ from django.contrib.admin.views.decorators import staff_member_required
 # Local apps
 from .forms import CitaForm, DireccionForm, PerfilForm, RegistroForm, EmailLoginForm
 from .models import (Carrito,Categoria,ConfigSitio,Direccion,ItemCarrito,ItemPedido,Pago,Pedido,Producto,)
-from .decorators import admin_required, mecanico_or_admin_required, repartidor_or_admin_required
+from .decorators import admin_required, mecanico_or_admin_required, repartidor_or_admin_required, asignador_or_admin_required
 
 #temportal -- borrar despues
 from django.db import transaction, IntegrityError
@@ -974,7 +974,7 @@ def retiro_despacho(request):
 from django.contrib.admin.views.decorators import staff_member_required
 
 
-@staff_member_required
+@admin_required
 def admin_agendamientos(request):
     citas = (
         Cita.objects
@@ -994,13 +994,70 @@ def admin_agendamientos(request):
         },
     )
 
+@admin_required
 def admin_configuracion(request):
     return render(request, 'taller/admin_configuracion.html')
 
-def admin_dashboard(request):
-    return render(request, 'taller/admin_agendamientos.html')
+@asignador_or_admin_required
+def admin_asignacion(request):
+    """
+    Vista para que asignadores puedan asignar pedidos a repartidores.
+    """
+    # Estados válidos para asignación
+    estados_asignables = [
+        Pedido.Estado.PAGADO,
+        Pedido.Estado.PREPARACION,
+    ]
+    
+    # Obtener pedidos sin asignar o que necesitan ser reasignados
+    pedidos_sin_asignar = Pedido.objects.filter(
+        estado__in=estados_asignables,
+        asignado_a__isnull=True
+    ).select_related(
+        'usuario',
+        'direccion_envio',
+        'pago'
+    ).prefetch_related(
+        'items__producto'
+    ).order_by('creado')
+    
+    # Obtener todos los repartidores activos
+    repartidores = Usuario.objects.filter(
+        rol='REPARTIDOR',
+        bloqueado=False
+    ).order_by('first_name', 'last_name')
+    
+    # Manejar asignación POST
+    if request.method == 'POST' and request.user.rol in ['ADMIN', 'ASIGNADOR']:
+        pedido_id = request.POST.get('pedido_id')
+        repartidor_id = request.POST.get('repartidor_id')
+        
+        try:
+            pedido = Pedido.objects.get(id=pedido_id)
+            repartidor = Usuario.objects.get(id=repartidor_id, rol='REPARTIDOR')
+            
+            # Asignar pedido
+            pedido.asignado_a = repartidor
+            pedido.asignado_por = request.user
+            pedido.save()
+            
+            messages.success(
+                request, 
+                f"✅ Pedido #{pedido.id} asignado a {repartidor.get_full_name()}."
+            )
+        except (Pedido.DoesNotExist, Usuario.DoesNotExist):
+            messages.error(request, "❌ Error: Pedido o repartidor no encontrado.")
+        
+        return redirect('admin_asignacion')
+    
+    context = {
+        'pedidos_sin_asignar': pedidos_sin_asignar,
+        'repartidores': repartidores,
+    }
+    
+    return render(request, 'taller/admin_asignacion.html', context)
 
-@staff_member_required
+@admin_required
 def admin_pedidos(request):
     # Obtener solo pedidos pagados correctamente (excluyendo pendientes y cancelados)
     estados_validos = [
@@ -1039,8 +1096,8 @@ def admin_pedidos(request):
         'pedidos_por_usuario': pedidos_por_usuario,
     })
 
-def admin_reportes(request):
-    return render(request, 'taller/admin_reportes.html')
+def asignar_pedidos(request):
+    return render(request, 'taller/asignar_pedidos.html')
 
 from django.contrib.auth import get_user_model
 from django.contrib import messages
@@ -1055,11 +1112,42 @@ from django.db.models import Q
 from django.shortcuts import render
 from .models import Usuario
 
-@staff_member_required
+@admin_required
 def admin_usuarios(request):
     # Obtener parámetros de búsqueda
     q = request.GET.get('q', '')
     rol = request.GET.get('rol', '')
+
+    # Procesar cambio de rol (POST)
+    if request.method == 'POST' and request.POST.get('action') == 'change_role':
+        usuario_id = request.POST.get('usuario_id')
+        nuevo_rol = request.POST.get('nuevo_rol')
+        try:
+            usuario_obj = Usuario.objects.get(id=usuario_id)
+        except Usuario.DoesNotExist:
+            messages.error(request, "Usuario no encontrado.")
+            return redirect('admin_usuarios')
+
+        # Prevenciones de seguridad
+        if usuario_obj.is_superuser:
+            messages.error(request, "No puedes cambiar el rol de un superusuario.")
+            return redirect('admin_usuarios')
+
+        if usuario_obj == request.user:
+            messages.error(request, "No puedes cambiar tu propio rol desde aquí.")
+            return redirect('admin_usuarios')
+
+        # Validar rol
+        roles_validos = [choice[0] for choice in Usuario.Rol.choices]
+        if nuevo_rol not in roles_validos:
+            messages.error(request, "Rol inválido seleccionado.")
+            return redirect('admin_usuarios')
+
+        usuario_obj.rol = nuevo_rol
+        # No modificamos is_superuser/is_staff aquí; solo el campo rol
+        usuario_obj.save()
+        messages.success(request, f"Rol de {usuario_obj.get_full_name() or usuario_obj.email} actualizado a {nuevo_rol}.")
+        return redirect('admin_usuarios')
 
     # Base queryset (todos los usuarios)
     usuarios = Usuario.objects.all().order_by('-date_joined')
@@ -1670,12 +1758,12 @@ from django.contrib.auth.decorators import login_required
 from django.shortcuts import render
 from .models import Pedido
 
-@staff_member_required
-@login_required
+@repartidor_or_admin_required
 def entregas_view(request):
     """
     Muestra los pedidos asignados al usuario.
-    Si el usuario es superusuario, muestra todos los pedidos.
+    Si el usuario es administrador, muestra todos los pedidos.
+    Si es repartidor, muestra solo sus entregas asignadas.
     Excluye pedidos pendientes y cancelados.
     """
     estados_validos = [
@@ -1686,7 +1774,7 @@ def entregas_view(request):
         Pedido.Estado.ENTREGADO,
     ]
     
-    if request.user.is_superuser:
+    if request.user.rol == 'ADMIN':
         pedidos = Pedido.objects.filter(
             estado__in=estados_validos
         ).select_related(
@@ -1717,10 +1805,14 @@ from django.shortcuts import get_object_or_404, redirect
 from django.contrib.admin.views.decorators import staff_member_required
 from .models import Pedido
 
-@staff_member_required
-@login_required
+@repartidor_or_admin_required
 def actualizar_estado_pedido(request, pedido_id, nuevo_estado):
     pedido = get_object_or_404(Pedido, id=pedido_id)
+    
+    # Validar que el usuario tenga permiso para actualizar este pedido
+    if request.user.rol == 'REPARTIDOR' and pedido.asignado_a != request.user:
+        messages.error(request, "No tienes permiso para actualizar este pedido.")
+        return redirect(request.META.get('HTTP_REFERER', 'admin_entregas'))
 
     if nuevo_estado == "ENTREGADO":
         pedido.marcar_como_entregado(request.user.get_full_name() or request.user.email)
@@ -2505,10 +2597,14 @@ import base64
 from .models import Pedido
 from .forms import ConfirmarEntregaForm
 
-@login_required
+@repartidor_or_admin_required
 def confirmar_entrega(request, pedido_id):
     pedido = get_object_or_404(Pedido, id=pedido_id)
 
+    # Validar que el usuario tenga permiso para confirmar esta entrega
+    if request.user.rol == 'REPARTIDOR' and pedido.asignado_a != request.user:
+        messages.error(request, "No tienes permiso para confirmar esta entrega.")
+        return redirect('admin_entregas')
  
     if pedido.metodo_entrega == Pedido.MetodoEntrega.RETIRO:
         pedido.estado = Pedido.Estado.ENTREGADO
