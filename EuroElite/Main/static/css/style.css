@@ -1300,7 +1300,7 @@ body {
 
 /* =============== FOOTER =============== */
 .footer {
-    background: var(--primary-dark);
+    background: linear-gradient(135deg, #000000, #5777b8);
     color: var(--white);
     padding: 60px 0 20px;
     /* Empuja el footer al final si el contenido es corto */

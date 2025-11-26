@@ -372,7 +372,7 @@
 
                 <!-- Admin Icon (solo visible para administradores) -->
                 {% if user.is_authenticated and user.rol == 'ADMIN' %}
-                <div class="admin-icon d-none d-lg-block" onclick="toggleAdminMenu()" role="button" aria-haspopup="true"
+                <div class="admin-icon" onclick="toggleAdminMenu()" role="button" aria-haspopup="true"
                     aria-expanded="false">
                     <i class="fas fa-cog"></i>
                     <div class="admin-dropdown" id="admin-dropdown">
