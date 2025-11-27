@@ -28,7 +28,7 @@ SECRET_KEY = 'django-insecure-v*cnfx@yx!0icme_h4+w+&ununtjqgrpp*=(f@r$)7ij+0&vyw
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['localhost', '127.0.0.1','jehison.pythonanywhere.com','www.euroelite.cl']
+ALLOWED_HOSTS = ['localhost', '127.0.0.1','jehison.pythonanywhere.com','www.euroelite.cl','euroelite.cl']
 
 CSRF_TRUSTED_ORIGINS = [
     "http://localhost",                       # para pruebas locales sin https
