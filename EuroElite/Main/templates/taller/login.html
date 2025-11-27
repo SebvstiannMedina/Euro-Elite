@@ -178,7 +178,7 @@
                         <form method="post" id="loginForm" novalidate>
                             {% csrf_token %}
                             <div class="mb-4">
-                                <label for="{{ form.username.id_for_label }}" class="form-label">Correo electr&#243;nico</label>
+                                <label for="{{ form.username.id_for_label }}" class="form-label">Correo electrónico</label>
                                 <input type="email"
                                        name="{{ form.username.html_name }}"
                                        id="{{ form.username.id_for_label }}"
@@ -186,6 +186,8 @@
                                        class="form-control form-control-lg"
                                        placeholder="tu@correo.cl"
                                        autocomplete="email"
+                                       spellcheck="false"
+                                       maxlength="254"
                                        required>
                                 <div class="text-danger small d-none" data-feedback="username"></div>
                                 {% if form.username.errors %}
@@ -199,13 +201,14 @@
                             </div>
 
                             <div class="mb-3">
-                                <label for="{{ form.password.id_for_label }}" class="form-label">Contrase&#241;a</label>
+                                <label for="{{ form.password.id_for_label }}" class="form-label">Contraseña</label>
                                 <input type="password"
                                        name="{{ form.password.html_name }}"
                                        id="{{ form.password.id_for_label }}"
                                        class="form-control form-control-lg"
                                        placeholder="********"
                                        autocomplete="current-password"
+                                       maxlength="128"
                                        required>
                                 <div class="text-danger small d-none" data-feedback="password"></div>
                                 {% if form.password.errors %}
@@ -268,6 +271,17 @@
       return;
     }
 
+    // Check for SQL injection patterns
+    const hasSqlInjectionPatterns = (value) => {
+      const sqlPatterns = [
+        /(\b(SELECT|INSERT|UPDATE|DELETE|DROP|CREATE|ALTER|EXEC|EXECUTE|SCRIPT|UNION|OR|AND)\b)/gi,
+        /(['";])/g,
+        /(--|#|\/\*|\*\/)/g,
+        /(xp_|sp_)/i
+      ];
+      return sqlPatterns.some(pattern => pattern.test(value));
+    };
+
     const showInlineError = (field, message) => {
       const { input, feedback } = field;
       if (!feedback) {
@@ -300,7 +314,7 @@
 
     const fields = [
       {
-        ...getField('email'),
+        ...getField('username'),
         prepare(field) {
           field.input.setAttribute('inputmode', 'email');
           field.input.setAttribute('spellcheck', 'false');
@@ -326,6 +340,10 @@
           if (!value) {
             return 'Ingresa tu correo.';
           }
+          // Check for SQL injection
+          if (hasSqlInjectionPatterns(value)) {
+            return 'El correo contiene caracteres o patrones no permitidos.';
+          }
           if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(value)) {
             return 'Ingresa un correo válido.';
           }
@@ -342,8 +360,12 @@
           if (!value) {
             return 'Ingresa tu contraseña.';
           }
+          // Check for SQL injection in password (prevents escape sequences)
+          if (hasSqlInjectionPatterns(value)) {
+            return 'La contraseña contiene patrones no permitidos.';
+          }
           if (value.length < 6) {
-            return 'Debe tener al menos 6 caracteres.';
+            return 'Contraseña inválida.';
           }
           return '';
         }

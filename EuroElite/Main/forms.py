@@ -203,7 +203,7 @@ class CitaForm(forms.ModelForm):
             "servicio": forms.Select(attrs={"class": "form-control"}),
             "bloque": forms.Select(attrs={"class": "form-control"}),
             "a_domicilio": forms.CheckboxInput(attrs={"class": "form-check-input"}),
-            "direccion_domicilio": forms.TextInput(attrs={"class": "form-control"}),
+            "direccion_domicilio": forms.TextInput(attrs={"class": "form-control", "maxlength": "150"}),
         }
 
     def __init__(self, *args, **kwargs):

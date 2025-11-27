@@ -199,6 +199,10 @@
                                        class="form-control form-control-lg"
                                        placeholder="Tu nombre"
                                        autocomplete="given-name"
+                                       minlength="3"
+                                       maxlength="30"
+                                       pattern="[A-Za-zÁÉÍÓÚÜÑáéíóúüñ\s]+"
+                                       title="Solo letras (mínimo 3, máximo 30 caracteres)"
                                        required>
                                 <div class="text-danger small d-none" data-feedback="first_name"></div>
                             </div>
@@ -212,33 +216,44 @@
                                        class="form-control form-control-lg"
                                        placeholder="Tu apellido"
                                        autocomplete="family-name"
+                                       minlength="3"
+                                       maxlength="30"
+                                       pattern="[A-Za-zÁÉÍÓÚÜÑáéíóúüñ\s]+"
+                                       title="Solo letras (mínimo 3, máximo 30 caracteres)"
                                        required>
                                 <div class="text-danger small d-none" data-feedback="last_name"></div>
                             </div>
 
                             <div class="mb-4">
-                                <label for="telefono" class="form-label">Tel&eacute;fono</label>
+                                <label for="telefono" class="form-label">Teléfono</label>
                                 <input type="tel"
                                        name="telefono"
                                        id="telefono"
                                        value="{{ request.POST.telefono|default_if_none:'' }}"
                                        class="form-control form-control-lg"
-                                       placeholder="Tu tel&eacute;fono"
+                                       placeholder="9 dígitos sin espacios (ej: 912345678)"
                                        autocomplete="tel"
+                                       inputmode="numeric"
+                                       minlength="9"
+                                       maxlength="9"
+                                       pattern="[0-9]{9}"
+                                       title="Solo 9 dígitos numéricos"
                                        required>
                                 <div class="text-danger small d-none" data-feedback="telefono"></div>
                             </div>
 
                             {% if form.email %}
                                 <div class="mb-4">
-                                    <label for="{{ form.email.id_for_label }}" class="form-label">Correo electr&oacute;nico</label>
+                                    <label for="{{ form.email.id_for_label }}" class="form-label">Correo electrónico</label>
                                     <input type="email"
                                            name="{{ form.email.html_name }}"
                                            id="{{ form.email.id_for_label }}"
                                            value="{{ form.email.value|default_if_none:'' }}"
                                            class="form-control form-control-lg"
                                            placeholder="tu@correo.cl"
-                                           autocomplete="email">
+                                           autocomplete="email"
+                                           spellcheck="false"
+                                           maxlength="254">
                                     <div class="text-danger small d-none" data-feedback="email"></div>
                                     {% if form.email.errors %}
                                         <div class="invalid-feedback d-block">
@@ -252,22 +267,24 @@
                             {% endif %}
 
                             <div class="mb-4">
-                                <label for="{{ form.password1.id_for_label }}" class="form-label">Contrase&ntilde;a</label>
+                                <label for="{{ form.password1.id_for_label }}" class="form-label">Contraseña</label>
                                 <input type="password"
                                        name="{{ form.password1.html_name }}"
                                        id="{{ form.password1.id_for_label }}"
                                        class="form-control form-control-lg"
-                                       placeholder="********"
+                                       placeholder="Mín. 8 caracteres (letra, mayúscula, número, símbolo)"
                                        autocomplete="new-password"
+                                       minlength="8"
+                                       maxlength="128"
                                        required>
                                 <div class="text-danger small d-none" data-feedback="password1"></div>
+                                <div class="form-text small mt-2" style="color: #6c757d;">
+                                  Requisitos: 8+ caracteres, 1+ mayúscula, 1+ número (máx 2 consecutivos), 1 símbolo
+                                </div>
                                 {% if form.password1.errors %}
                                     <div class="invalid-feedback d-block">
                                         {{ form.password1.errors|striptags }}
                                     </div>
-                                {% endif %}
-                                {% if form.password1.help_text %}
-                                    <div class="form-text">{{ form.password1.help_text|safe }}</div>
                                 {% endif %}
                             </div>
 
@@ -398,9 +415,75 @@
     const hasLetter = (value) => /[A-Za-zÀ-ÿ]/.test(value);
     const hasNumber = (value) => /[0-9]/.test(value);
 
+    // Helper to escape HTML and prevent SQL injection
+    const escapeHtml = (text) => {
+      const div = document.createElement('div');
+      div.textContent = text;
+      return div.innerHTML;
+    };
+
+    // Check for SQL injection patterns
+    const hasSqlInjectionPatterns = (value) => {
+      const sqlPatterns = [
+        /(\b(SELECT|INSERT|UPDATE|DELETE|DROP|CREATE|ALTER|EXEC|EXECUTE|SCRIPT|UNION|OR|AND)\b)/gi,
+        /(['";])/g,
+        /(--|#|\/\*|\*\/)/g,
+        /(xp_|sp_)/i
+      ];
+      return sqlPatterns.some(pattern => pattern.test(value));
+    };
+
+    // Validate consecutive digits (max 2 allowed)
+    const hasThreeConsecutiveDigits = (value) => {
+      return /\d{3,}/.test(value);
+    };
+
+    // Validate password strength
+    const validatePasswordStrength = (password) => {
+      // Must be at least 8 characters total
+      if (password.length < 8) {
+        return 'Debe tener al menos 8 caracteres.';
+      }
+
+      // Must have at least 1 uppercase letter
+      if (!/[A-Z]/.test(password)) {
+        return 'Debe tener al menos 1 letra mayúscula.';
+      }
+
+      // Must have at least 1 lowercase letter
+      if (!/[a-z]/.test(password)) {
+        return 'Debe tener al menos 1 letra minúscula.';
+      }
+
+      // Must have at least 1 number
+      if (!/\d/.test(password)) {
+        return 'Debe tener al menos 1 número.';
+      }
+
+      // No more than 2 consecutive digits
+      if (hasThreeConsecutiveDigits(password)) {
+        return 'No puede tener más de 2 dígitos consecutivos (ej: 123 no permitido, pero 12 sí).';
+      }
+
+      // Must have at least 1 special character
+      if (!/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(password)) {
+        return 'Debe tener al menos 1 símbolo especial (!@#$%^&*...).';
+      }
+
+      return '';
+    };
+
     const fields = [
       createField('first_name', {
+        prepare(field) {
+          field.input.setAttribute('inputmode', 'text');
+        },
         onInput(field) {
+          // Remove non-letter characters (except spaces) in real-time
+          const filtered = field.input.value.replace(/[^A-Za-zÁÉÍÓÚÜÑáéíóúüñ\s]/g, '');
+          if (field.input.value !== filtered) {
+            field.input.value = filtered;
+          }
           field.input.value = normalizeWord(field.input.value);
           showInlineError(field, '');
         },
@@ -413,14 +496,25 @@
           if (!value) {
             return 'Ingresa tu nombre.';
           }
-          if (value.length < 2) {
-            return 'El nombre debe tener al menos 2 caracteres.';
+          if (value.length < 3) {
+            return 'El nombre debe tener al menos 3 caracteres.';
+          }
+          if (value.length > 30) {
+            return 'El nombre no puede exceder 30 caracteres.';
           }
           return '';
         }
       }),
       createField('last_name', {
+        prepare(field) {
+          field.input.setAttribute('inputmode', 'text');
+        },
         onInput(field) {
+          // Remove non-letter characters (except spaces) in real-time
+          const filtered = field.input.value.replace(/[^A-Za-zÁÉÍÓÚÜÑáéíóúüñ\s]/g, '');
+          if (field.input.value !== filtered) {
+            field.input.value = filtered;
+          }
           field.input.value = normalizeWord(field.input.value);
           showInlineError(field, '');
         },
@@ -433,39 +527,47 @@
           if (!value) {
             return 'Ingresa tu apellido.';
           }
-          if (value.length < 2) {
-            return 'El apellido debe tener al menos 2 caracteres.';
+          if (value.length < 3) {
+            return 'El apellido debe tener al menos 3 caracteres.';
+          }
+          if (value.length > 30) {
+            return 'El apellido no puede exceder 30 caracteres.';
           }
           return '';
         }
       }),
       createField('telefono', {
         prepare(field) {
-          field.input.setAttribute('inputmode', 'tel');
-          field.input.setAttribute('maxlength', '16');
-          field.input.setAttribute('pattern', '\+?[0-9]{8,15}');
+          field.input.setAttribute('inputmode', 'numeric');
+          field.input.setAttribute('maxlength', '9');
+          field.input.setAttribute('pattern', '[0-9]{9}');
           if (!field.input.getAttribute('placeholder')) {
-            field.input.setAttribute('placeholder', '+56912345678');
+            field.input.setAttribute('placeholder', '912345678');
           }
         },
         onInput(field) {
-          const cleaned = normalizePhone(field.input.value);
+          // Keep only digits
+          const cleaned = field.input.value.replace(/[^0-9]/g, '');
           if (field.input.value !== cleaned) {
             field.input.value = cleaned;
+          }
+          // Limit to 9 digits
+          if (field.input.value.length > 9) {
+            field.input.value = field.input.value.slice(0, 9);
           }
           showInlineError(field, '');
         },
         onBlur(field) {
-          field.input.value = normalizePhone(field.input.value);
+          field.input.value = field.input.value.replace(/[^0-9]/g, '');
         },
         validate(field) {
-          const value = normalizePhone(field.input.value);
+          const value = field.input.value.replace(/[^0-9]/g, '');
           field.input.value = value;
           if (!value) {
             return 'Ingresa tu teléfono.';
           }
-          if (!/^\+?[0-9]{8,15}$/.test(value)) {
-            return 'Ingresa un teléfono válido (8 a 15 dígitos).';
+          if (value.length !== 9) {
+            return 'El teléfono debe tener exactamente 9 dígitos.';
           }
           return '';
         }
@@ -481,10 +583,13 @@
           }
         },
         onInput(field) {
+          // Remove spaces
           const cleaned = field.input.value.replace(/\s+/g, '');
           if (field.input.value !== cleaned) {
             field.input.value = cleaned;
           }
+          // Escape dangerous characters for display
+          const escaped = escapeHtml(field.input.value);
           showInlineError(field, '');
         },
         onBlur(field) {
@@ -496,6 +601,10 @@
           if (!value) {
             return 'Ingresa tu correo.';
           }
+          // Check for SQL injection
+          if (hasSqlInjectionPatterns(value)) {
+            return 'El correo contiene caracteres o patrones no permitidos.';
+          }
           if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(value)) {
             return 'Ingresa un correo válido.';
           }
@@ -504,7 +613,8 @@
       }),
       createField('password1', {
         prepare(field) {
-          field.input.setAttribute('minlength', '8');
+          field.input.setAttribute('minlength', '11');
+          field.input.setAttribute('maxlength', '128');
         },
         onInput(field) {
           showInlineError(field, '');
@@ -514,11 +624,14 @@
           if (!value) {
             return 'Crea una contraseña.';
           }
-          if (value.length < 8) {
-            return 'Debe tener al menos 8 caracteres.';
+          // Check for SQL injection
+          if (hasSqlInjectionPatterns(value)) {
+            return 'La contraseña contiene patrones no permitidos.';
           }
-          if (!hasLetter(value) || !hasNumber(value)) {
-            return 'Incluye letras y números en tu contraseña.';
+          // Validate password strength
+          const strengthError = validatePasswordStrength(value);
+          if (strengthError) {
+            return strengthError;
           }
           return '';
         }

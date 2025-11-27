@@ -175,13 +175,14 @@
 <div class="container mb-5">
     <!-- Filtros -->
     <div class="filter-section">
-        <form method="get" action="{% url 'vehiculos_venta' %}">
+        <form method="get" action="{% url 'vehiculos_venta' %}" id="filterForm" novalidate>
             <div class="row g-3">
                 <div class="col-md-3">
                     <label class="form-label fw-bold">
                         <i class="fas fa-tag"></i> Marca
                     </label>
-                    <input type="text" name="marca" class="form-control" placeholder="Ej: Toyota, BMW..." value="{{ request.GET.marca }}">
+                    <input type="text" name="marca" class="form-control" id="filtroMarca" placeholder="Ej: Toyota..." maxlength="60" value="{{ request.GET.marca }}" data-filter-input>
+                    <small class="text-muted d-block mt-1"><span data-char-count="marca">0</span>/60</small>
                 </div>
                 <div class="col-md-3">
                     <label class="form-label fw-bold">
@@ -329,3 +330,73 @@
 </div>
 
 {% endblock %}
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    // Función para detectar patrones SQL injection
+    const hasSqlInjectionPatterns = (value) => {
+      const sqlPatterns = [
+        /(\b(SELECT|INSERT|UPDATE|DELETE|DROP|CREATE|ALTER|EXEC|EXECUTE|SCRIPT|UNION|OR|AND)\b)/gi,
+        /(['";])/g,
+        /(--|#|\/\*|\*\/)/g,
+        /(xp_|sp_)/i
+      ];
+      return sqlPatterns.some(pattern => pattern.test(value));
+    };
+
+    // Validar campo Marca
+    const marcaInput = document.getElementById('filtroMarca');
+    if (marcaInput) {
+      marcaInput.addEventListener('input', function () {
+        // Limitar a 60 caracteres
+        if (this.value.length > 60) {
+          this.value = this.value.substring(0, 60);
+        }
+        
+        // Actualizar contador
+        const charCount = document.querySelector('[data-char-count="marca"]');
+        if (charCount) {
+          charCount.textContent = this.value.length;
+        }
+
+        // Detectar SQL injection
+        if (hasSqlInjectionPatterns(this.value)) {
+          this.classList.add('is-invalid');
+        } else {
+          this.classList.remove('is-invalid');
+        }
+      });
+
+      marcaInput.addEventListener('blur', function () {
+        if (this.value && hasSqlInjectionPatterns(this.value)) {
+          this.classList.add('is-invalid');
+          alert('⚠️ El campo contiene caracteres no permitidos.');
+          this.value = ''; // Limpiar el campo
+        }
+      });
+
+      // Inicializar contador con valor actual
+      const charCount = document.querySelector('[data-char-count="marca"]');
+      if (charCount) {
+        charCount.textContent = marcaInput.value.length;
+      }
+    }
+
+    // Validar formulario antes de enviar
+    const filterForm = document.getElementById('filterForm');
+    if (filterForm) {
+      filterForm.addEventListener('submit', function (event) {
+        if (marcaInput) {
+          const marca = marcaInput.value.trim();
+          
+          if (marca && hasSqlInjectionPatterns(marca)) {
+            event.preventDefault();
+            alert('⚠️ El campo Marca contiene caracteres no permitidos. Por favor, usa solo letras y números.');
+            marcaInput.focus();
+            return false;
+          }
+        }
+      });
+    }
+});
+</script>
