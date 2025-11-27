@@ -2667,6 +2667,6 @@ def admin_horarios(request):
             "horarios": HorarioDia.objects.filter(dia_semana=numero).order_by("hora_inicio")
         }
 
-    return render(request, "Taller/admin_horarios.html", {
+    return render(request, "taller/admin_horarios.html", {
         "dias": dias,
     })
