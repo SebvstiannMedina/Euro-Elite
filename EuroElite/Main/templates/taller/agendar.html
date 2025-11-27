@@ -104,7 +104,7 @@
             <input type="tel" class="form-control" id="telefono_contacto" name="telefono_contacto"
               placeholder="+56912345678" maxlength="12" required
               value="{% if request.method == 'POST' %}{{ request.POST.telefono_contacto }}{% else %}{{ request.user.telefono|default:'' }}{% endif %}">
-            <div class="form-text">Lo usaremos para contactarte si es necesario.</div>
+            <div class="form-text">Lo usaremos para confirmar tu reserva.</div>
           </div>
 
           <!-- Botones -->

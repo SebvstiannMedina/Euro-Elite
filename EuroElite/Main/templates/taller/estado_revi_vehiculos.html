@@ -12,6 +12,67 @@
     {% endfor %}
   {% endif %}
 
+  <div id="euToastContainer" class="position-fixed top-0 end-0 p-3" style="z-index:1080;"></div>
+
+  <script>
+    (function(){
+      try {
+        // If there are server-rendered .alert elements, reveal and scroll to the first
+        const alerts = document.querySelectorAll('.alert');
+        if (alerts && alerts.length) {
+          alerts.forEach((a) => a.classList.add('show'));
+          try { alerts[0].scrollIntoView({behavior:'smooth', block:'center'}); } catch(e){}
+        }
+      } catch(e) { /* silent */ }
+    })();
+  </script>
+
+  <script>
+    // Mostrar mensaje fallback si existe en localStorage (colocado por la página de envío)
+    (function(){
+      try {
+        const raw = localStorage.getItem('eu_flash');
+        if (!raw) return;
+        let obj = null;
+        try { obj = JSON.parse(raw); } catch(e) { obj = { text: String(raw), tag: 'info' }; }
+
+        // Create a Bootstrap Toast in the top-right container
+        const container = document.getElementById('euToastContainer');
+        const tag = (obj.tag || 'info');
+        const toneClass = ['primary','secondary','success','danger','warning','info','light','dark'].includes(tag) ? 'text-bg-' + tag : 'text-bg-info';
+        const toastEl = document.createElement('div');
+        toastEl.className = 'toast align-items-center ' + toneClass + ' border-0';
+        toastEl.setAttribute('role','alert');
+        toastEl.setAttribute('aria-live','assertive');
+        toastEl.setAttribute('aria-atomic','true');
+        toastEl.innerHTML = `
+          <div class="d-flex">
+            <div class="toast-body">${obj.text || ''}</div>
+            <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+          </div>
+        `;
+        container.appendChild(toastEl);
+        // Initialize and show toast (Bootstrap must be loaded in base template)
+        try {
+          const bsToast = new bootstrap.Toast(toastEl, { delay: 5000 });
+          bsToast.show();
+        } catch(e) {
+          // If bootstrap Toast is not available, fallback to inserting an alert block
+          const fallback = document.createElement('div');
+          fallback.className = 'alert alert-' + (obj.tag || 'info') + ' alert-dismissible fade show';
+          fallback.setAttribute('role','alert');
+          fallback.innerHTML = (obj.text || '') + '<button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>';
+          const main = document.querySelector('.container.py-5') || document.body;
+          main.insertBefore(fallback, main.firstChild);
+          try { fallback.scrollIntoView({behavior:'smooth', block:'center'}); } catch(e){}
+        }
+
+        // limpiar
+        localStorage.removeItem('eu_flash');
+      } catch(e) { /* silent */ }
+    })();
+  </script>
+
   {% if vehiculos %}
     <div class="row">
       {% for v in vehiculos %}

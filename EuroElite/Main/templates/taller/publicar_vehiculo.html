@@ -26,9 +26,116 @@
     border: none; color: #fff; font-weight: 600;
   }
   .btn-enviar:hover { filter: brightness(1.05); }
-  .field-error { color: #dc3545; font-size: .9rem; }
+  .field-error { color: #dc3545; font-size: .95rem; font-weight: 600; margin-top: .35rem; display:block; }
   .section-title { font-weight: 700; color: #2c3e50; }
+  
+  /* Validaciones visuales */
+  .is-valid {
+    border-color: #28a745 !important;
+    background-color: #f0fff4 !important;
+  }
+  
+  .is-invalid {
+    border-color: #dc3545 !important;
+    background-color: #fff5f5 !important;
+  }
+
+  /* Toast container */
+  .toast-container-custom {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    z-index: 99999;
+    width: 100%;
+    max-width: 400px;
+  }
+
+  .toast-custom {
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    margin-bottom: 12px;
+    padding: 16px;
+    border-left: 4px solid #6c757d;
+    animation: slideInRight 0.3s ease-out;
+  }
+
+  .toast-custom.success {
+    border-left-color: #28a745;
+    background-color: #f0fff4;
+  }
+
+  .toast-custom.error {
+    border-left-color: #dc3545;
+    background-color: #fff5f5;
+  }
+
+  .toast-custom.warning {
+    border-left-color: #ffc107;
+    background-color: #fffbf0;
+  }
+
+  .toast-custom.info {
+    border-left-color: #0d6efd;
+    background-color: #f0f7ff;
+  }
+
+  .toast-custom-title {
+    font-weight: 600;
+    font-size: 0.95rem;
+    margin-bottom: 4px;
+  }
+
+  .toast-custom-title.success { color: #28a745; }
+  .toast-custom-title.error { color: #dc3545; }
+  .toast-custom-title.warning { color: #ffc107; }
+  .toast-custom-title.info { color: #0d6efd; }
+
+  .toast-custom-message {
+    font-size: 0.9rem;
+    color: #495057;
+  }
+
+  .toast-close {
+    float: right;
+    font-size: 1.25rem;
+    cursor: pointer;
+    color: #6c757d;
+  }
+
+  .toast-close:hover {
+    color: #212529;
+  }
+
+  @keyframes slideInRight {
+    from {
+      transform: translateX(400px);
+      opacity: 0;
+    }
+    to {
+      transform: translateX(0);
+      opacity: 1;
+    }
+  }
+
+  @keyframes slideOutRight {
+    from {
+      transform: translateX(0);
+      opacity: 1;
+    }
+    to {
+      transform: translateX(400px);
+      opacity: 0;
+    }
+  }
+
+  .toast-custom.hide {
+    animation: slideOutRight 0.3s ease-out forwards;
+  }
 </style>
+
+<!-- Toast Container -->
+<div id="toastContainer" class="toast-container-custom"></div>
 
 <!-- Hero -->
 <div class="hero-section">
@@ -61,6 +168,10 @@
 
         <form method="POST" enctype="multipart/form-data" class="vehiculo-form">
           {% csrf_token %}
+          <div id="clientErrorSummary" class="alert alert-danger d-none" role="alert" style="display:none;">
+            <strong>Hay errores en el formulario:</strong>
+            <ul id="clientErrorList" class="mb-0"></ul>
+          </div>
 
           <!-- Datos principales -->
           <h5 class="section-title mb-3"><i class="fas fa-car me-2"></i> Datos del vehículo</h5>
@@ -68,32 +179,37 @@
             <div class="col-md-6">
               <label class="form-label">Marca</label>
               {{ form.marca }}
+              <small class="form-text text-muted">Solo letras, números y guiones</small>
               {% if form.marca.errors %}<div class="field-error">{{ form.marca.errors.0 }}</div>{% endif %}
             </div>
             <div class="col-md-6">
               <label class="form-label">Modelo</label>
               {{ form.modelo }}
+              <small class="form-text text-muted">Solo letras, números y guiones</small>
               {% if form.modelo.errors %}<div class="field-error">{{ form.modelo.errors.0 }}</div>{% endif %}
             </div>
             <div class="col-md-3">
               <label class="form-label">Año</label>
               {{ form.año }}
+              <small class="form-text text-muted">Solo números</small>
               {% if form.año.errors %}<div class="field-error">{{ form.año.errors.0 }}</div>{% endif %}
             </div>
             <div class="col-md-3">
               <label class="form-label">Kilometraje (km)</label>
               {{ form.kilometraje }}
+              <small class="form-text text-muted">Solo números</small>
               {% if form.kilometraje.errors %}<div class="field-error">{{ form.kilometraje.errors.0 }}</div>{% endif %}
             </div>
             <div class="col-md-3">
               <label class="form-label">Precio (CLP)</label>
               {{ form.precio }}
+              <small class="form-text text-muted">Solo números</small>
               {% if form.precio.errors %}<div class="field-error">{{ form.precio.errors.0 }}</div>{% endif %}
             </div>
             <div class="col-md-3">
               <label class="form-label">Patente</label>
               {{ form.patente }}
-              <div class="help-text">Opcional. Se mostrará en la ficha del vehículo.</div>
+              <small class="form-text text-muted">Máx. 6 caracteres alfanuméricos</small>
               {% if form.patente.errors %}<div class="field-error">{{ form.patente.errors.0 }}</div>{% endif %}
             </div>
             <div class="col-md-6">
@@ -109,11 +225,13 @@
             <div class="col-md-6">
               <label class="form-label">Color</label>
               {{ form.color }}
+              <small class="form-text text-muted">Solo letras</small>
               {% if form.color.errors %}<div class="field-error">{{ form.color.errors.0 }}</div>{% endif %}
             </div>
             <div class="col-12">
               <label class="form-label">Descripción</label>
               {{ form.descripcion }}
+              <small class="form-text text-muted">Letras, números y símbolos: .,!?;:-() (máx. 2000 caracteres)</small>
               {% if form.descripcion.errors %}<div class="field-error">{{ form.descripcion.errors.0 }}</div>{% endif %}
             </div>
           </div>
@@ -149,16 +267,228 @@
 </div>
 
 <script>
-  // Previsualización de la galería
+  // Sistema de notificaciones Toast
+  const ToastManager = {
+    container: null,
+    
+    init() {
+      this.container = document.getElementById('toastContainer');
+    },
+
+    show(message, type = 'info', duration = 3000, title = '') {
+      if (!this.container) this.init();
+      
+      const toast = document.createElement('div');
+      toast.className = `toast-custom ${type}`;
+      
+      let icon = '';
+      let defaultTitle = '';
+      
+      switch(type) {
+        case 'success':
+          icon = '<i class="fas fa-check-circle me-2"></i>';
+          defaultTitle = '¡Correcto!';
+          break;
+        case 'error':
+          icon = '<i class="fas fa-exclamation-circle me-2"></i>';
+          defaultTitle = 'Error';
+          break;
+        case 'warning':
+          icon = '<i class="fas fa-exclamation-triangle me-2"></i>';
+          defaultTitle = 'Advertencia';
+          break;
+        case 'info':
+          icon = '<i class="fas fa-info-circle me-2"></i>';
+          defaultTitle = 'Información';
+          break;
+      }
+      
+      toast.innerHTML = `
+        <span class="toast-close" onclick="this.parentElement.remove()">&times;</span>
+        ${title || defaultTitle ? `<div class="toast-custom-title ${type}">${icon}${title || defaultTitle}</div>` : ''}
+        <div class="toast-custom-message">${message}</div>
+      `;
+      
+      this.container.appendChild(toast);
+      
+      if (duration > 0) {
+        setTimeout(() => {
+          toast.classList.add('hide');
+          setTimeout(() => toast.remove(), 300);
+        }, duration);
+      }
+    }
+  };
+
+  // Inicializar ToastManager
+  ToastManager.init();
+
+  // Validaciones en tiempo real
+  (function() {
+    // Función para agregar validación a un campo
+    const addValidation = (fieldName, pattern, invalidMsg, options = {}) => {
+      const field = document.querySelector(`[name="${fieldName}"]`);
+      if (!field) return;
+
+      field.addEventListener('input', function() {
+        const value = this.value;
+        let isValid = true;
+
+        // Validar patrón
+        if (value && !pattern.test(value)) {
+          isValid = false;
+        }
+
+        // Validar límite de caracteres
+        if (options.maxLength && value.length > options.maxLength) {
+          isValid = false;
+        }
+
+        // Cambiar estilo visual
+        if (isValid) {
+          this.classList.remove('is-invalid');
+          this.classList.add('is-valid');
+        } else if (value) {
+          this.classList.add('is-invalid');
+          this.classList.remove('is-valid');
+        } else {
+          this.classList.remove('is-invalid', 'is-valid');
+        }
+      });
+
+      field.addEventListener('blur', function() {
+        if (this.value && !pattern.test(this.value)) {
+          this.classList.add('is-invalid');
+          this.classList.remove('is-valid');
+        }
+      });
+    };
+
+    // Marca: Solo letras, números, guiones y espacios
+    addValidation('marca', /^[a-zA-Z0-9\s\-áéíóúÁÉÍÓÚ]*$/, 'Solo letras, números y guiones', { maxLength: 50 });
+
+    // Modelo: Solo letras, números, guiones y espacios
+    addValidation('modelo', /^[a-zA-Z0-9\s\-áéíóúÁÉÍÓÚ]*$/, 'Solo letras, números y guiones', { maxLength: 50 });
+
+    // Año: Solo números
+    const yearField = document.querySelector('[name="año"]');
+    if (yearField) {
+      yearField.type = 'number';
+      yearField.setAttribute('min', '1950');
+      yearField.setAttribute('max', new Date().getFullYear() + 1);
+    }
+
+    // Kilometraje: Solo números
+    const kmField = document.querySelector('[name="kilometraje"]');
+    if (kmField) {
+      kmField.type = 'number';
+      kmField.setAttribute('min', '0');
+      kmField.setAttribute('max', '999999');
+    }
+
+    // Precio: Solo números
+    const priceField = document.querySelector('[name="precio"]');
+    if (priceField) {
+      priceField.type = 'number';
+      priceField.setAttribute('min', '0');
+      priceField.setAttribute('step', '1000');
+    }
+
+    // Patente: Solo letras y números, máximo 6 caracteres
+    addValidation('patente', /^[A-Z0-9]*$/, 'Solo letras y números, máximo 6', { maxLength: 6 });
+    const patenteField = document.querySelector('[name="patente"]');
+    if (patenteField) {
+      patenteField.addEventListener('input', function() {
+        this.value = this.value.toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 6);
+      });
+    }
+
+    // Color: Solo letras y espacios
+    addValidation('color', /^[a-zA-Z\s\-áéíóúÁÉÍÓÚ]*$/, 'Solo letras', { maxLength: 30 });
+
+    // Descripción: Letras, números, espacios y símbolos simples
+    addValidation('descripcion', /^[a-zA-Z0-9\s\.\,\!\?\;\:\-\(\)áéíóúÁÉÍÓÚ\n\r]*$/, 'Caracteres no permitidos', { maxLength: 2000 });
+  })();
+  
+  // Helpers para mostrar/limpiar errores con toasts
+  function setFieldError(el, message) {
+    if (!el) {
+      ToastManager.show(message, 'error');
+      return;
+    }
+    let err = null;
+    if (el.nextElementSibling && el.nextElementSibling.classList && el.nextElementSibling.classList.contains('field-error')) {
+      err = el.nextElementSibling;
+    } else {
+      err = document.createElement('div');
+      err.className = 'field-error';
+      err.setAttribute('aria-live', 'polite');
+      if (el.parentNode) el.parentNode.insertBefore(err, el.nextSibling);
+    }
+    err.textContent = message;
+    err.classList.remove('text-success');
+    err.classList.add('text-danger');
+    el.classList.add('is-invalid');
+    el.classList.remove('is-valid');
+    ToastManager.show(message, 'error');
+  }
+
+  function clearFieldError(el) {
+    if (!el) return;
+    let err = null;
+    if (el.nextElementSibling && el.nextElementSibling.classList && el.nextElementSibling.classList.contains('field-error')) {
+      err = el.nextElementSibling;
+    } else if (el.parentNode) {
+      err = el.parentNode.querySelector('.field-error');
+    }
+    if (!err && el.parentNode) {
+      err = document.createElement('div');
+      err.className = 'field-error';
+      el.parentNode.insertBefore(err, el.nextSibling);
+    }
+    if (err) {
+      err.textContent = '';
+      err.classList.remove('text-danger');
+      err.classList.remove('text-success');
+    }
+    el.classList.remove('is-invalid');
+    el.classList.remove('is-valid');
+  }
+
+  // Previsualización de la galería + validación de archivos (tipo y tamaño)
   (function() {
     const input = document.querySelector('input[name="imagenes"]');
     const grid = document.getElementById('previewGrid');
     if (!input || !grid) return;
+
+    const MAX_SIZE = 7 * 1024 * 1024; // 7 MB
+    const ALLOWED = ['image/jpeg','image/png','image/webp'];
+
+    function validateImages(files) {
+      const errs = [];
+      for (let f of files) {
+        if (!ALLOWED.includes(f.type)) errs.push(`${f.name}: formato no permitido`);
+        if (f.size > MAX_SIZE) errs.push(`${f.name}: excede 7 MB`);
+      }
+      return errs;
+    }
+
     input.addEventListener('change', function() {
       grid.innerHTML = '';
       const files = Array.from(this.files || []);
-      if (files.length === 0) return;
+      const errors = validateImages(files.slice(0, 10));
+      const imgField = this;
       
+      if (errors.length) {
+        setFieldError(imgField, errors.join(' — '));
+      } else {
+        clearFieldError(imgField);
+        if (files.length > 0) {
+          ToastManager.show(`${files.length} imagen(es) cargada(s) correctamente`, 'success', 2000);
+        }
+      }
+
+      if (files.length === 0) return;
       files.slice(0, 10).forEach((file, idx) => {
         const reader = new FileReader();
         reader.onload = function(e) {
@@ -172,6 +502,215 @@
         };
         reader.readAsDataURL(file);
       });
+    });
+  })();
+
+  // Validación al enviar el formulario
+  (function() {
+    const form = document.querySelector('form.vehiculo-form');
+    if (!form) { return; }
+
+    const patterns = {
+      marca: /^[a-zA-Z0-9\s\-áéíóúÁÉÍÓÚ]+$/,
+      modelo: /^[a-zA-Z0-9\s\-áéíóúÁÉÍÓÚ]+$/,
+      patente: /^[A-Z0-9]{1,6}$/, 
+      color: /^[a-zA-Z\s\-áéíóúÁÉÍÓÚ]+$/,
+      descripcion: /^[a-zA-Z0-9\s\.\,\!\?\;\:\-\(\)áéíóúÁÉÍÓÚ\n\r]*$/
+    };
+
+    function validateAll() {
+      const errors = [];
+
+      function get(name) {
+        let el = form.querySelector(`[name="${name}"]`);
+        if (el) { return el; }
+
+        try {
+          const idName = 'id_' + name;
+          if (typeof CSS !== 'undefined' && CSS.escape) {
+            el = form.querySelector('#' + CSS.escape(idName));
+          } else {
+            el = form.querySelector('#' + idName.replace(/"/g, '\\"'));
+          }
+        } catch (err) {
+          el = null;
+        }
+        if (el) { return el; }
+
+        const normalized = name.normalize ? name.normalize('NFD').replace(/[\u0000-\u036f]/g, '') : name;
+        const ascii = normalized.replace(/[^a-zA-Z0-9_\-]/g, '_');
+        el = form.querySelector(`[name="${ascii}"]`) || form.querySelector('#id_' + ascii);
+        return el || null;
+      }
+
+      // Marca (required)
+      const marca = get('marca');
+      const marcaVal = (marca && marca.value || '').trim();
+      if (!marcaVal) {
+        setFieldError(marca, 'Falta completar la marca.'); 
+        errors.push('Marca: falta por rellenar');
+      } else if (!patterns.marca.test(marcaVal)) {
+        setFieldError(marca, 'Formato inválido: solo letras, números y guiones.'); 
+        errors.push('Marca: formato inválido');
+      } else { 
+        clearFieldError(marca); 
+      }
+
+      // Modelo (required)
+      const modelo = get('modelo');
+      const modeloVal = (modelo && modelo.value || '').trim();
+      if (!modeloVal) {
+        setFieldError(modelo, 'Falta completar el modelo.'); 
+        errors.push('Modelo: falta por rellenar');
+      } else if (!patterns.modelo.test(modeloVal)) {
+        setFieldError(modelo, 'Formato inválido: solo letras, números y guiones.'); 
+        errors.push('Modelo: formato inválido');
+      } else { 
+        clearFieldError(modelo); 
+      }
+
+      // Año (required, rango)
+      const anio = get('año');
+      const anioVal = anio ? parseInt(anio.value, 10) : NaN;
+      const current = new Date().getFullYear();
+      if (!anio || !anio.value) {
+        setFieldError(anio, 'Falta completar el año.'); 
+        errors.push('Año: falta por rellenar');
+      } else if (isNaN(anioVal) || anioVal < 1950 || anioVal > current + 1) {
+        setFieldError(anio, `Año inválido. Debe ser entre 1950 y ${current + 1}.`); 
+        errors.push('Año: fuera de rango');
+      } else { 
+        clearFieldError(anio); 
+      }
+
+      // Kilometraje
+      const km = get('kilometraje');
+      const kmVal = km ? parseInt(km.value, 10) : NaN;
+      if (!km || !km.value) {
+        setFieldError(km, 'Falta completar el kilometraje.'); 
+        errors.push('Kilometraje: falta por rellenar');
+      } else if (isNaN(kmVal) || kmVal < 0 || kmVal > 999999) {
+        setFieldError(km, 'Kilometraje inválido (0 - 999999).'); 
+        errors.push('Kilometraje: inválido');
+      } else { 
+        clearFieldError(km); 
+      }
+
+      // Precio
+      const precio = get('precio');
+      const precioVal = precio ? Number(precio.value) : NaN;
+      if (!precio || !precio.value) {
+        setFieldError(precio, 'Falta completar el precio.'); 
+        errors.push('Precio: falta por rellenar');
+      } else if (isNaN(precioVal) || precioVal <= 0) {
+        setFieldError(precio, 'Precio inválido. Debe ser mayor a 0.'); 
+        errors.push('Precio: inválido');
+      } else { 
+        clearFieldError(precio); 
+      }
+
+      // Patente (required)
+      const patente = get('patente');
+      const patVal = (patente && patente.value || '').trim().toUpperCase().replace(/[^A-Z0-9]/g,'');
+      if (!patVal) {
+        setFieldError(patente, 'Falta completar la patente.');
+        errors.push('Patente: falta por rellenar');
+      } else if (!patterns.patente.test(patVal)) {
+        setFieldError(patente, 'Patente inválida. Máx. 6 caracteres alfanuméricos.'); 
+        errors.push('Patente: inválida');
+      } else { 
+        patente.value = patVal; 
+        clearFieldError(patente); 
+      }
+
+      // Imágenes (required - al menos 1)
+      const imgInput = get('imagenes');
+      if (!imgInput || !imgInput.files || imgInput.files.length === 0) {
+        setFieldError(imgInput, 'Debes cargar al menos una imagen del vehículo.');
+        errors.push('Imágenes: falta por cargar');
+      } else {
+        const files = Array.from(imgInput.files).slice(0, 10);
+        const imgErrors = [];
+        const MAX_SIZE = 7 * 1024 * 1024; // 7MB
+        const ALLOWED = ['image/jpeg','image/png','image/webp'];
+        files.forEach(f => {
+          if (!ALLOWED.includes(f.type)) imgErrors.push(`${f.name}: formato no permitido`);
+          if (f.size > MAX_SIZE) imgErrors.push(`${f.name}: excede 7 MB`);
+        });
+        if (imgErrors.length) {
+          setFieldError(imgInput, imgErrors.join(' · '));
+          errors.push('Imágenes: inválidas');
+        } else {
+          clearFieldError(imgInput);
+        }
+      }
+
+      // Color (required)
+      const color = get('color');
+      const colorVal = (color && color.value || '').trim();
+      if (!colorVal) {
+        setFieldError(color, 'Falta completar el color.');
+        errors.push('Color: falta por rellenar');
+      } else if (!patterns.color.test(colorVal)) { 
+        setFieldError(color, 'Color inválido. Solo letras y espacios.'); 
+        errors.push('Color: inválido'); 
+      } else { 
+        clearFieldError(color); 
+      }
+
+      // Descripción (required)
+      const desc = get('descripcion');
+      const descVal = (desc && desc.value || '').trim();
+      if (!descVal) {
+        setFieldError(desc, 'Falta completar la descripción.');
+        errors.push('Descripción: falta por rellenar');
+      } else if (!patterns.descripcion.test(descVal)) { 
+        setFieldError(desc, 'Descripción inválida. Contiene caracteres no permitidos.'); 
+        errors.push('Descripción: inválida'); 
+      } else { 
+        clearFieldError(desc); 
+      }
+
+      // Mostrar resumen de errores si los hay
+      const summary = document.getElementById('clientErrorSummary');
+      const list = document.getElementById('clientErrorList');
+      if (errors.length > 0) {
+        list.innerHTML = '';
+        errors.forEach(e => { 
+          const li = document.createElement('li'); 
+          li.textContent = e; 
+          list.appendChild(li); 
+        });
+        summary.classList.remove('d-none'); 
+        summary.style.display = 'block';
+        ToastManager.show('Por favor revisa los errores en el formulario', 'error', 4000, 'Formulario incompleto');
+      } else {
+        list.innerHTML = '';
+        summary.classList.add('d-none'); 
+        summary.style.display = 'none';
+      }
+
+      return errors.length === 0;
+    }
+
+    form.addEventListener('submit', function(e) {
+      const ok = validateAll();
+      if (!ok) {
+        e.preventDefault(); 
+        e.stopPropagation();
+        const first = form.querySelector('.is-invalid');
+        if (first) { 
+          first.focus(); 
+          first.scrollIntoView({behavior:'smooth', block:'center'}); 
+        }
+      }
+      else {
+        ToastManager.show('Enviando tu vehículo para aprobación...', 'info', 0);
+        try {
+          try { localStorage.setItem('eu_flash', JSON.stringify({tag:'success', text: 'Tu vehículo fue enviado para aprobación del administrador.'})); } catch(e) {}
+          window.addEventListener('beforeunload', function() {});
+        } catch(e) { console.error(e); }
+      }
     });
   })();
 </script>

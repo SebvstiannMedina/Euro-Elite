@@ -1,5 +1,6 @@
 ﻿from django import forms
 import unicodedata
+import re
 from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth import get_user_model, authenticate
 from django.utils import timezone
@@ -568,39 +569,88 @@ class VehiculoForm(forms.ModelForm):
     # -----------------
     # Validaciones
     # -----------------
+    def clean_marca(self):
+        marca = (self.cleaned_data.get('marca') or '').strip()
+        if not marca:
+            raise forms.ValidationError('La marca es obligatoria.')
+        # Solo letras, números y espacios
+        if not re.match(r'^[a-zA-Z0-9\s\-áéíóúÁÉÍÓÚ]+$', marca):
+            raise forms.ValidationError('La marca solo puede contener letras, números y guiones.')
+        if len(marca) > 50:
+            raise forms.ValidationError('La marca no puede exceder 50 caracteres.')
+        return marca.title()
+
+    def clean_modelo(self):
+        modelo = (self.cleaned_data.get('modelo') or '').strip()
+        if not modelo:
+            raise forms.ValidationError('El modelo es obligatorio.')
+        # Solo letras, números y espacios
+        if not re.match(r'^[a-zA-Z0-9\s\-áéíóúÁÉÍÓÚ]+$', modelo):
+            raise forms.ValidationError('El modelo solo puede contener letras, números y guiones.')
+        if len(modelo) > 50:
+            raise forms.ValidationError('El modelo no puede exceder 50 caracteres.')
+        return modelo.title()
+
     def clean_año(self):
         anio = self.cleaned_data.get('año')
         if anio is None:
-            return anio
+            raise forms.ValidationError('El año es obligatorio.')
         current_year = datetime.now().year
         if anio < 1950 or anio > current_year + 1:
             raise forms.ValidationError(f"El año debe estar entre 1950 y {current_year + 1}.")
         return anio
 
-    def clean_precio(self):
-        precio = self.cleaned_data.get('precio')
-        if precio is None:
-            return precio
-        if precio < 0:
-            raise forms.ValidationError('El precio no puede ser negativo.')
-        return precio
-
     def clean_kilometraje(self):
         km = self.cleaned_data.get('kilometraje')
         if km is None:
-            return km
+            raise forms.ValidationError('El kilometraje es obligatorio.')
         if km < 0:
             raise forms.ValidationError('El kilometraje no puede ser negativo.')
+        if km > 999999:
+            raise forms.ValidationError('El kilometraje no puede exceder 999999 km.')
         return km
+
+    def clean_precio(self):
+        precio = self.cleaned_data.get('precio')
+        if precio is None:
+            raise forms.ValidationError('El precio es obligatorio.')
+        if precio <= 0:
+            raise forms.ValidationError('El precio debe ser mayor a 0.')
+        if precio > 9999999999:
+            raise forms.ValidationError('El precio es demasiado alto.')
+        return precio
 
     def clean_patente(self):
         patente = (self.cleaned_data.get('patente') or '').upper().strip()
-        # Normalizar, quitar espacios y guiones
-        patente = patente.replace(' ', '').replace('-', '')
-        # No obligatoria, pero si viene, validar formato básico chileno (6-7 caracteres alfanuméricos)
-        if patente and (len(patente) < 6 or len(patente) > 7):
-            raise forms.ValidationError('La patente debe tener 6 o 7 caracteres alfanuméricos.')
+        if patente:
+            # Solo letras y números, máximo 6 caracteres
+            patente = patente.replace(' ', '').replace('-', '')
+            if not re.match(r'^[A-Z0-9]{1,6}$', patente):
+                raise forms.ValidationError('La patente debe tener máximo 6 caracteres alfanuméricos.')
+            if len(patente) > 6:
+                raise forms.ValidationError('La patente no puede exceder 6 caracteres.')
         return patente
+
+    def clean_color(self):
+        color = (self.cleaned_data.get('color') or '').strip()
+        if color:
+            # Solo letras y espacios
+            if not re.match(r'^[a-zA-Z\s\-áéíóúÁÉÍÓÚ]+$', color):
+                raise forms.ValidationError('El color solo puede contener letras.')
+            if len(color) > 30:
+                raise forms.ValidationError('El color no puede exceder 30 caracteres.')
+            return color.title()
+        return color
+
+    def clean_descripcion(self):
+        desc = (self.cleaned_data.get('descripcion') or '').strip()
+        if desc:
+            # Letras, números, espacios y símbolos simples: .,!?;:-()
+            if not re.match(r'^[a-zA-Z0-9\s\.\,\!\?\;\:\-\(\)áéíóúÁÉÍÓÚ\n\r]+$', desc):
+                raise forms.ValidationError('La descripción contiene caracteres no permitidos.')
+            if len(desc) > 2000:
+                raise forms.ValidationError('La descripción no puede exceder 2000 caracteres.')
+        return desc
 
     def clean_imagenes(self):
         # Al ser un campo con multiple, Django no lo maneja automáticamente

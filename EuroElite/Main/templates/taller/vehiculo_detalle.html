@@ -159,6 +159,7 @@
         border-radius: 15px;
         position: sticky;
         top: 20px;
+        z-index: 10;
     }
 
     .contact-box h4 {
@@ -224,6 +225,17 @@
         border-radius: 25px;
         font-size: 1.1rem;
         font-weight: 600;
+    }
+
+    .contact-box-wrapper {
+        position: relative;
+        z-index: 20;
+    }
+
+    .info-card-after-contact {
+        margin-top: 20px;
+        position: relative;
+        z-index: 1;
     }
 </style>
 
@@ -348,7 +360,8 @@
 
         <!-- Sidebar Contacto -->
         <div class="col-lg-4">
-            <div class="contact-box">
+            <div class="contact-box-wrapper">
+                <div class="contact-box">
                 <div class="price-tag text-center mb-4">
                     ${{ vehiculo.precio|floatformat:0 }}
                 </div>
@@ -393,9 +406,10 @@
                     <i class="fas fa-shield-alt"></i> Vehículo verificado por Euro Elite
                 </div>
             </div>
+            </div>
 
             <!-- Información Adicional -->
-            <div class="info-card mt-4">
+            <div class="info-card mt-4 info-card-after-contact">
                 <h5><i class="fas fa-info-circle"></i> Información</h5>
                 <ul class="list-unstyled mt-3">
                     <li class="mb-2">
