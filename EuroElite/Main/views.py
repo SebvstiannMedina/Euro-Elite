@@ -490,6 +490,9 @@ def perfil(request):
         .order_by('-predeterminada', '-id').first()
 
 # Si no existe dirección en DB, crear una con los datos del checkout
+    metodo_entrega_form = request.POST.get('metodo_entrega', 'envio').strip().lower()
+    metodo_entrega = Pedido.MetodoEntrega.RETIRO if metodo_entrega_form == 'retiro' else Pedido.MetodoEntrega.DESPACHO
+    
     if not addr and metodo_entrega == Pedido.MetodoEntrega.DESPACHO:
         addr = Direccion.objects.create(
             usuario=request.user,
