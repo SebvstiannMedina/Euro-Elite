@@ -613,22 +613,40 @@ def mis_citas(request):
 
 @login_required
 def anular_cita(request, cita_id):
+    from .models import HoraDisponible
+    import json
+    
     base_queryset = Cita.objects.select_related("bloque")
     if request.user.is_staff:
         cita = get_object_or_404(base_queryset, id=cita_id)
     else:
         cita = get_object_or_404(base_queryset, id=cita_id, usuario=request.user)
 
+    is_ajax = request.headers.get('X-Requested-With') == 'XMLHttpRequest' or request.content_type == 'application/json'
+
     if cita.estado == Cita.Estado.RESERVADA:
         cita.estado = Cita.Estado.CANCELADA
         if cita.bloque:
+            # Restaurar la hora disponible
+            fecha = cita.bloque.inicio.date()
+            hora = cita.bloque.inicio.time()
+            HoraDisponible.objects.filter(fecha=fecha, hora=hora).update(disponible=True)
+            
+            # Desbloquear el bloque
             cita.bloque.bloqueado = False
             cita.bloque.save(update_fields=["bloqueado"])
         cita.save(update_fields=["estado"])
+        
+        if is_ajax:
+            return JsonResponse({"success": True, "message": "La cita fue cancelada correctamente."})
         messages.success(request, "La cita fue cancelada correctamente.")
     else:
+        if is_ajax:
+            return JsonResponse({"success": False, "error": "Solo puedes cancelar citas que estén reservadas."})
         messages.warning(request, "Solo puedes cancelar citas que estén reservadas.")
 
+    if is_ajax:
+        return JsonResponse({"success": True})
     return _redirect_back(request, "mis_citas")
 
 
@@ -2650,6 +2668,9 @@ from .forms import HorarioDiaForm  # Lo crearemos abajo
 
 @staff_member_required
 def admin_horarios(request):
+    from .models import HorarioDia, HoraDisponible
+    from django.utils import timezone
+    
     dias_semana = {
         0: "Lunes",
         1: "Martes",
@@ -2662,11 +2683,182 @@ def admin_horarios(request):
 
     dias = {}
     for numero, nombre in dias_semana.items():
+        horarios = HorarioDia.objects.filter(dia_semana=numero, activo=True).order_by("hora_inicio")
+        
+        # Para cada horario, obtener las horas disponibles registradas
+        horas_por_horario = {}
+        for h in horarios:
+            horas_disponibles = h.horas_disponibles.filter(disponible=True).order_by("-fecha", "hora")
+            horas_por_horario[h.id] = horas_disponibles
+        
         dias[numero] = {
             "nombre": nombre,
-            "horarios": HorarioDia.objects.filter(dia_semana=numero).order_by("hora_inicio")
+            "horarios": horarios,
+            "horas_por_horario": horas_por_horario
         }
 
     return render(request, "taller/admin_horarios.html", {
         "dias": dias,
     })
+
+
+@login_required
+def api_generar_bloques_por_fecha(request):
+    """Genera (si hace falta) y devuelve los bloques disponibles para una fecha.
+    Retorna JSON: { ok: True, bloques: [{id, hora}, ...] }
+    """
+    from .models import HoraDisponible, BloqueHorario, Cita
+    from datetime import datetime as _dt, datetime
+
+    fecha_str = request.GET.get("fecha")
+    if not fecha_str:
+        return JsonResponse({"ok": False, "error": "Falta parámetro fecha"}, status=400)
+
+    try:
+        fecha = _dt.strptime(fecha_str, "%Y-%m-%d").date()
+    except Exception:
+        return JsonResponse({"ok": False, "error": "Formato de fecha inválido (YYYY-MM-DD)"}, status=400)
+
+    try:
+        tz = timezone.get_current_timezone()
+        horas = HoraDisponible.objects.filter(fecha=fecha, disponible=True)
+
+        bloques_list = []
+        for hd in horas:
+            inicio_naive = datetime.combine(fecha, hd.hora)
+            inicio = timezone.make_aware(inicio_naive, tz)
+            fin = inicio + timedelta(hours=1)
+
+            bloque, _ = BloqueHorario.objects.get_or_create(inicio=inicio, fin=fin, defaults={"bloqueado": False})
+
+            # Solo devolver bloques libres
+            if not bloque.bloqueado and not Cita.objects.filter(bloque=bloque, estado=Cita.Estado.RESERVADA).exists():
+                bloques_list.append({"id": bloque.id, "hora": inicio.strftime("%H:%M")})
+
+        # Ordenar por hora
+        bloques_list = sorted(bloques_list, key=lambda x: x["hora"])
+
+        return JsonResponse({"ok": True, "bloques": bloques_list})
+    except Exception as e:
+        return JsonResponse({"ok": False, "error": str(e)}, status=500)
+
+
+# =============================
+# ENDPOINTS AJAX PARA HORAS DISPONIBLES
+# =============================
+
+@staff_member_required
+@require_POST
+def crear_hora_disponible(request):
+    """Crea una hora disponible para agendamiento."""
+    from .models import HorarioDia, HoraDisponible
+    from datetime import datetime
+    
+    try:
+        horario_id = request.POST.get('horario_id')
+        fecha_str = request.POST.get('fecha')
+        hora_str = request.POST.get('hora')
+        
+        if not all([horario_id, fecha_str, hora_str]):
+            return JsonResponse({'success': False, 'error': 'Faltan datos'}, status=400)
+        
+        # Validar que el horario existe y está activo
+        horario = HorarioDia.objects.get(id=horario_id, activo=True)
+        
+        # Parsear fecha y hora
+        from datetime import datetime, time
+        fecha = datetime.strptime(fecha_str, '%Y-%m-%d').date()
+        hora = datetime.strptime(hora_str, '%H:%M').time()
+        
+        # Validar que la hora está dentro del rango del horario del día
+        if not (horario.hora_inicio <= hora < horario.hora_fin):
+            return JsonResponse({
+                'success': False, 
+                'error': f'La hora debe estar entre {horario.hora_inicio} y {horario.hora_fin}'
+            }, status=400)
+        
+        # Crear o actualizar hora disponible
+        hora_disp, created = HoraDisponible.objects.get_or_create(
+            fecha=fecha,
+            hora=hora,
+            defaults={'horario_dia': horario, 'disponible': True}
+        )
+        
+        if not created:
+            # Si ya existe, marcar como disponible
+            hora_disp.disponible = True
+            hora_disp.save(update_fields=['disponible'])
+            mensaje = "Hora actualizada como disponible"
+        else:
+            mensaje = "Hora registrada como disponible"
+        
+        return JsonResponse({
+            'success': True,
+            'message': mensaje,
+            'hora_id': hora_disp.id,
+            'fecha': fecha_str,
+            'hora': hora_str
+        })
+    
+    except HorarioDia.DoesNotExist:
+        return JsonResponse({'success': False, 'error': 'Horario no encontrado'}, status=404)
+    except Exception as e:
+        return JsonResponse({'success': False, 'error': str(e)}, status=400)
+
+
+@staff_member_required
+@require_POST
+def eliminar_hora_disponible(request):
+    """Marca una hora como no disponible (ocupada)."""
+    from .models import HoraDisponible
+    
+    try:
+        hora_id = request.POST.get('hora_id')
+        
+        if not hora_id:
+            return JsonResponse({'success': False, 'error': 'Falta hora_id'}, status=400)
+        
+        hora = HoraDisponible.objects.get(id=hora_id)
+        hora.disponible = False
+        hora.save(update_fields=['disponible'])
+        
+        return JsonResponse({
+            'success': True,
+            'message': 'Hora marcada como ocupada'
+        })
+    
+    except HoraDisponible.DoesNotExist:
+        return JsonResponse({'success': False, 'error': 'Hora no encontrada'}, status=404)
+    except Exception as e:
+        return JsonResponse({'success': False, 'error': str(e)}, status=400)
+
+
+@staff_member_required
+def listar_horas_disponibles(request):
+    """Lista horas disponibles por horario (AJAX)."""
+    from .models import HorarioDia, HoraDisponible
+    
+    try:
+        horario_id = request.GET.get('horario_id')
+        fecha = request.GET.get('fecha')
+        
+        if not all([horario_id, fecha]):
+            return JsonResponse({'success': False, 'error': 'Faltan parámetros'}, status=400)
+        
+        # Validar horario existe
+        HorarioDia.objects.get(id=horario_id)
+        
+        # Obtener horas disponibles
+        horas = HoraDisponible.objects.filter(
+            horario_dia_id=horario_id,
+            fecha=fecha,
+            disponible=True
+        ).values('id', 'hora').order_by('hora')
+        
+        return JsonResponse({
+            'success': True,
+            'horas': list(horas)
+        })
+    
+    except Exception as e:
+        return JsonResponse({'success': False, 'error': str(e)}, status=400)

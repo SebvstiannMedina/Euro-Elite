@@ -4,8 +4,10 @@ import re
 from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth import get_user_model, authenticate
 from django.utils import timezone
+from datetime import datetime, timedelta
+from django.db.models import Count, Q
 
-from .models import Cita, BloqueHorario, Servicio, Producto, Direccion, Promocion
+from .models import Cita, BloqueHorario, Servicio, Producto, Direccion, Promocion, HorarioDia
 
 Usuario = get_user_model()
 
@@ -186,9 +188,6 @@ class RegistroForm(UserCreationForm):
 
 
 # ================= CITA =================
-from django.db.models import Q, Count
-from datetime import datetime, timedelta
-from .models import Cita, Servicio, BloqueHorario, HorarioDia
 
 class CitaForm(forms.ModelForm):
 
@@ -208,6 +207,7 @@ class CitaForm(forms.ModelForm):
         }
 
     def __init__(self, *args, **kwargs):
+        from .models import HoraDisponible
         user = kwargs.pop("user", None)
         super().__init__(*args, **kwargs)
 
@@ -233,23 +233,38 @@ class CitaForm(forms.ModelForm):
                 fecha_str = self.data.get("fecha")
                 fecha = datetime.strptime(fecha_str, "%Y-%m-%d").date()
 
-                # Genera bloques según el horario del admin
-                self._generar_bloques_para_fecha(fecha)
+                # Crear bloques dinámicamente desde HoraDisponible registradas
+                self._generar_bloques_desde_disponibles(fecha)
 
-                # Carga bloques disponibles
-                self.fields["bloque"].queryset = (
-                    BloqueHorario.objects.annotate(
-                        activas=Count("citas", filter=Q(citas__estado="RESERVADA"))
-                    )
-                    .filter(
+                # Cargar solo bloques que tengan HoraDisponible asociada
+                horas_disponibles = HoraDisponible.objects.filter(
+                    fecha=fecha,
+                    disponible=True
+                ).values_list('hora', flat=True).distinct()
+
+                # Filtrar bloques que coincidan con horas disponibles
+                bloques_disponibles = []
+                for hora_disp in horas_disponibles:
+                    # Encontrar bloques que comiencen con esa hora
+                    from datetime import datetime as dt
+                    tz = timezone.get_current_timezone()
+                    inicio_aware = timezone.make_aware(dt.combine(fecha, hora_disp), tz)
+                    
+                    # Buscar bloque que tenga esa hora inicio
+                    bloque = BloqueHorario.objects.filter(
                         inicio__date=fecha,
-                        bloqueado=False,
-                        activas=0,
-                        inicio__gte=timezone.now()
-                    )
-                    .order_by("inicio")
-                )
-            except:
+                        inicio__hour=hora_disp.hour
+                    ).first()
+                    
+                    if bloque and not Cita.objects.filter(bloque=bloque, estado="RESERVADA").exists():
+                        bloques_disponibles.append(bloque.id)
+                
+                self.fields["bloque"].queryset = BloqueHorario.objects.filter(
+                    id__in=bloques_disponibles
+                ).order_by("inicio")
+                
+            except Exception as e:
+                print(f"Error cargando bloques: {e}")
                 pass
 
         # --- En caso de edición ---
@@ -257,35 +272,47 @@ class CitaForm(forms.ModelForm):
             fecha = self.instance.bloque.inicio.date()
             self.fields["fecha"].initial = fecha
             self.fields["bloque"].queryset = (
-                BloqueHorario.objects.filter(inicio__date=fecha, bloqueado=False)
+                BloqueHorario.objects.filter(inicio__date=fecha)
             )
 
     # ===================== MÉTODO INTERNO =====================
-    def _generar_bloques_para_fecha(self, fecha):
-        """Genera bloques según HorarioDia configurado por admins."""
-        dia_semana = fecha.weekday()  # 0 = Lunes ... 6 = Domingo
-        rangos = HorarioDia.objects.filter(dia_semana=dia_semana, activo=True)
+    def _generar_bloques_desde_disponibles(self, fecha):
+        """Crea bloques a partir de horas disponibles registradas."""
+        from .models import HoraDisponible
+        from datetime import datetime as dt
+        
+        # Obtener horas disponibles para esa fecha
+        horas_disponibles = HoraDisponible.objects.filter(
+            fecha=fecha,
+            disponible=True
+        ).values_list('hora', flat=True).distinct()
 
         tz = timezone.get_current_timezone()
 
-        for rango in rangos:
-            hora_inicio = datetime.combine(fecha, rango.hora_inicio)
-            hora_fin = datetime.combine(fecha, rango.hora_fin)
+        for hora in horas_disponibles:
+            inicio_naive = dt.combine(fecha, hora)
+            inicio = timezone.make_aware(inicio_naive, tz)
+            fin = inicio + timedelta(hours=1)
 
-            hora_actual = hora_inicio
-            while hora_actual < hora_fin:
-                inicio = timezone.make_aware(hora_actual, tz)
-                fin = inicio + timedelta(hours=1)
-
-                BloqueHorario.objects.get_or_create(
-                    inicio=inicio,
-                    fin=fin,
-                    bloqueado=False
-                )
-
-                hora_actual += timedelta(hours=1)
+            BloqueHorario.objects.get_or_create(
+                inicio=inicio,
+                fin=fin,
+                bloqueado=False
+            )
 
     # ===================== VALIDACIONES =====================
+    def clean_bloque(self):
+        """Permite cualquier BloqueHorario válido, no solo los del queryset inicial."""
+        bloque_id = self.data.get("bloque")
+        if not bloque_id:
+            return None
+        
+        try:
+            bloque = BloqueHorario.objects.get(id=bloque_id)
+            return bloque
+        except BloqueHorario.DoesNotExist:
+            raise forms.ValidationError("Horario inválido.")
+    
     def clean(self):
         cleaned_data = super().clean()
         fecha = cleaned_data.get("fecha")
@@ -297,7 +324,7 @@ class CitaForm(forms.ModelForm):
         if bloque and bloque.inicio <= timezone.now():
             raise forms.ValidationError("El horario ya pasó.")
 
-        if bloque and bloque.citas.filter(estado="RESERVADA").exists():
+        if bloque and Cita.objects.filter(bloque=bloque, estado="RESERVADA").exists():
             raise forms.ValidationError("Este bloque ya está reservado.")
 
         if cleaned_data.get("a_domicilio") and not cleaned_data.get("direccion_domicilio"):
@@ -307,7 +334,23 @@ class CitaForm(forms.ModelForm):
 
     # ===================== SAVE =====================
     def save(self, commit=True):
+        from .models import HoraDisponible
         cita = super().save(commit=False)
+        
+        # Marcar la hora disponible como ocupada
+        if cita.bloque:
+            fecha = cita.bloque.inicio.date()
+            hora = cita.bloque.inicio.time()
+            
+            hora_disp = HoraDisponible.objects.filter(
+                fecha=fecha,
+                hora=hora
+            ).first()
+            
+            if hora_disp:
+                hora_disp.disponible = False
+                hora_disp.save(update_fields=['disponible'])
+        
         if commit:
             cita.save()
         return cita
@@ -527,7 +570,6 @@ class EmailAuthenticationForm(AuthenticationForm):
     )
 
 from .models import VehiculoEnVenta
-from datetime import datetime
 
 
 class VehiculoForm(forms.ModelForm):

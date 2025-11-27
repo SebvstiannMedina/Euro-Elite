@@ -764,3 +764,22 @@ class HorarioDia(models.Model):
 
     def __str__(self):
         return f"{self.get_dia_semana_display()}: {self.hora_inicio} - {self.hora_fin}"
+
+
+class HoraDisponible(models.Model):
+    """Modelo para registrar horas específicas disponibles para reserva."""
+    horario_dia = models.ForeignKey(HorarioDia, on_delete=models.CASCADE, related_name="horas_disponibles")
+    fecha = models.DateField(db_index=True)
+    hora = models.TimeField()
+    disponible = models.BooleanField(default=True, db_index=True)
+    creado = models.DateTimeField(auto_now_add=True)
+    actualizado = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        unique_together = ("fecha", "hora")
+        ordering = ("-fecha", "hora")
+        verbose_name_plural = "Horas disponibles"
+
+    def __str__(self):
+        estado = "✓ Disponible" if self.disponible else "✗ Ocupada"
+        return f"{self.fecha} {self.hora} - {estado}"

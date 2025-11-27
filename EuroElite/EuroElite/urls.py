@@ -159,10 +159,11 @@ urlpatterns = [
     # entrega
     path("entrega/<int:pedido_id>/confirmar/", main_views.confirmar_entrega, name="confirmar_entrega"),
 
-
-    
-
-    
+    # Horas disponibles (AJAX)
+    path('api/horarios/crear-disponible/', main_views.crear_hora_disponible, name='crear_hora_disponible'),
+    path('api/horarios/eliminar-disponible/', main_views.eliminar_hora_disponible, name='eliminar_hora_disponible'),
+    path('api/horarios/listar-disponibles/', main_views.listar_horas_disponibles, name='listar_horas_disponibles'),
+    path('api/horarios/bloques-por-fecha/', main_views.api_generar_bloques_por_fecha, name='api_bloques_por_fecha'),
 
 ]
 

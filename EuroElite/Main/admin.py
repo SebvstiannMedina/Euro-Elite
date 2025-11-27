@@ -5,7 +5,7 @@ from .models import (
     Pago, Boleta, Resena, Servicio, Profesional,
     BloqueHorario, Cita, Banner, ConfigSitio, VehiculoEnVenta,
     VehiculoCliente, HistorialServicio, FotoNosotros, Contacto,
-    RecordatorioMantenimiento,HorarioDia
+    RecordatorioMantenimiento, HorarioDia, HoraDisponible
 )
 
 # Usuarios personalizados
@@ -87,6 +87,20 @@ class HorarioDiaAdmin(admin.ModelAdmin):
     list_display = ("dia_semana", "hora_inicio", "hora_fin", "activo")
     list_filter = ("dia_semana", "activo")
     ordering = ("dia_semana", "hora_inicio")
+
+
+@admin.register(HoraDisponible)
+class HoraDisponibleAdmin(admin.ModelAdmin):
+    list_display = ("fecha", "hora", "disponible", "creado")
+    list_filter = ("disponible", "fecha", "hora")
+    search_fields = ("fecha",)
+    ordering = ("-fecha", "hora")
+    date_hierarchy = "fecha"
+    
+    def get_readonly_fields(self, request, obj=None):
+        if obj:
+            return ("horario_dia", "fecha", "hora", "creado", "actualizado")
+        return ("creado", "actualizado")
 
 
 # Otros modelos (registrados de manera básica)

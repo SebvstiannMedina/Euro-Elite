@@ -1,7 +1,7 @@
 {% extends "base.html" %}
-{% load static %}
+{% load static custom_filters %}
 {% block content %}
-
+{% csrf_token %}
 
 <!-- =========================== -->
 <!--         HERO SECTION        -->
@@ -12,11 +12,11 @@
         <div class="col-lg-8">
             <div class="hero-eyebrow">PANEL DE ADMINISTRACIÓN</div>
             <h1 class="hero-title display-5 mb-3">
-                Horarios Semanales
+                Gestión de Horarios y Disponibilidad
             </h1>
             <p class="hero-text">
-                Configura los horarios disponibles para cada día de la semana.
-                Estos horarios serán utilizados automáticamente por el sistema de agendamiento.
+                1️⃣ Configura los horarios operativos en la sección inferior.
+                2️⃣ Luego, registra horas específicas disponibles para que los usuarios puedan agendar.
             </p>
         </div>
     </div>
@@ -43,19 +43,63 @@
         {% if data.horarios %}
             <div class="list-group mb-3">
                 {% for h in data.horarios %}
-                <div class="list-group-item d-flex justify-content-between align-items-center"
-                    style="border-radius: 18px; border: 1px solid rgba(15,23,42,0.08); background: #fff;">
+                <div class="schedule-item">
 
-                    <!-- Hora -->
-                    <div class="d-flex align-items-center gap-2">
+                    <!-- Rango de horario -->
+                    <div class="d-flex align-items-center gap-2 flex-grow-1">
                         <div class="time-pill">
                             <i class="fa-solid fa-clock"></i>
                             {{ h.hora_inicio }} – {{ h.hora_fin }}
                         </div>
                     </div>
 
-                    <!-- Botones -->
-                    <div class="action-stack">
+                    <!-- Sección de horas disponibles -->
+                    <div class="horas-disponibles-section mb-3">
+                        <label class="form-label fw-semibold mb-2">
+                            <i class="fa-solid fa-hourglass-end"></i> Horas disponibles:
+                        </label>
+                        
+                        {% if data.horas_por_horario|get_item:h.id %}
+                            <div class="horas-list">
+                                {% for hora in data.horas_por_horario|get_item:h.id %}
+                                <div class="hora-tag">
+                                    {{ hora.fecha|date:"d/m" }} - {{ hora.hora }}
+                                    <button type="button" class="btn-eliminar-hora" 
+                                        onclick="eliminarHora({{ hora.id }})">
+                                        <i class="fa-solid fa-times"></i>
+                                    </button>
+                                </div>
+                                {% endfor %}
+                            </div>
+                        {% else %}
+                            <p class="text-muted small">Sin horas registradas</p>
+                        {% endif %}
+                    </div>
+
+                    <!-- Formulario para agregar horas -->
+                    <div class="add-hora-form">
+                        <div class="row g-2">
+                            <div class="col-md-5">
+                                <input type="date" class="form-control form-control-sm" 
+                                    data-horario-id="{{ h.id }}"
+                                    class="fecha-input">
+                            </div>
+                            <div class="col-md-5">
+                                <input type="time" class="form-control form-control-sm hora-input" 
+                                    data-horario-id="{{ h.id }}"
+                                    min="{{ h.hora_inicio }}" max="{{ h.hora_fin }}">
+                            </div>
+                            <div class="col-md-2">
+                                <button type="button" class="btn btn-sm btn-success w-100"
+                                    onclick="agregarHora({{ h.id }})">
+                                    <i class="fa-solid fa-plus"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Botones de edición del horario -->
+                    <div class="action-stack mt-2">
                         <a href="{% url 'admin:Main_horariodia_change' h.id %}"
                         class="btn btn-progress px-3 py-2">
                             <i class="fa-solid fa-pen-to-square"></i>
@@ -152,6 +196,15 @@
   background: linear-gradient(180deg, #ffffff 0%, #f8fbff 100%);
   padding: 1.5rem;
   box-shadow: 0 22px 55px rgba(15,23,42,0.09);
+  margin-bottom: 2rem;
+}
+
+.schedule-item {
+  border: 1px solid rgba(15,23,42,0.08);
+  border-radius: 16px;
+  padding: 1.25rem;
+  background: #fafbff;
+  margin-bottom: 1rem;
 }
 
 .legend-dot {
@@ -170,6 +223,52 @@
   background: rgba(99,102,241,0.12);
   font-weight: 600;
   color: #312e81;
+}
+
+.horas-disponibles-section {
+  background: rgba(114, 214, 255, 0.08);
+  padding: 0.75rem;
+  border-radius: 12px;
+  border-left: 3px solid var(--ee-accent);
+}
+
+.horas-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-bottom: 0.75rem;
+}
+
+.hora-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: var(--ee-soft);
+  color: var(--ee-primary);
+  padding: 0.4rem 0.8rem;
+  border-radius: 999px;
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.btn-eliminar-hora {
+  background: none;
+  border: none;
+  color: #dc2626;
+  cursor: pointer;
+  font-size: 0.75rem;
+  padding: 0;
+}
+
+.btn-eliminar-hora:hover {
+  color: #991b1b;
+}
+
+.add-hora-form {
+  background: rgba(99, 102, 241, 0.06);
+  padding: 0.75rem;
+  border-radius: 12px;
+  border: 1px dashed var(--ee-accent);
 }
 
 /* Botones */
@@ -218,5 +317,107 @@
   font-size: 2rem;
 }
 </style>
+
+<!-- Script para gestionar horas disponibles -->
+<script>
+function agregarHora(horarioId) {
+    // Encontrar los inputs de este horario
+    const dateInputs = document.querySelectorAll(`input[data-horario-id="${horarioId}"]`);
+    const horaInputs = document.querySelectorAll(`input[data-horario-id="${horarioId}"].hora-input`);
+    
+    let dateInput = null;
+    let horaInput = null;
+    
+    // Buscar el input de fecha
+    for (let input of dateInputs) {
+        if (input.type === 'date') {
+            dateInput = input;
+            break;
+        }
+    }
+    
+    // Buscar el input de hora
+    horaInput = document.querySelector(`input.hora-input[data-horario-id="${horarioId}"]`);
+    
+    if (!dateInput || !horaInput) {
+        console.error('No se encontraron inputs');
+        alert('Error: No se encontraron los campos');
+        return;
+    }
+    
+    const fecha = dateInput.value;
+    const hora = horaInput.value;
+    
+    if (!fecha || !hora) {
+        alert('Por favor selecciona fecha y hora');
+        return;
+    }
+    
+    // Enviar petición AJAX
+    const csrftoken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+    
+    fetch('{% url "crear_hora_disponible" %}', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+            'X-CSRFToken': csrftoken,
+        },
+        body: `horario_id=${horarioId}&fecha=${fecha}&hora=${hora}`
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert('✅ Hora registrada correctamente');
+            location.reload();
+        } else {
+            alert('❌ Error: ' + data.error);
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('Error en la solicitud');
+    });
+}
+
+function eliminarHora(horaId) {
+    if (!confirm('¿Estás seguro de que deseas marcar esta hora como ocupada?')) {
+        return;
+    }
+    
+    const csrftoken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+    
+    fetch('{% url "eliminar_hora_disponible" %}', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+            'X-CSRFToken': csrftoken,
+        },
+        body: `hora_id=${horaId}`
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert('✅ Hora marcada como ocupada');
+            location.reload();
+        } else {
+            alert('❌ Error: ' + data.error);
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('Error en la solicitud');
+    });
+}
+
+// Generar opciones de horas dinámicamente
+document.addEventListener('DOMContentLoaded', function() {
+    // Establecer fecha mínima como hoy
+    const dateInputs = document.querySelectorAll('input[type="date"]');
+    const today = new Date().toISOString().split('T')[0];
+    dateInputs.forEach(input => {
+        input.min = today;
+    });
+});
+</script>
 
 {% endblock %}

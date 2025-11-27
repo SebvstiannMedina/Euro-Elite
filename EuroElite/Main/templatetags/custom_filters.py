@@ -13,3 +13,14 @@ def miles_chilenos(value):
         return f"{valor:,}".replace(",", ".")
     except (ValueError, TypeError):
         return value
+
+
+@register.filter
+def get_item(dictionary, key):
+    """
+    Obtiene un item de un diccionario en templates.
+    Uso: {{ dict|get_item:key }}
+    """
+    if isinstance(dictionary, dict):
+        return dictionary.get(key, [])
+    return []

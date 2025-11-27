@@ -46,12 +46,14 @@
         {% endfor %}
       {% endif %}
 
+      <div id="messagesContainer"></div>
+
       <div class="card shadow-sm p-4 border-0 rounded-4 bg-white">
 
         {% if citas %}
           
           {% for c in citas %}
-          <div class="order-card shadow-sm mb-4 p-3 rounded-3 border">
+          <div class="order-card shadow-sm mb-4 p-3 rounded-3 border" data-cita-id="{{ c.id }}">
 
             <div class="row align-items-center gy-3">
 
@@ -62,15 +64,17 @@
                 <div class="flex-grow-1">
                   
                   <!-- Estado -->
-                  {% if c.estado == 'RESERVADA' %}
-                    <span class="badge rounded-pill bg-primary px-3 py-2 mb-1">Reservada</span>
-                  {% elif c.estado == 'EN_PROCESO' %}
-                    <span class="badge rounded-pill bg-warning text-dark px-3 py-2 mb-1">En proceso</span>
-                  {% elif c.estado == 'COMPLETADA' %}
-                    <span class="badge rounded-pill bg-success px-3 py-2 mb-1">Completada</span>
-                  {% elif c.estado == 'CANCELADA' %}
-                    <span class="badge rounded-pill bg-danger px-3 py-2 mb-1">Cancelada</span>
-                  {% endif %}
+                  <div class="badge-container">
+                    {% if c.estado == 'RESERVADA' %}
+                      <span class="badge rounded-pill bg-primary px-3 py-2 mb-1">Reservada</span>
+                    {% elif c.estado == 'EN_PROCESO' %}
+                      <span class="badge rounded-pill bg-warning text-dark px-3 py-2 mb-1">En proceso</span>
+                    {% elif c.estado == 'COMPLETADA' %}
+                      <span class="badge rounded-pill bg-success px-3 py-2 mb-1">Completada</span>
+                    {% elif c.estado == 'CANCELADA' %}
+                      <span class="badge rounded-pill bg-danger px-3 py-2 mb-1">Cancelada</span>
+                    {% endif %}
+                  </div>
 
                   <!-- Fecha -->
                   <div class="order-title mt-1">
@@ -100,12 +104,16 @@
 
               <!-- Acciones -->
               <div class="col-12 col-md-4 text-md-end">
-                {% if c.estado == 'RESERVADA' %}
-                  <a href="{% url 'anular_cita' c.id %}?next={{ request.get_full_path|urlencode }}"
-                     class="btn btn-outline-danger btn-sm px-3">
-                    <i class="fas fa-times-circle me-1"></i> Anular
-                  </a>
-                {% endif %}
+                <div class="actions-container">
+                  {% if c.estado == 'RESERVADA' %}
+                    <button type="button" class="btn btn-outline-danger btn-sm px-3 open-cancel-modal"
+                            data-cita-id="{{ c.id }}"
+                            data-servicio="{{ c.servicio.nombre|escape }}"
+                            data-fecha="{{ c.bloque.inicio|localtime|date:'j \\d\\e F \\a \\l\\a\\s H:i' }}">
+                      <i class="fas fa-times-circle me-1"></i> Anular
+                    </button>
+                  {% endif %}
+                </div>
               </div>
 
             </div>
@@ -136,5 +144,113 @@
 .order-subtitle { color: #6b7280; font-size: .9rem; }
 .list-group-item.active { font-weight: 600; }
 </style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  // Single global cancel modal to avoid flicker
+  const openButtons = document.querySelectorAll('.open-cancel-modal');
+  if (!openButtons.length) return;
+
+  // Create or get global modal HTML at the end of the body
+  let globalModal = document.getElementById('modalCancelarGlobal');
+  if (!globalModal) {
+    const modalHtml = `
+    <div class="modal fade" id="modalCancelarGlobal" tabindex="-1" data-bs-backdrop="static" data-bs-keyboard="false">
+      <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+          <div class="modal-header border-0">
+            <h5 class="modal-title">¿Cancelar cita?</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+          </div>
+          <div class="modal-body">
+            <p>¿Estás seguro de que deseas cancelar esta cita?</p>
+            <div class="bg-light p-3 rounded">
+              <small class="d-block"><strong class="modal-servicio"></strong></small>
+              <small class="d-block modal-fecha"></small>
+            </div>
+            <p class="text-muted mt-3 mb-0"><small>Esta acción es irreversible. Podrás agendar otro horario después.</small></p>
+          </div>
+          <div class="modal-footer border-0">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">No, mantener cita</button>
+            <button type="button" class="btn btn-danger" id="confirmCancelBtn">Sí, cancelar cita</button>
+          </div>
+        </div>
+      </div>
+    </div>`;
+    const wrapper = document.createElement('div');
+    wrapper.innerHTML = modalHtml;
+    document.body.appendChild(wrapper.firstElementChild);
+    globalModal = document.getElementById('modalCancelarGlobal');
+  }
+
+  const bsGlobalModal = new bootstrap.Modal(globalModal);
+  let currentCitaId = null;
+
+  function getCookie(name) {
+    const value = `; ${document.cookie}`;
+    const parts = value.split(`; ${name}=`);
+    if (parts.length === 2) return parts.pop().split(';').shift();
+  }
+
+  openButtons.forEach(btn => {
+    btn.addEventListener('click', function (e) {
+      e.preventDefault();
+      currentCitaId = this.dataset.citaId;
+      const servicio = this.dataset.servicio || '';
+      const fecha = this.dataset.fecha || '';
+      globalModal.querySelector('.modal-servicio').textContent = servicio;
+      globalModal.querySelector('.modal-fecha').textContent = fecha;
+      bsGlobalModal.show();
+    });
+  });
+
+  const confirmBtn = document.getElementById('confirmCancelBtn');
+  confirmBtn.addEventListener('click', function () {
+    if (!currentCitaId) return;
+    const btn = this;
+    btn.disabled = true;
+
+    fetch(`/citas/${currentCitaId}/anular/`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-CSRFToken': getCookie('csrftoken') || ''
+      },
+      body: JSON.stringify({})
+    })
+    .then(r => r.json())
+    .then(data => {
+      btn.disabled = false;
+      bsGlobalModal.hide();
+      if (data.success) {
+        const citaCard = document.querySelector(`[data-cita-id="${currentCitaId}"]`);
+        if (citaCard) {
+          const badgeContainer = citaCard.querySelector('.badge-container');
+          if (badgeContainer) badgeContainer.innerHTML = '<span class="badge rounded-pill bg-danger px-3 py-2 mb-1">Cancelada</span>';
+          const actions = citaCard.querySelector('.actions-container');
+          if (actions) actions.innerHTML = '';
+        }
+        const messagesContainer = document.getElementById('messagesContainer');
+        if (messagesContainer && messagesContainer.querySelector('.alert-success') === null) {
+          const alertDiv = document.createElement('div');
+          alertDiv.className = 'alert alert-success alert-dismissible fade show';
+          alertDiv.role = 'alert';
+          alertDiv.innerHTML = `La cita fue cancelada correctamente.<button type="button" class="btn-close" data-bs-dismiss="alert"></button>`;
+          messagesContainer.appendChild(alertDiv);
+        }
+      } else {
+        alert('Error: ' + (data.error || 'Error desconocido'));
+      }
+    })
+    .catch(err => {
+      btn.disabled = false;
+      bsGlobalModal.hide();
+      console.error('Error:', err);
+      alert('Error al cancelar la cita');
+    })
+    .finally(() => { currentCitaId = null; });
+  });
+});
+</script>
 
 {% endblock %}
