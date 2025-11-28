@@ -1,4 +1,4 @@
-{% load static %}
+﻿{% load static %}
 
 <!DOCTYPE html>
 <html lang="en">
@@ -38,7 +38,7 @@
         justify-content: space-between;
         width: 100%;
         position: relative;
-        /* importante para que el menú se posicione debajo */
+        /* importante para que el menÃº se posicione debajo */
         z-index: 1000;
     }
 
@@ -87,53 +87,212 @@
         cursor: pointer;
     }
 
-    /* Responsive - Menú desplegable debajo del navbar */
+    /* Responsive - menu desplegable debajo del navbar */
     @media (max-width: 992px) {
+        body.menu-open {
+            overflow: hidden;
+        }
+
         .navbar-container {
-            flex-wrap: wrap;
+            flex-wrap: nowrap;
+            padding: 0 16px;
         }
 
         .navbar-logo img {
-            height: 70px;
+            height: 64px;
         }
 
-        .navbar-menu {
-            display: none;
-            flex-direction: column;
-            position: absolute;
-            top: 100%;
-            /* justo debajo del navbar */
-            left: 0;
-            width: 100%;
-            /* ocupa todo el ancho */
-            background: linear-gradient(135deg, #000000, #5777b8);
-            padding: 20px 0;
-            text-align: center;
-            z-index: 999;
-        }
-
-        .navbar-menu.show {
-            display: flex;
-        }
-
-        .navbar-menu li {
-            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-            width: 100%;
-        }
-
-        .navbar-menu a {
-            font-size: 1.1rem;
-            padding: 12px;
-            display: block;
-            width: 100%;
+        .navbar-actions {
+            gap: 10px;
         }
 
         .navbar-toggle {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 44px;
+            height: 44px;
+            border-radius: 0;
+            border: none;
+            background: transparent;
+            box-shadow: none;
+        }
+
+        .navbar-menu {
+            display: flex;
+            flex-direction: column;
+            position: fixed;
+            top: 0;
+            right: 0;
+            width: min(360px, 86vw);
+            height: 100vh;
+            padding: 22px 18px 32px;
+            align-items: stretch;
+            background:
+                radial-gradient(circle at 20% 20%, rgba(87, 119, 184, 0.35), transparent 32%),
+                radial-gradient(circle at 80% 0%, rgba(227, 30, 36, 0.28), transparent 26%),
+                linear-gradient(160deg, #0a1024, #1f2f55 55%, #1b2c4d);
+            backdrop-filter: blur(10px);
+            box-shadow: -10px 0 38px rgba(0, 0, 0, 0.32);
+            border-left: 1px solid rgba(255, 255, 255, 0.08);
+            gap: 12px;
+            text-align: left;
+            transform: translateX(100%);
+            opacity: 0;
+            pointer-events: none;
+            transition: transform 0.35s ease, opacity 0.3s ease;
+            z-index: 1100;
+        }
+
+        .navbar-menu.show {
+            transform: translateX(0);
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .navbar-menu li {
+            border: none;
+            width: 100%;
+            list-style: none;
+        }
+
+        .navbar-menu>li:not(.mobile-menu-heading):not(.mobile-user-card)>a {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 14px 16px;
+            width: 100%;
+            font-size: 1rem;
+            letter-spacing: 0.4px;
+            background: rgba(255, 255, 255, 0.06);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 14px;
+            box-shadow: 0 16px 36px rgba(0, 0, 0, 0.18);
+            color: #fff;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .navbar-menu>li:not(.mobile-menu-heading):not(.mobile-user-card)>a::after {
+            content: "\f105";
+            font-family: "Font Awesome 6 Free";
+            font-weight: 900;
+            color: rgba(255, 255, 255, 0.65);
+        }
+
+        .navbar-menu>li:not(.mobile-menu-heading):not(.mobile-user-card)>a:hover {
+            background: rgba(255, 255, 255, 0.14);
+            border-color: rgba(255, 255, 255, 0.18);
+            transform: translateY(-1px);
+        }
+
+        .mobile-menu-heading {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 4px 4px 10px;
+            margin-bottom: 2px;
+        }
+
+        .mobile-menu-heading .mobile-menu-logo {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: transparent;
+            border: none;
+            box-shadow: none;
+            border-radius: 0;
+            width: auto;
+            height: auto;
+            padding: 0;
+        }
+
+        .mobile-menu-heading .mobile-menu-logo img {
+            width: 40px;
+            height: 40px;
+            object-fit: contain;
+        }
+
+        .mobile-menu-title {
+            display: flex;
+            flex-direction: column;
+            color: #fff;
+            line-height: 1.2;
+        }
+
+        .mobile-menu-title span {
+            font-weight: 700;
+            letter-spacing: 0.8px;
+        }
+
+        .mobile-menu-title small {
+            color: rgba(255, 255, 255, 0.75);
+            font-size: 0.9rem;
+        }
+
+        .mobile-user-card {
+            padding: 14px;
+            margin-top: 6px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 14px;
+            box-shadow: 0 14px 30px rgba(0, 0, 0, 0.2);
+            color: #fff;
+        }
+
+        .mobile-user-card .user-name {
+            font-weight: 600;
+            margin-bottom: 10px;
+        }
+
+        .mobile-user-actions a,
+        .mobile-user-actions button {
             display: block;
+            width: 100%;
+            text-align: left;
+            padding: 12px 14px;
+            margin-bottom: 8px;
+            border-radius: 12px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            background: rgba(255, 255, 255, 0.08);
+            color: #fff;
+            text-decoration: none;
+        }
+
+        .mobile-user-actions form {
+            margin: 0;
+        }
+
+        .mobile-user-actions button {
+            background: rgba(227, 30, 36, 0.15);
+            border-color: rgba(227, 30, 36, 0.35);
+            color: #ffecef;
+        }
+
+        .mobile-user-actions a:last-child,
+        .mobile-user-actions button:last-child {
+            margin-bottom: 0;
         }
     }
 
-    /* Acciones (Carrito + Usuario + Botón menú) */
+    .mobile-menu-overlay {
+        position: fixed;
+        inset: 0;
+        background: radial-gradient(circle at 20% 20%, rgba(87, 119, 184, 0.25), transparent 30%),
+            rgba(5, 10, 25, 0.65);
+        backdrop-filter: blur(6px);
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity 0.3s ease;
+        z-index: 900;
+    }
+
+    .mobile-menu-overlay.show {
+        opacity: 1;
+        pointer-events: auto;
+    }
+
+    /* Acciones (Carrito + Usuario + BotÃ³n menÃº) */
     .navbar-actions {
         display: flex !important;
         align-items: center;
@@ -272,35 +431,49 @@
                 <img src="{% static 'img/LogoApp.png' %}" alt="Logo" class="navbar-logo">
             </div>
 
-            <!-- Menú principal -->
+            <!-- Menu principal -->
             <ul class="navbar-menu" id="navbar-menu">
+                <li class="mobile-menu-heading d-lg-none">
+                    <div class="mobile-menu-logo">
+                        <img src="{% static 'img/LogoApp.png' %}" alt="Euro Elite">
+                    </div>
+                    <div class="mobile-menu-title">
+                        <span>Euro Elite</span>
+                    </div>
+                </li>
                 <li><a href="{% url 'home' %}">INICIO</a></li>
                 <li><a href="{% url 'productos' %}">PRODUCTOS</a></li>
                 <li><a href="{% url 'agendar' %}">SERVICIOS</a></li>
-                <li><a href="{% url 'vehiculos_venta' %}">VEHÍCULOS</a></li>
+                <li><a href="{% url 'vehiculos_venta' %}">VEHICULOS</a></li>
                 <li><a href="{% url 'nosotros' %}">NOSOTROS</a></li>
                 <li><a href="{% url 'equipo' %}">EQUIPO</a></li>
 
-                <!-- Usuario en móvil -->
-                <li class="d-lg-none">
+                <!-- Usuario en movil -->
+                <li class="d-lg-none mobile-user-card">
                     {% if user.is_authenticated %}
-                    <span class="text-white">Hola, {{ user.first_name }}</span>
-                    <a href="{% url 'perfil' %}">Mi Perfil</a>
-                    <form action="{% url 'logout' %}" method="post" style="display:inline;">
-                        {% csrf_token %}
-                        <button type="submit" class="dropdown-item">Cerrar Sesión</button>
-                    </form>
+                    <div class="user-name">Hola, {{ user.first_name }}</div>
+                    <div class="mobile-user-actions">
+                        <a href="{% url 'perfil' %}">Mi Perfil</a>
+                        <form action="{% url 'logout' %}" method="post">
+                            {% csrf_token %}
+                            <button type="submit">Cerrar Sesi&oacute;n</button>
+                        </form>
+                    </div>
                     {% else %}
-                    <a href="{% url 'login' %}">Iniciar Sesión</a>
-                    <a href="{% url 'registro' %}">Registrarse</a>
+                    <div class="user-name">Bienvenido</div>
+                    <div class="mobile-user-actions">
+                        <a href="{% url 'login' %}">Iniciar Sesi&oacute;n</a>
+                        <a href="{% url 'registro' %}">Registrarse</a>
+                    </div>
                     {% endif %}
                 </li>
             </ul>
 
-            <!-- Acciones (Botón menú + Carrito + Usuario) -->
+
+            <!-- Acciones (BotÃ³n menÃº + Carrito + Usuario) -->
             <div class="navbar-actions">
-                <!-- Botón móvil -->
-                <button class="navbar-toggle" onclick="toggleMobileMenu()" aria-label="Abrir menú">
+                <!-- BotÃ³n mÃ³vil -->
+                <button class="navbar-toggle" onclick="toggleMobileMenu()" aria-label="Abrir menu">
                     <i class="fas fa-bars"></i>
                 </button>
 
@@ -323,7 +496,7 @@
                         <a href="{% url 'perfil' %}"><i class="fas fa-user-circle"></i> Mi Perfil</a>
                         <a href="{% url 'mis_pedidos' %}"><i class="fas fa-shopping-bag"></i> Mis Pedidos</a>
                         <a href="{% url 'mis_citas' %}"><i class="fas fa-calendar-check"></i> Mis Citas</a>
-                        <!-- <a href="{% url 'mis_vehiculos' %}"><i class="fas fa-car"></i> Mis Vehículos</a> -->
+                        <!-- <a href="{% url 'mis_vehiculos' %}"><i class="fas fa-car"></i> Mis VehÃ­culos</a> -->
                         
                         <!-- Links para repartidores -->
                         {% if user.rol == 'REPARTIDOR' %}
@@ -343,10 +516,10 @@
                         <hr style="margin: 8px 0; border-color: #e0e0e0;">
                         <form action="{% url 'logout' %}" method="post" style="margin: 0;">
                             {% csrf_token %}
-                            <button type="submit" class="dropdown-item logout-btn"><i class="fas fa-sign-out-alt"></i> Cerrar Sesión</button>
+                            <button type="submit" class="dropdown-item logout-btn"><i class="fas fa-sign-out-alt"></i> Cerrar SesiÃ³n</button>
                         </form>
                         {% else %}
-                        <a href="{% url 'login' %}"><i class="fas fa-sign-in-alt"></i> Iniciar Sesión</a>
+                        <a href="{% url 'login' %}"><i class="fas fa-sign-in-alt"></i> Iniciar SesiÃ³n</a>
                         <a href="{% url 'registro' %}"><i class="fas fa-user-plus"></i> Registrarse</a>
                         {% endif %}
                     </div>
@@ -380,10 +553,10 @@
                         
                         <!-- Dashboard y Reportes -->
                         <a href="{% url 'admin_asignacion' %}">
-                            <i class="fas fa-file-alt"></i> Asignación Dashboard
+                            <i class="fas fa-file-alt"></i> Asignaci&oacute;n Dashboard
                         </a>
                         <a href="{% url 'estadisticas' %}">
-                            <i class="fa-solid fa-chart-pie"></i> Estadísticas
+                            <i class="fa-solid fa-chart-pie"></i> Estad&iacute;sticas
                         </a>
                         <a href="{% url 'administrar_horarios' %}">
                             <i class="fas fa-file-alt"></i> Administrar Horarios
@@ -391,13 +564,13 @@
                         
                         <hr style="margin: 8px 0; border-color: #e0e0e0;">
                         
-                        <!-- Gestión de Productos -->
+                        <!-- Gesti&oacute;n de Productos -->
                         <div class="dropdown-header" style="font-size: 0.85rem; color: #666;">Productos</div>
                         <a href="{% url 'agregar_editar' %}">
                             <i class="fas fa-box"></i> Gestionar Productos
                         </a>
                         <a href="{% url 'gestionar_codigos_descuento' %}">
-                            <i class="fas fa-tags"></i> Códigos de Descuento
+                            <i class="fas fa-tags"></i> C&oacute;digos de Descuento
                         </a>
                         
                         <hr style="margin: 8px 0; border-color: #e0e0e0;">
@@ -427,21 +600,21 @@
                         <!-- Contenido -->
                         <div class="dropdown-header" style="font-size: 0.85rem; color: #666;">Contenido</div>
                         <a href="{% url 'admin_resenas' %}">
-                            <i class="fas fa-star"></i> Reseñas
+                            <i class="fas fa-star"></i> Rese&ntilde;as
                         </a>
                         <a href="{% url 'admin_contactos' %}">
                             <i class="fas fa-envelope"></i> Mensajes de Contacto
                         </a>
                         <a href="{% url 'admin_galeria_nosotros' %}">
-                            <i class="fas fa-images"></i> Galería Nosotros
+                            <i class="fas fa-images"></i> Galer&iacute;a Nosotros
                         </a>
                         
                         <hr style="margin: 8px 0; border-color: #e0e0e0;">
                         
-                        <!-- Vehículos -->
-                        <div class="dropdown-header" style="font-size: 0.85rem; color: #666;">Vehículos</div>
+                        <!-- Vehiculos -->
+                        <div class="dropdown-header" style="font-size: 0.85rem; color: #666;">Veh&iacute;culos</div>
                         <a href="{% url 'revisar_vehiculo' %}">
-                            <i class="fas fa-car"></i> Revisar Vehículos en Venta
+                            <i class="fas fa-car"></i> Revisar Veh&iacute;culos en Venta
                         </a>
                         
                         <hr style="margin: 8px 0; border-color: #e0e0e0;">
@@ -453,9 +626,9 @@
                         
                         <hr style="margin: 8px 0; border-color: #e0e0e0;">
                         
-                        <!-- Configuración 
+                        <!-- ConfiguraciÃ³n 
                         <a href="{% url 'admin_configuracion' %}">
-                            <i class="fas fa-cogs"></i> Configuración
+                            <i class="fas fa-cogs"></i> ConfiguraciÃ³n
                         </a>-->
                     </div>
                 </div>
@@ -463,6 +636,7 @@
             </div>
         </div>
     </nav>
+    <div class="mobile-menu-overlay" id="mobile-menu-overlay" onclick="toggleMobileMenu(false)"></div>
 
     <!-- CONTENIDO PRINCIPAL -->
     {% block content %}
@@ -473,7 +647,7 @@
         <div class="footer-container">
             <div class="footer-section">
                 <h3>Euro Elite</h3>
-                <p>Tu tienda especializada en repuestos europeos de alta calidad. Más de 10 años de experiencia en el
+                <p>Tu tienda especializada en repuestos europeos de alta calidad. MÃ¡s de 10 aÃ±os de experiencia en el
                     mercado automotriz.</p>
                 <div class="social-icons">
                     <a href="#" style="margin-right: 1rem;"><i class="fab fa-facebook-f"></i></a>
@@ -495,10 +669,10 @@
             <div class="footer-section">
                 <h3>Servicios</h3>
                 <ul>
-                    <li><a href="{% url 'agendar' %}">Instalación</a></li>
-                    <li><a href="{% url 'agendar' %}">Mantención</a></li>
-                    <li><a href="{% url 'agendar' %}">Diagnóstico</a></li>
-                    <li><a href="{% url 'agendar' %}">Garantía</a></li>
+                    <li><a href="{% url 'agendar' %}">Instalaci&oacute;n</a></li>
+                    <li><a href="{% url 'agendar' %}">Mantenci&oacute;n</a></li>
+                    <li><a href="{% url 'agendar' %}">Diagn&oacute;stico</a></li>
+                    <li><a href="{% url 'agendar' %}">Garant&iacute;a</a></li>
                     <li><a href="{% url 'publicar_vehiculo' %}">Vende tu Auto</a></li>
                 </ul>
             </div>
@@ -518,16 +692,16 @@
             <div class="footer-section">
                 <h3>Legal</h3>
                 <ul>
-                    <li><a href="{% url 'terminos' %}">Términos y Condiciones</a></li>
-                    <li><a href="{% url 'privacidad' %}">Política de Privacidad</a></li>
-                    <li><a href="{% url 'privacidad' %}">Política de Devoluciones</a></li>
-                    <li><a href="{% url 'resenas' %}">Reseñas de Clientes</a></li>
+                    <li><a href="{% url 'terminos' %}">T&eacute;rminos y Condiciones</a></li>
+                    <li><a href="{% url 'privacidad' %}">Pol&iacute;tica de Privacidad</a></li>
+                    <li><a href="{% url 'privacidad' %}">Pol&iacute;tica de Devoluciones</a></li>
+                    <li><a href="{% url 'resenas' %}">Rese&ntilde;as de Clientes</a></li>
                 </ul>
             </div>
         </div>
 
         <div class="footer-bottom" style="text-align: center;margin: 0.25rem;">
-            <p>&copy; 2025 Euro Elite. Todos los derechos reservados. | Diseñado con ❤️ para los amantes del automóvil
+            <p>&copy; 2025 Euro Elite. Todos los derechos reservados. | Dise&ntilde;ado con &hearts; para los amantes del autom&oacute;vil
             </p>
         </div>
     </footer>
@@ -541,10 +715,46 @@
         integrity="sha384-FKyoEForCGlyvwx9Hj09JcYn3nv7wiPVlz7YYwJrWVcXK/BmnVDxM+D2scQbITxI"
         crossorigin="anonymous"></script>
     <script>
-        function toggleMobileMenu() {
+        function toggleMobileMenu(forceState) {
             const menu = document.getElementById("navbar-menu");
-            menu.classList.toggle("show");
+            const overlay = document.getElementById("mobile-menu-overlay");
+            const toggle = document.querySelector(".navbar-toggle i");
+            if (!menu) return;
+
+            const shouldOpen = typeof forceState === "boolean" ? forceState : !menu.classList.contains("show");
+            menu.classList.toggle("show", shouldOpen);
+
+            if (overlay) {
+                overlay.classList.toggle("show", shouldOpen);
+            }
+
+            document.body.classList.toggle("menu-open", shouldOpen);
+
+            if (toggle) {
+                toggle.classList.toggle("fa-bars", !shouldOpen);
+                toggle.classList.toggle("fa-times", shouldOpen);
+            }
         }
+
+        document.querySelectorAll("#navbar-menu a").forEach(link => {
+            link.addEventListener("click", () => {
+                if (window.innerWidth <= 992) {
+                    toggleMobileMenu(false);
+                }
+            });
+        });
+
+        window.addEventListener("resize", () => {
+            if (window.innerWidth > 992) {
+                toggleMobileMenu(false);
+            }
+        });
+
+        document.addEventListener("keydown", (event) => {
+            if (event.key === "Escape") {
+                toggleMobileMenu(false);
+            }
+        });
     </script>
     {% block extra_scripts %}{% endblock %}
 </body>
