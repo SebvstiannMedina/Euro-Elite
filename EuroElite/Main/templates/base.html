@@ -29,15 +29,27 @@
 </head>
 
 <style>
+    :root {
+        --navbar-height: 160px;
+    }
+
+    body {
+        padding-top: var(--navbar-height);
+    }
+
     /* NAVBAR */
     .navbar {
         background: linear-gradient(135deg, #000000, #5777b8);
         padding: 25px 0;
         box-shadow: 0 6px 20px rgba(6, 43, 97, 0.15);
-        display: ruby-text;
+        display: block;
         justify-content: space-between;
         width: 100%;
-        position: relative;
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        margin: 0;
         /* importante para que el menÃº se posicione debajo */
         z-index: 1000;
     }
@@ -89,6 +101,10 @@
 
     /* Responsive - menu desplegable debajo del navbar */
     @media (max-width: 992px) {
+        :root {
+            --navbar-height: 120px;
+        }
+
         body.menu-open {
             overflow: hidden;
         }
@@ -770,6 +786,22 @@
         integrity="sha384-FKyoEForCGlyvwx9Hj09JcYn3nv7wiPVlz7YYwJrWVcXK/BmnVDxM+D2scQbITxI"
         crossorigin="anonymous"></script>
     <script>
+        function updateNavbarHeight() {
+            const navbar = document.querySelector(".navbar");
+            if (!navbar) return;
+            document.documentElement.style.setProperty("--navbar-height", `${navbar.offsetHeight}px`);
+        }
+
+        window.addEventListener("load", updateNavbarHeight);
+        window.addEventListener("resize", () => {
+            clearTimeout(window.__navbarHeightTimer);
+            window.__navbarHeightTimer = setTimeout(updateNavbarHeight, 150);
+        });
+        document.addEventListener("DOMContentLoaded", updateNavbarHeight);
+        if (document.fonts && document.fonts.ready) {
+            document.fonts.ready.then(updateNavbarHeight).catch(() => { });
+        }
+
         function toggleMobileMenu(forceState) {
             const menu = document.getElementById("navbar-menu");
             const overlay = document.getElementById("mobile-menu-overlay");
