@@ -273,6 +273,16 @@
         .mobile-user-actions button:last-child {
             margin-bottom: 0;
         }
+
+        .delivery-icon .delivery-link {
+            width: 44px;
+            height: 44px;
+            border-radius: 12px;
+        }
+
+        .delivery-icon i {
+            font-size: 1.05rem;
+        }
     }
 
     .mobile-menu-overlay {
@@ -321,6 +331,42 @@
         font-weight: bold;
         border-radius: 50%;
         padding: 2px 6px;
+    }
+
+    /* Botón de acceso rápido a entregas (repartidores) */
+    .delivery-icon .delivery-link {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 48px;
+        height: 48px;
+        border-radius: 14px;
+        background: linear-gradient(140deg, #5eead4, #22c55e 55%, #16a34a);
+        border: 1px solid rgba(255, 255, 255, 0.14);
+        box-shadow: 0 10px 24px rgba(34, 197, 94, 0.32);
+        color: #f8fff3;
+        text-decoration: none;
+        position: relative;
+        overflow: hidden;
+        transition: transform 0.2s ease, box-shadow 0.25s ease, background 0.3s ease;
+    }
+
+    .delivery-icon .delivery-link::after {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background: radial-gradient(circle at 30% 30%, rgba(255, 255, 255, 0.38), transparent 45%);
+        pointer-events: none;
+    }
+
+    .delivery-icon .delivery-link:hover {
+        transform: translateY(-2px) scale(1.02);
+        box-shadow: 0 14px 32px rgba(34, 197, 94, 0.42);
+    }
+
+    .delivery-icon i {
+        font-size: 1.2rem;
+        color: #f7fff9;
     }
 
     .dropdown-item {
@@ -501,7 +547,7 @@
                         <!-- Links para repartidores -->
                         {% if user.rol == 'REPARTIDOR' %}
                         <hr style="margin: 8px 0; border-color: #e0e0e0;">
-                        <a href="{% url 'admin_entregas' %}" style="color: #4CAF50;"><i class="fas fa-box"></i> Mis Entregas</a>
+                        <a href="{% url 'admin_entregas' %}" style="color: #22c55e;"><i class="fas fa-truck-fast"></i> Mis Entregas</a>
                         {% endif %}
                         
                         <!-- Links para asignadores -->
@@ -525,11 +571,20 @@
                     </div>
                 </div>
 
+                <!-- Delivery Icon mobile (visible solo en móvil para repartidores) -->
+                {% if user.is_authenticated and user.rol == 'REPARTIDOR' %}
+                <div class="delivery-icon d-lg-none">
+                    <a href="{% url 'admin_entregas' %}" title="Mis Entregas" class="delivery-link" aria-label="Ir a mis entregas">
+                        <i class="fas fa-truck-fast"></i>
+                    </a>
+                </div>
+                {% endif %}
+
                 <!-- Delivery Icon (solo visible para repartidores) -->
                 {% if user.is_authenticated and user.rol == 'REPARTIDOR' %}
                 <div class="delivery-icon d-none d-lg-block">
-                    <a href="{% url 'admin_entregas' %}" title="Mis Entregas" style="color: #4CAF50; text-decoration: none;">
-                        <i class="fas fa-box"></i>
+                    <a href="{% url 'admin_entregas' %}" title="Mis Entregas" class="delivery-link" aria-label="Ir a mis entregas">
+                        <i class="fas fa-truck-fast"></i>
                     </a>
                 </div>
                 {% endif %}
