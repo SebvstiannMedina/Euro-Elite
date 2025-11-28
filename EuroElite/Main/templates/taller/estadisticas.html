@@ -12,87 +12,129 @@
       <h2 class="fw-bold text-primary mb-1">
         <i class="fa-solid fa-chart-line me-2"></i> Estadísticas de Ventas y Ganancias
       </h2>
-      <p class="text-muted mb-0">Visualiza el rendimiento mensual y descarga reportes financieros detallados.</p>
+      <p class="text-muted mb-0">
+        Visualiza el rendimiento mensual, el detalle financiero y los productos más vendidos.
+      </p>
     </div>
     <a href="{% url 'descargar_excel_pedidos' %}" class="btn btn-success shadow-sm">
       <i class="fa-solid fa-file-excel me-2"></i> Descargar Excel
     </a>
   </div>
 
-
+  <!-- 🔹 Filtros -->
   <form method="get" class="card border-0 shadow-sm rounded-4 p-3 mb-5 bg-light">
     <div class="row g-3 align-items-end">
       <div class="col-md-4">
-        <label for="fecha_inicio" class="form-label fw-semibold">Desde</label>
-        <input type="date" id="fecha_inicio" name="fecha_inicio" class="form-control" value="{{ request.GET.fecha_inicio }}">
+        <label class="form-label fw-semibold">Desde</label>
+        <input type="date" name="fecha_inicio" class="form-control"
+               value="{{ request.GET.fecha_inicio }}">
       </div>
       <div class="col-md-4">
-        <label for="fecha_fin" class="form-label fw-semibold">Hasta</label>
-        <input type="date" id="fecha_fin" name="fecha_fin" class="form-control" value="{{ request.GET.fecha_fin }}">
+        <label class="form-label fw-semibold">Hasta</label>
+        <input type="date" name="fecha_fin" class="form-control"
+               value="{{ request.GET.fecha_fin }}">
       </div>
       <div class="col-md-3">
-        <label for="estado" class="form-label fw-semibold">Estado del Pedido</label>
-        <select id="estado" name="estado" class="form-select">
+        <label class="form-label fw-semibold">Estado del Pedido</label>
+        <select name="estado" class="form-select">
           <option value="">Todos</option>
           {% for key, val in estados %}
-            <option value="{{ key }}" {% if request.GET.estado == key %}selected{% endif %}>{{ val }}</option>
+            <option value="{{ key }}" {% if request.GET.estado == key %}selected{% endif %}>
+              {{ val }}
+            </option>
           {% endfor %}
         </select>
       </div>
       <div class="col-md-1 d-grid">
-        <button type="submit" class="btn btn-primary">
+        <button class="btn btn-primary">
           <i class="fa-solid fa-filter me-1"></i> Filtrar
         </button>
       </div>
     </div>
   </form>
 
-
+  <!-- 🔹 KPIs -->
   <div class="row g-4 mb-5">
     <div class="col-md-3">
-      <div class="card border-0 shadow-sm rounded-4 p-4 text-center">
+      <div class="card shadow-sm p-4 text-center rounded-4">
         <h6 class="text-muted">Ganancia Total</h6>
         <h3 class="fw-bold text-success">${{ total_ganancia|miles_chilenos }}</h3>
       </div>
     </div>
     <div class="col-md-3">
-      <div class="card border-0 shadow-sm rounded-4 p-4 text-center">
+      <div class="card shadow-sm p-4 text-center rounded-4">
         <h6 class="text-muted">IVA Total</h6>
         <h3 class="fw-bold text-info">${{ total_iva|miles_chilenos }}</h3>
       </div>
     </div>
     <div class="col-md-3">
-      <div class="card border-0 shadow-sm rounded-4 p-4 text-center">
+      <div class="card shadow-sm p-4 text-center rounded-4">
         <h6 class="text-muted">Pedidos Registrados</h6>
         <h3 class="fw-bold text-dark">{{ cantidad_pedidos }}</h3>
       </div>
     </div>
     <div class="col-md-3">
-      <div class="card border-0 shadow-sm rounded-4 p-4 text-center">
+      <div class="card shadow-sm p-4 text-center rounded-4">
         <h6 class="text-muted">Mes más Rentable</h6>
         <h4 class="fw-bold text-primary">{{ mes_max }}</h4>
       </div>
     </div>
   </div>
 
+  <!-- 🔹 Gráficos -->
   <div class="row g-4 mb-5">
     <div class="col-lg-7">
-      <div class="card border-0 shadow-lg rounded-4 p-4">
+      <div class="card shadow-lg p-4 rounded-4">
         <h5 class="fw-bold mb-3">Ganancias por Mes</h5>
         <canvas id="gananciasChart" height="150"></canvas>
       </div>
     </div>
     <div class="col-lg-5">
-      <div class="card border-0 shadow-lg rounded-4 p-4">
+      <div class="card shadow-lg p-4 rounded-4">
         <h5 class="fw-bold mb-3">Tendencia de Ingresos</h5>
         <canvas id="tendenciaChart" height="150"></canvas>
       </div>
     </div>
   </div>
 
+  <!-- 🔹 Ventas por producto -->
+  <div class="card shadow-sm rounded-4 p-4 mb-5">
+    <h5 class="fw-bold mb-3">Ventas por Producto</h5>
+    <p class="text-muted" style="font-size: .9rem;">
+      Unidades vendidas e ingresos generados por cada producto.
+    </p>
+    <div class="table-responsive">
+      <table class="table table-hover align-middle">
+        <thead class="table-light">
+          <tr>
+            <th>Producto</th>
+            <th>Unidades Vendidas</th>
+            <th>Ingresos</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for v in ventas_por_producto %}
+          <tr>
+            <td>{{ v.nombre_producto }}</td>
+            <td>{{ v.total_unidades }}</td>
+            <td>${{ v.total_ingresos|miles_chilenos }}</td>
+          </tr>
+          {% empty %}
+          <tr>
+            <td colspan="3" class="text-center text-muted py-3">
+              No hay productos vendidos en este periodo.
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
 
-  <div class="card border-0 shadow-sm rounded-4 p-4">
+  <!-- 🔹 Detalle financiero de pedidos -->
+  <div class="card shadow-sm rounded-4 p-4">
     <h5 class="fw-bold mb-3">Detalle Financiero de Pedidos</h5>
+
     <div class="table-responsive">
       <table class="table table-hover align-middle">
         <thead class="table-light">
@@ -103,7 +145,8 @@
             <th>Precio</th>
             <th>Costo</th>
             <th>Ganancia</th>
-            <th>IVA (19%)</th>
+            <th>IVA</th>
+            <th>Productos</th>
             <th>Fecha</th>
           </tr>
         </thead>
@@ -114,33 +157,47 @@
             <td>{{ p.usuario.get_full_name|default:p.usuario.email }}</td>
             <td><span class="badge bg-secondary">{{ p.get_estado_display }}</span></td>
             <td>${{ p.total|miles_chilenos }}</td>
-            <td>${{ p.costo_total|default:"0"|miles_chilenos }}</td>
-            <td class="fw-semibold text-success">${{ p.ganancia|default:"0"|miles_chilenos }}</td>
-            <td>${{ p.iva|default:"0"|miles_chilenos }}</td>
+            <td>${{ p.costo_total|miles_chilenos }}</td>
+            <td class="fw-semibold text-success">${{ p.ganancia|miles_chilenos }}</td>
+            <td>${{ p.iva|miles_chilenos }}</td>
+
+            <!-- 🔥 Productos del pedido -->
+            <td>
+              {% for item in p.items.all %}
+                {{ item.nombre_producto }} (x{{ item.cantidad }})
+                {% if not forloop.last %}, {% endif %}
+              {% endfor %}
+            </td>
+
             <td>{{ p.creado|date:"d/m/Y H:i" }}</td>
           </tr>
           {% empty %}
           <tr>
-            <td colspan="8" class="text-center text-muted py-3">No hay pedidos registrados con los filtros aplicados.</td>
+            <td colspan="9" class="text-center text-muted py-3">
+              No hay pedidos registrados con los filtros aplicados.
+            </td>
           </tr>
           {% endfor %}
         </tbody>
       </table>
     </div>
   </div>
+
 </div>
 
 <!-- Chart.js -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
 <script>
   const labels = {{ labels|safe }};
   const values = {{ values|safe }};
 
-  // Gráfico de barras
+  // Barras: Ganancias por mes
   const ctx1 = document.getElementById('gananciasChart').getContext('2d');
   const gradient = ctx1.createLinearGradient(0, 0, 0, 300);
   gradient.addColorStop(0, 'rgba(37, 99, 235, 0.8)');
   gradient.addColorStop(1, 'rgba(37, 99, 235, 0.2)');
+
   new Chart(ctx1, {
     type: 'bar',
     data: {
@@ -160,8 +217,9 @@
     }
   });
 
-  // Gráfico de línea
+  // Línea: Tendencia mensual
   const ctx2 = document.getElementById('tendenciaChart').getContext('2d');
+
   new Chart(ctx2, {
     type: 'line',
     data: {

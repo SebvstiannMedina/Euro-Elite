@@ -1422,23 +1422,79 @@ def confirmacion_datos(request):
 def olvide_contra(request):
     return render(request, 'taller/olvide_contra.html')
 
+from datetime import datetime
+from decimal import Decimal
+from django.shortcuts import render
+from django.db.models import Sum, F, ExpressionWrapper, DecimalField
+from django.db.models.functions import TruncMonth
+
+from Main.models import Pedido, ItemPedido
+
+
 def estadisticas(request):
-    labels = ["Enero 2025", "Febrero 2025", "Marzo 2025"]
-    values = [220000, 330000, 200000]
+    fecha_inicio = request.GET.get("fecha_inicio")
+    fecha_fin = request.GET.get("fecha_fin")
+    estado = request.GET.get("estado")
 
-    # Cálculos previos
-    total = sum(values) if values else 0
-    max_val = max(values) if values else 0
-    mes_max = labels[values.index(max_val)] if values else "N/A"
-    cantidad_pedidos = len(values)
+    pedidos = Pedido.objects.all().order_by("-creado")
 
-    return render(request, "taller/estadisticas.html", {
+
+    if fecha_inicio:
+        pedidos = pedidos.filter(creado__date__gte=fecha_inicio)
+    if fecha_fin:
+        pedidos = pedidos.filter(creado__date__lte=fecha_fin)
+    if estado:
+        pedidos = pedidos.filter(estado=estado)
+
+  
+    total_ganancia = pedidos.aggregate(total=Sum("ganancia"))["total"] or 0
+    total_iva = pedidos.aggregate(total=Sum("iva"))["total"] or 0
+    cantidad_pedidos = pedidos.count()
+
+    ingresos_por_mes = (
+        pedidos.annotate(mes=TruncMonth("creado"))
+        .values("mes")
+        .annotate(total=Sum("ganancia"))
+        .order_by("mes")
+    )
+
+    labels = [i["mes"].strftime("%b %Y") for i in ingresos_por_mes]
+    values = [int(i["total"]) for i in ingresos_por_mes]
+
+    mes_max = "Sin datos"
+    if ingresos_por_mes:
+        mejor = max(ingresos_por_mes, key=lambda x: x["total"])
+        mes_max = mejor["mes"].strftime("%B %Y")
+
+    
+    subtotal_expr = ExpressionWrapper(
+        F("precio_unitario") * F("cantidad"),
+        output_field=DecimalField(max_digits=12, decimal_places=2)
+    )
+
+    ventas_por_producto = (
+        ItemPedido.objects.values("nombre_producto")
+        .annotate(
+            total_unidades=Sum("cantidad"),
+            total_ingresos=Sum(subtotal_expr),
+        )
+        .order_by("-total_ingresos")
+    )
+
+    context = {
+        "pedidos": pedidos,
+        "total_ganancia": total_ganancia,
+        "total_iva": total_iva,
+        "cantidad_pedidos": cantidad_pedidos,
         "labels": labels,
         "values": values,
-        "total": total,
         "mes_max": mes_max,
-        "cantidad_pedidos": cantidad_pedidos,
-    })
+        "estados": Pedido.Estado.choices,
+        "ventas_por_producto": ventas_por_producto,
+    }
+
+    return render(request, "estadisticas.html", context)
+
 
 def custom_404(request, exception):
     return render(request, 'taller/notfound.html')
@@ -1868,16 +1924,22 @@ from .models import Pedido
 def descargar_excel_pedidos(request):
     pedidos = Pedido.objects.all().order_by("-creado")
 
-  
     wb = Workbook()
     ws = wb.active
     ws.title = "Pedidos"
 
-   
+    # ----------------------------
+    # ENCABEZADOS
+    # ----------------------------
     headers = [
-        "ID", "Cliente", "Estado", "Precio (Venta)",
-        "Costo", "Total (Precio - Costo)", "IVA (19%)",
-        "Método Entrega", "Método Pago", "Fecha", "Entregado por"
+        "ID", "Cliente", "Estado",
+        "Precio (Venta con IVA)",
+        "Costo Real",
+        "Ganancia Real",
+        "IVA Correcto (19%)",
+        "Método Entrega", "Método Pago",
+        "Fecha", "Entregado por",
+        "Productos"
     ]
     ws.append(headers)
 
@@ -1892,22 +1954,40 @@ def descargar_excel_pedidos(request):
             cell.alignment = Alignment(horizontal="center", vertical="center")
             cell.border = Border(top=border_style, bottom=border_style, left=border_style, right=border_style)
 
-    # 📊 Variables para totales
+    # ----------------------------
+    # TOTALES GENERALES
+    # ----------------------------
     total_precio = 0
     total_costo = 0
     total_ganancia = 0
     total_iva = 0
 
-
+    # ----------------------------
+    # FILAS
+    # ----------------------------
     for p in pedidos:
-        precio = float(p.total or 0)
-        costo = round(precio * 0.75, 0)  # estimación de costo
-        total = precio - costo
-        iva = round(precio * 0.19, 0)
 
+        # Precio total (con IVA incluido)
+        precio = float(p.total or 0)
+
+        # Costo real desde BD
+        costo = float(p.costo_total or 0)
+
+        # IVA real (si el precio incluye IVA)
+        neto = precio / 1.19
+        iva = round(precio - neto)
+
+        # Ganancia real
+        ganancia = round(neto - costo)
+
+        # Productos
+        items = p.items.all()
+        productos_txt = ", ".join([f"{i.nombre_producto} (x{i.cantidad})" for i in items])
+
+        # Totales acumulados
         total_precio += precio
         total_costo += costo
-        total_ganancia += total
+        total_ganancia += ganancia
         total_iva += iva
 
         ws.append([
@@ -1916,41 +1996,44 @@ def descargar_excel_pedidos(request):
             p.get_estado_display(),
             precio,
             costo,
-            total,
+            ganancia,
             iva,
             p.get_metodo_entrega_display(),
             p.get_metodo_pago_display(),
             p.creado.strftime("%d/%m/%Y %H:%M"),
-            p.entregado_por or "-"
+            p.entregado_por or "-",
+            productos_txt
         ])
 
-
+    # Formatos de moneda
     for col_letter in ["D", "E", "F", "G"]:
         for cell in ws[col_letter][1:]:
             cell.number_format = '"$"#,##0'
 
-
+    # Ajustar ancho columnas
     for col in ws.columns:
         max_length = 0
-        column = col[0].column_letter
+        col_letter = col[0].column_letter
         for cell in col:
             try:
                 length = len(str(cell.value))
-                if length > max_length:
-                    max_length = length
+                max_length = max(max_length, length)
             except:
                 pass
-        ws.column_dimensions[column].width = max_length + 3
+        ws.column_dimensions[col_letter].width = max_length + 3
 
+    # ----------------------------
+    # HOJA DE RESUMEN
+    # ----------------------------
     resumen = wb.create_sheet(title="Resumen")
     resumen_headers = ["Concepto", "Valor"]
     resumen.append(resumen_headers)
 
     resumen_datos = [
-        ("Total Ventas (Precio)", total_precio),
+        ("Total Ventas (Precio con IVA)", total_precio),
         ("Total Costos", total_costo),
         ("Ganancia Total", total_ganancia),
-        ("IVA Total (19%)", total_iva),
+        ("IVA Total", total_iva),
         ("Cantidad de Pedidos", len(pedidos)),
         ("Fecha de Generación", datetime.now().strftime("%d/%m/%Y %H:%M")),
     ]
@@ -1958,23 +2041,23 @@ def descargar_excel_pedidos(request):
     for item, valor in resumen_datos:
         resumen.append([item, valor])
 
+    # Estilo
     for cell in resumen["A"] + resumen["B"]:
         cell.border = Border(top=border_style, bottom=border_style, left=border_style, right=border_style)
         cell.alignment = Alignment(horizontal="center", vertical="center")
 
     for col in resumen.columns:
-        col_letter = col[0].column_letter
-        resumen.column_dimensions[col_letter].width = 25
+        resumen.column_dimensions[col[0].column_letter].width = 25
 
+    # Encabezado resumen
+    for cell in resumen[1]:
+        cell.fill = header_fill
+        cell.font = header_font
+        cell.alignment = Alignment(horizontal="center")
 
-    for col in resumen[1]:
-        col.fill = header_fill
-        col.font = header_font
-        col.alignment = Alignment(horizontal="center")
-
+    # Formato moneda
     for cell in resumen["B"][1:5]:
         cell.number_format = '"$"#,##0'
-
 
     fecha_str = datetime.now().strftime("%d-%m-%Y")
     nombre_archivo = f"pedidos_financieros_{fecha_str}.xlsx"
@@ -1986,6 +2069,7 @@ def descargar_excel_pedidos(request):
 
     wb.save(response)
     return response
+
 
 
 from decimal import Decimal

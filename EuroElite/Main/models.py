@@ -322,7 +322,14 @@ from django.conf import settings
 from django.utils import timezone
 from django.core.validators import FileExtensionValidator
 
+from django.db import models
+from django.conf import settings
+from decimal import Decimal
+
+IVA_RATE = Decimal("0.19")
+
 class Pedido(models.Model):
+
     class Estado(models.TextChoices):
         PENDIENTE = "PENDIENTE", "Pendiente"
         PAGADO = "PAGADO", "Pagado"
@@ -340,6 +347,78 @@ class Pedido(models.Model):
         EFECTIVO = "EFECTIVO", "Efectivo"
         TRANSFERENCIA = "TRANSFERENCIA", "Transferencia"
         PASARELA = "PASARELA", "Pasarela de pago"
+
+    # CAMPOS IMPORTANTES
+    usuario = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name="pedidos"
+    )
+
+    total = models.DecimalField(
+        max_digits=12,
+        decimal_places=0,
+        help_text="Total pagado por el cliente (CON IVA incluido)"
+    )
+
+    costo_total = models.DecimalField(
+        max_digits=12,
+        decimal_places=0,
+        default=0,
+        help_text="Costo real de los productos"
+    )
+
+    iva = models.DecimalField(
+        max_digits=12,
+        decimal_places=0,
+        default=0
+    )
+
+    ganancia = models.DecimalField(
+        max_digits=12,
+        decimal_places=0,
+        default=0
+    )
+
+    estado = models.CharField(
+        max_length=20,
+        choices=Estado.choices,
+        default=Estado.PENDIENTE
+    )
+
+    metodo_entrega = models.CharField(
+        max_length=20,
+        choices=MetodoEntrega.choices,
+        default=MetodoEntrega.RETIRO
+    )
+
+    metodo_pago = models.CharField(
+        max_length=20,
+        choices=MetodoPago.choices,
+        default=MetodoPago.EFECTIVO
+    )
+
+    creado = models.DateTimeField(auto_now_add=True)
+
+    # -------------------------
+    #  CÁLCULO DE IVA Y GANANCIA
+    # -------------------------
+    def calcular_totales(self):
+        """Recalcula IVA y ganancia basado en total con IVA incluido"""
+        bruto = Decimal(self.total)              # total CON IVA
+        neto = bruto / (Decimal("1.00") + IVA_RATE)
+        iva_val = bruto - neto
+
+        self.iva = round(iva_val)
+        self.ganancia = round(neto - (self.costo_total or 0))
+
+    def save(self, *args, **kwargs):
+        self.calcular_totales()
+        super().save(*args, **kwargs)
+
+    def __str__(self):
+        return f"Pedido #{self.pk}"
+
 
     # RELACIONES PRINCIPALES
     usuario = models.ForeignKey(
@@ -449,6 +528,7 @@ class ItemPedido(MarcaTiempo):
     @property
     def subtotal(self):
         return self.precio_unitario * self.cantidad
+
 
 
 class Pago(MarcaTiempo):
