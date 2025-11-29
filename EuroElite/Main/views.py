@@ -383,9 +383,10 @@ def producto_detalle(request, pk):
     })
 
 def nosotros(request):
-    from .models import FotoNosotros
+    from .models import FotoNosotros, Testimonio
     fotos = FotoNosotros.objects.filter(activa=True).order_by('orden', '-creado')
-    return render(request, 'taller/nosotros.html', {'fotos': fotos})
+    resenas = Testimonio.objects.filter(aprobada=True).order_by('-creado')[:6]
+    return render(request, 'taller/nosotros.html', {'fotos': fotos, 'resenas': resenas})
 
 def equipo(request):
     return render(request, 'taller/equipo.html')
@@ -2432,12 +2433,40 @@ def agregar_resena(request, producto_id):
 
 def resenas(request):
     """Página pública de reseñas aprobadas."""
-    from .models import Resena
-    
+    from .models import Resena, Testimonio
+
+    # Si envían una reseña pública desde el formulario
+    if request.method == 'POST':
+        nombre = request.POST.get('nombre', '').strip()
+        email = request.POST.get('email', '').strip()
+        mensaje = request.POST.get('mensaje', '').strip()
+        try:
+            calificacion = int(request.POST.get('calificacion'))
+        except Exception:
+            calificacion = None
+
+        if not mensaje:
+            messages.error(request, 'El mensaje es obligatorio.')
+            return redirect('resenas')
+
+        Testimonio.objects.create(
+            usuario=request.user if request.user.is_authenticated else None,
+            nombre=nombre,
+            email=email,
+            mensaje=mensaje,
+            calificacion=calificacion,
+            aprobada=False
+        )
+
+        messages.success(request, 'Gracias por tu reseña. Será publicada tras su aprobación.')
+        return redirect('resenas')
+
     resenas_aprobadas = Resena.objects.filter(aprobada=True).select_related('usuario', 'producto').order_by('-creado')
-    
+    resenas_publicas = Testimonio.objects.filter(aprobada=True).select_related('usuario').order_by('-creado')
+
     return render(request, 'taller/resenas.html', {
-        'resenas': resenas_aprobadas
+        'resenas': resenas_aprobadas,
+        'resenas_publicas': resenas_publicas
     })
 
 
@@ -2448,17 +2477,84 @@ def admin_resenas(request):
         messages.error(request, "No tienes permisos para acceder a esta página.")
         return redirect('home')
     
-    from .models import Resena
-    
+    from .models import Resena, Testimonio
+
+    # Reseñas de productos: Pendientes (no aprobadas)
     pendientes = Resena.objects.filter(aprobada=False).select_related('usuario', 'producto').order_by('-creado')
-    aprobadas = Resena.objects.filter(aprobada=True).select_related('usuario', 'producto').order_by('-creado')
-    
+    # Reseñas de productos: Aprobadas
+    aprobadas_productos = Resena.objects.filter(aprobada=True).select_related('usuario', 'producto').order_by('-creado')
+
+    # Reseñas públicas: Pendientes (no aprobadas)
+    pendientes_resenas = Testimonio.objects.filter(aprobada=False).select_related('usuario').order_by('-creado')
+    # Reseñas públicas: Aprobadas/Publicadas
+    aprobadas_resenas = Testimonio.objects.filter(aprobada=True).select_related('usuario').order_by('-creado')
+    # Reseñas públicas: Rechazadas (None)
+    rechazadas_publicas = Testimonio.objects.filter(aprobada=None).select_related('usuario').order_by('-creado')
+
+    # Contadores para badges
+    pendientes_count = pendientes.count() + pendientes_resenas.count()
+    rechazadas_count = rechazadas_publicas.count()
+    aprobadas_count = aprobadas_productos.count() + aprobadas_resenas.count()
+
     return render(request, 'taller/admin_resenas.html', {
         'pendientes': pendientes,
-        'aprobadas': aprobadas
+        'aprobadas_productos': aprobadas_productos,
+        'pendientes_resenas': pendientes_resenas,
+        'aprobadas_resenas': aprobadas_resenas,
+        'rechazadas_publicas': rechazadas_publicas,
+        'pendientes_count': pendientes_count,
+        'rechazadas_count': rechazadas_count,
+        'aprobadas_count': aprobadas_count,
     })
 
 
+
+@login_required
+@require_POST
+def aprobar_testimonio(request, testimonio_id):
+    """Aprobar un testimonio (admin)."""
+    if request.user.rol != 'ADMIN':
+        return JsonResponse({"ok": False, "msg": "No tienes permisos."}, status=403)
+
+    from .models import Testimonio
+    test = get_object_or_404(Testimonio, id=testimonio_id)
+    test.aprobada = True
+    test.save()
+
+    return JsonResponse({"ok": True, "msg": "Reseña aprobada."})
+
+
+@login_required
+@require_POST
+def rechazar_testimonio(request, testimonio_id):
+    """Rechazar un testimonio público (marcar como rechazado con None)."""
+    if request.user.rol != 'ADMIN':
+        return JsonResponse({"ok": False, "msg": "No tienes permisos."}, status=403)
+
+    from .models import Testimonio
+    test = get_object_or_404(Testimonio, id=testimonio_id)
+    test.aprobada = None
+    test.save()
+
+    return JsonResponse({"ok": True, "msg": "Reseña rechazada."})
+
+
+@login_required
+@require_POST
+@login_required
+@require_POST
+def eliminar_testimonio(request, testimonio_id):
+    """Cambiar estado de testimonio (ocultar si está publicado, publicar si está rechazado)."""
+    if request.user.rol != 'ADMIN':
+        return JsonResponse({"ok": False, "msg": "No tienes permisos."}, status=403)
+
+    from .models import Testimonio
+    test = get_object_or_404(Testimonio, id=testimonio_id)
+    # Si está publicado (True), ocultarlo (None). Si está rechazado (None), publicarlo (True)
+    test.aprobada = True if test.aprobada is None else None
+    test.save()
+
+    return JsonResponse({"ok": True, "msg": "Reseña actualizada."})
 @login_required
 @require_POST
 def aprobar_resena(request, resena_id):
@@ -2476,16 +2572,18 @@ def aprobar_resena(request, resena_id):
 
 @login_required
 @require_POST
-def eliminar_resena(request, resena_id):
-    """Eliminar una reseña."""
+def rechazar_resena(request, resena_id):
+    """Rechazar una reseña de producto (cambiar estado a no aprobada)."""
     if request.user.rol != 'ADMIN':
         return JsonResponse({"ok": False, "msg": "No tienes permisos."}, status=403)
     
     from .models import Resena
     resena = get_object_or_404(Resena, id=resena_id)
-    resena.delete()
+    # Cambiar según el estado actual
+    resena.aprobada = not resena.aprobada
+    resena.save()
     
-    return JsonResponse({"ok": True, "msg": "Reseña eliminada."})
+    return JsonResponse({"ok": True, "msg": "Reseña actualizada."})
 
 
 # =============================

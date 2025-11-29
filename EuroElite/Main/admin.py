@@ -7,6 +7,7 @@ from .models import (
     VehiculoCliente, HistorialServicio, FotoNosotros, Contacto,
     RecordatorioMantenimiento, HorarioDia, HoraDisponible
 )
+from .models import Testimonio
 
 # Usuarios personalizados
 @admin.register(Usuario)
@@ -71,6 +72,22 @@ class VehiculoEnVentaAdmin(admin.ModelAdmin):
 class ResenaAdmin(admin.ModelAdmin):
     list_display = ('usuario', 'producto', 'calificacion', 'aprobada', 'creado')
     search_fields = ('usuario__email', 'producto__nombre')
+    list_filter = ('aprobada', 'calificacion', 'creado')
+    actions = ['aprobar_resenas', 'rechazar_resenas']
+
+    def aprobar_resenas(self, request, queryset):
+        queryset.update(aprobada=True)
+    aprobar_resenas.short_description = "Aprobar reseñas seleccionadas"
+
+    def rechazar_resenas(self, request, queryset):
+        queryset.update(aprobada=False)
+    rechazar_resenas.short_description = "Rechazar reseñas seleccionadas"
+
+
+@admin.register(Testimonio)
+class TestimonioAdmin(admin.ModelAdmin):
+    list_display = ('nombre', 'usuario', 'calificacion', 'aprobada', 'creado')
+    search_fields = ('nombre', 'email', 'usuario__email')
     list_filter = ('aprobada', 'calificacion', 'creado')
     actions = ['aprobar_resenas', 'rechazar_resenas']
 

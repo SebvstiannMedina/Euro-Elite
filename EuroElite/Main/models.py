@@ -567,6 +567,22 @@ class Resena(MarcaTiempo):
     aprobada = models.BooleanField(default=False)
 
 
+# Reseñas / Testimonios generales para la página "Nosotros"
+class Testimonio(MarcaTiempo):
+    usuario = models.ForeignKey(settings.AUTH_USER_MODEL, null=True, blank=True, on_delete=models.SET_NULL, related_name="testimonios")
+    nombre = models.CharField(max_length=120, blank=True)
+    email = models.EmailField(blank=True)
+    mensaje = models.TextField()
+    calificacion = models.PositiveSmallIntegerField(null=True, blank=True, validators=[MinValueValidator(1), MaxValueValidator(5)])
+    aprobada = models.BooleanField(null=True, default=False)  # False: pendiente, True: aprobada/publicada, None: rechazada
+
+    def __str__(self):
+        return (self.nombre or (self.usuario.get_full_name() if self.usuario else 'Anon')) + f" - {self.creado:%d/%m/%Y}"
+    class Meta:
+        verbose_name = 'Reseña'
+        verbose_name_plural = 'Reseñas'
+
+
 # =============================
 #   SERVICIOS Y AGENDAS
 # =============================

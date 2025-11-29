@@ -10,21 +10,27 @@
     <ul class="nav nav-tabs mb-4" role="tablist">
         <li class="nav-item" role="presentation">
             <button class="nav-link active" data-bs-toggle="tab" data-bs-target="#pendientes" type="button">
-                Pendientes <span class="badge bg-warning">{{ pendientes.count }}</span>
+                Pendientes <span class="badge bg-warning">{{ pendientes_count }}</span>
             </button>
         </li>
         <li class="nav-item" role="presentation">
-            <button class="nav-link" data-bs-toggle="tab" data-bs-target="#aprobadas" type="button">
-                Aprobadas <span class="badge bg-success">{{ aprobadas.count }}</span>
+            <button class="nav-link" data-bs-toggle="tab" data-bs-target="#rechazadas" type="button">
+                Rechazadas <span class="badge bg-danger">{{ rechazadas_count }}</span>
+            </button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" data-bs-toggle="tab" data-bs-target="#publicas" type="button">
+                Públicas <span class="badge bg-success">{{ aprobadas_count }}</span>
             </button>
         </li>
     </ul>
 
     <div class="tab-content">
-        <!-- Reseñas Pendientes -->
+        <!-- Reseñas Pendientes (Productos + Públicas) -->
         <div class="tab-pane fade show active" id="pendientes">
+            <h5 class="mb-3">Reseñas de Productos</h5>
             {% for resena in pendientes %}
-            <div class="card mb-3 shadow-sm">
+            <div class="card mb-3 shadow-sm border-left border-warning">
                 <div class="card-body">
                     <div class="row">
                         <div class="col-md-8">
@@ -50,28 +56,90 @@
                             {% endif %}
                         </div>
                         <div class="col-md-4 text-end">
-                            <button class="btn btn-success mb-2" onclick="aprobarResena({{ resena.id }})">
+                            <button class="btn btn-success btn-sm mb-2" onclick="aprobarResena({{ resena.id }})">
                                 <i class="fas fa-check"></i> Aprobar
                             </button>
-                            <button class="btn btn-danger" onclick="eliminarResena({{ resena.id }})">
-                                <i class="fas fa-trash"></i> Eliminar
+                            <button class="btn btn-danger btn-sm" onclick="rechazarResena({{ resena.id }})">
+                                <i class="fas fa-times"></i> Rechazar
                             </button>
                         </div>
                     </div>
                 </div>
             </div>
             {% empty %}
-            <div class="alert alert-info">No hay reseñas pendientes de aprobación.</div>
+            <div class="alert alert-info">No hay reseñas de productos pendientes.</div>
+            {% endfor %}
+
+            <h5 class="mt-4 mb-3">Reseñas Públicas</h5>
+            {% for t in pendientes_resenas %}
+            <div class="card mb-3 shadow-sm border-left border-info">
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-9">
+                            <h6>
+                                {% if t.nombre %}
+                                    {{ t.nombre }}
+                                {% elif t.usuario %}
+                                    {{ t.usuario.get_full_name }}
+                                {% else %}
+                                    Anónimo
+                                {% endif %}
+                            </h6>
+                            <p class="mb-1"><strong>Email:</strong> {{ t.email }}</p>
+                            <p class="mb-1"><strong>Fecha:</strong> {{ t.creado|date:"d/m/Y H:i" }}</p>
+                            <p>{{ t.mensaje }}</p>
+                        </div>
+                        <div class="col-md-3 text-end">
+                            <button class="btn btn-success btn-sm mb-2" onclick="aprobarResenaPub({{ t.id }})"><i class="fas fa-check"></i> Publicar</button>
+                            <button class="btn btn-danger btn-sm" onclick="rechazarResenaPub({{ t.id }})"><i class="fas fa-times"></i> Rechazar</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% empty %}
+            <div class="alert alert-info">No hay reseñas públicas pendientes.</div>
             {% endfor %}
         </div>
 
-        <!-- Reseñas Aprobadas -->
-        <div class="tab-pane fade" id="aprobadas">
-            {% for resena in aprobadas %}
-            <div class="card mb-3 shadow-sm">
+        <!-- Reseñas Rechazadas -->
+        <div class="tab-pane fade" id="rechazadas">
+            <h5 class="mb-3">Reseñas Públicas Rechazadas</h5>
+            {% for t in rechazadas_publicas %}
+            <div class="card mb-3 shadow-sm border-left border-danger">
                 <div class="card-body">
                     <div class="row">
-                        <div class="col-md-10">
+                        <div class="col-md-9">
+                            <h6>
+                                {% if t.nombre %}
+                                    {{ t.nombre }}
+                                {% elif t.usuario %}
+                                    {{ t.usuario.get_full_name }}
+                                {% else %}
+                                    Anónimo
+                                {% endif %}
+                            </h6>
+                            <p class="mb-1"><strong>Email:</strong> {{ t.email }}</p>
+                            <p class="mb-1">{{ t.mensaje }}</p>
+                        </div>
+                        <div class="col-md-3 text-end">
+                            <button class="btn btn-success btn-sm" onclick="aprobarResenaPub({{ t.id }})"><i class="fas fa-check"></i> Publicar</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% empty %}
+            <div class="alert alert-info">No hay reseñas rechazadas.</div>
+            {% endfor %}
+        </div>
+
+        <!-- Reseñas Públicas -->
+        <div class="tab-pane fade" id="publicas">
+            <h5 class="mb-3">Reseñas de Productos Aprobadas</h5>
+            {% for resena in aprobadas_productos %}
+            <div class="card mb-3 shadow-sm border-left border-success">
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-9">
                             <h5>{{ resena.producto.nombre }}</h5>
                             <p class="mb-2">
                                 <strong>Usuario:</strong> {{ resena.usuario.get_full_name }}
@@ -92,26 +160,55 @@
                             <p>{{ resena.comentario }}</p>
                             {% endif %}
                         </div>
-                        <div class="col-md-2 text-end">
-                            <button class="btn btn-danger btn-sm" onclick="eliminarResena({{ resena.id }})">
-                                <i class="fas fa-trash"></i> Eliminar
+                        <div class="col-md-3 text-end">
+                            <button class="btn btn-warning btn-sm" onclick="rechazarResena({{ resena.id }})">
+                                <i class="fas fa-eye-slash"></i> Ocultar
                             </button>
                         </div>
                     </div>
                 </div>
             </div>
             {% empty %}
-            <div class="alert alert-info">No hay reseñas aprobadas.</div>
+            <div class="alert alert-info">No hay reseñas de productos aprobadas.</div>
+            {% endfor %}
+
+            <h5 class="mt-4 mb-3">Reseñas Públicas Publicadas</h5>
+            {% for t in aprobadas_resenas %}
+            <div class="card mb-3 shadow-sm border-left border-success">
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-9">
+                            <h6>
+                                {% if t.nombre %}
+                                    {{ t.nombre }}
+                                {% elif t.usuario %}
+                                    {{ t.usuario.get_full_name }}
+                                {% else %}
+                                    Anónimo
+                                {% endif %}
+                            </h6>
+                            <p class="mb-1">{{ t.mensaje }}</p>
+                            <small class="text-muted">{{ t.creado|date:"d/m/Y H:i" }}</small>
+                        </div>
+                        <div class="col-md-3 text-end">
+                            <button class="btn btn-warning btn-sm" onclick="rechazarResenaPub({{ t.id }})"><i class="fas fa-eye-slash"></i> Ocultar</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% empty %}
+            <div class="alert alert-info">No hay reseñas públicas publicadas.</div>
             {% endfor %}
         </div>
     </div>
 </div>
 
 <script>
-function aprobarResena(resenaId) {
-    if (!confirm('¿Aprobar esta reseña?')) return;
+
+function rechazarResena(resenaId) {
+    if (!confirm('¿Rechazar esta reseña?')) return;
     
-    fetch(`/api/resena/${resenaId}/aprobar/`, {
+    fetch(`/api/resena/${resenaId}/rechazar/`, {
         method: 'POST',
         headers: {
             'X-CSRFToken': '{{ csrf_token }}',
@@ -128,24 +225,34 @@ function aprobarResena(resenaId) {
     });
 }
 
-function eliminarResena(resenaId) {
-    if (!confirm('¿Eliminar esta reseña permanentemente?')) return;
-    
-    fetch(`/api/resena/${resenaId}/eliminar/`, {
+function aprobarResenaPub(testId) {
+    if (!confirm('¿Publicar esta reseña?')) return;
+    fetch(`/api/testimonio/${testId}/aprobar/`, {
         method: 'POST',
         headers: {
             'X-CSRFToken': '{{ csrf_token }}',
             'Content-Type': 'application/json'
         }
     })
-    .then(response => response.json())
-    .then(data => {
-        if (data.ok) {
-            location.reload();
-        } else {
-            alert(data.msg);
-        }
+    .then(r => r.json()).then(data => {
+        if (data.ok) location.reload(); else alert(data.msg);
     });
 }
+
+function rechazarResenaPub(testId) {
+    if (!confirm('¿Rechazar esta reseña?')) return;
+    fetch(`/api/testimonio/${testId}/rechazar/`, {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': '{{ csrf_token }}',
+            'Content-Type': 'application/json'
+        }
+    })
+    .then(r => r.json()).then(data => {
+        if (data.ok) location.reload(); else alert(data.msg);
+    });
+}
+
+
 </script>
 {% endblock %}

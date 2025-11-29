@@ -129,7 +129,7 @@
   </div>
 </section>
 
-<!-- EQUIPO -->
+<!-- EQUIPO 
 <section class="py-5 bg-light">
   <div class="container">
     <h2 class="fw-bold text-center mb-5 text-gradient">Nuestro equipo</h2>
@@ -164,7 +164,7 @@
       </div>
     </div>
   </div>
-</section>
+</section> -->
 
 <!-- GALERÍA -->
 <section class="py-5">
@@ -178,14 +178,23 @@
   </div>
 </section>
 
-<!-- TESTIMONIOS -->
+<!-- RESEÑAS PÚBLICAS -->
 <section class="py-5 bg-light">
   <div class="container">
     <h2 class="fw-bold text-center mb-5 text-gradient">Lo que dicen nuestros clientes</h2>
     <div class="row text-center g-4">
-      <div class="col-md-4"><p class="fst-italic">“Excelente atención y garantía real.”</p><small>- María ⭐⭐⭐⭐⭐</small></div>
-      <div class="col-md-4"><p class="fst-italic">“Me ayudaron a encontrar el auto ideal.”</p><small>- Javier ⭐⭐⭐⭐⭐</small></div>
-      <div class="col-md-4"><p class="fst-italic">“Euro Elite es confianza total.”</p><small>- Andrés ⭐⭐⭐⭐⭐</small></div>
+      {% if resenas %}
+        {% for t in resenas %}
+          <div class="col-md-4">
+            <p class="fst-italic">“{{ t.mensaje|truncatechars:160 }}”</p>
+            <small>- {% if t.nombre %}{{ t.nombre }}{% elif t.usuario %}{{ t.usuario.get_full_name }}{% else %}Anónimo{% endif %} {% if t.calificacion %} {% for i in "12345" %}{% if forloop.counter <= t.calificacion %}⭐{% endif %}{% endfor %}{% endif %}</small>
+          </div>
+        {% endfor %}
+      {% else %}
+        <div class="col-12">
+          <div class="alert alert-info">Todavía no hay reseñas públicas. <a href="{% url 'resenas' %}">Deja la tuya</a>.</div>
+        </div>
+      {% endif %}
     </div>
   </div>
 </section>

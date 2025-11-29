@@ -143,7 +143,9 @@ urlpatterns = [
     path('resenas/', main_views.resenas, name='resenas'),
     path('admin_resenas', main_views.admin_resenas, name='admin_resenas'),
     path('api/resena/<int:resena_id>/aprobar/', main_views.aprobar_resena, name='aprobar_resena'),
-    path('api/resena/<int:resena_id>/eliminar/', main_views.eliminar_resena, name='eliminar_resena'),
+    path('api/resena/<int:resena_id>/rechazar/', main_views.rechazar_resena, name='rechazar_resena'),
+    path('api/testimonio/<int:testimonio_id>/aprobar/', main_views.aprobar_testimonio, name='aprobar_testimonio'),
+    path('api/testimonio/<int:testimonio_id>/rechazar/', main_views.rechazar_testimonio, name='rechazar_testimonio'),
 
     # Galería Nosotros
     path('admin_galeria_nosotros', main_views.admin_galeria_nosotros, name='admin_galeria_nosotros'),

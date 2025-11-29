@@ -6,44 +6,79 @@
 {% block content %}
 <div class="container my-5">
     <h1 class="mb-4">Reseñas de nuestros clientes</h1>
-
     <div class="row">
-        {% for resena in resenas %}
-        <div class="col-md-6 mb-4">
-            <div class="card shadow-sm h-100">
+        <div class="col-lg-6 mb-4">
+            <div class="card shadow-sm">
                 <div class="card-body">
-                    <div class="d-flex justify-content-between align-items-start mb-3">
-                        <div>
-                            <h5 class="card-title mb-1">{{ resena.usuario.get_full_name }}</h5>
-                            <p class="text-muted small mb-0">{{ resena.creado|date:"d/m/Y" }}</p>
+                    <h5 class="card-title">Dejar una reseña</h5>
+                    <form method="post" action="{% url 'resenas' %}">
+                        {% csrf_token %}
+                        <div class="mb-3">
+                            <label class="form-label">Nombre (opcional)</label>
+                            <input class="form-control" name="nombre" value="{% if request.user.is_authenticated %}{{ request.user.get_full_name }}{% endif %}">
                         </div>
-                        <div class="text-warning">
-                            {% for i in "12345" %}
-                                {% if forloop.counter <= resena.calificacion %}
-                                    <i class="fas fa-star"></i>
-                                {% else %}
-                                    <i class="far fa-star"></i>
-                                {% endif %}
-                            {% endfor %}
+                        <div class="mb-3">
+                            <label class="form-label">Email (opcional)</label>
+                            <input class="form-control" name="email" value="{% if request.user.is_authenticated %}{{ request.user.email }}{% endif %}">
                         </div>
-                    </div>
-                    
-                    <p class="card-text"><strong>Producto:</strong> {{ resena.producto.nombre }}</p>
-                    
-                    {% if resena.comentario %}
-                    <p class="card-text">{{ resena.comentario }}</p>
-                    {% endif %}
+                        <div class="mb-3">
+                            <label class="form-label">Calificación</label>
+                            <select class="form-select" name="calificacion">
+                                <option value="">-- (opcional) --</option>
+                                {% for i in "12345" %}
+                                    <option value="{{ forloop.counter }}">{{ forloop.counter }} ⭐</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Comentario</label>
+                            <textarea class="form-control" name="mensaje" rows="4" required></textarea>
+                        </div>
+                        <button class="btn btn-primary" type="submit">Enviar reseña</button>
+                    </form>
                 </div>
             </div>
         </div>
-        {% empty %}
-        <div class="col-12">
-            <div class="alert alert-info text-center">
-                <i class="fas fa-info-circle me-2"></i>
-                Aún no hay reseñas publicadas. ¡Sé el primero en dejar una!
-            </div>
+
+        <div class="col-lg-6">
+            <h5 class="mb-3">Reseñas publicadas</h5>
+            {% if resenas_publicas %}
+                {% for t in resenas_publicas %}
+                <div class="card mb-3 shadow-sm">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between">
+                            <div>
+                                <h6 class="mb-0">
+                                    {% if t.nombre %}
+                                        {{ t.nombre }}
+                                    {% elif t.usuario %}
+                                        {{ t.usuario.get_full_name }}
+                                    {% else %}
+                                        Anónimo
+                                    {% endif %}
+                                </h6>
+                                <small class="text-muted">{{ t.creado|date:"d/m/Y" }}</small>
+                            </div>
+                            <div class="text-warning">
+                                {% if t.calificacion %}
+                                    {% for i in "12345" %}
+                                        {% if forloop.counter <= t.calificacion %}
+                                            <i class="fas fa-star"></i>
+                                        {% else %}
+                                            <i class="far fa-star"></i>
+                                        {% endif %}
+                                    {% endfor %}
+                                {% endif %}
+                            </div>
+                        </div>
+                        <p class="mt-2">{{ t.mensaje }}</p>
+                    </div>
+                </div>
+                {% endfor %}
+            {% else %}
+                <div class="alert alert-info">Aún no hay reseñas públicas.</div>
+            {% endif %}
         </div>
-        {% endfor %}
     </div>
 </div>
 {% endblock %}
