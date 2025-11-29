@@ -69,6 +69,11 @@ def flow_crear_orden(request):
     # Generar commerceOrder único: "<pedido_id>-<timestamp>"
     commerce_order = f"{pedido.id}-{int(time.time())}"
 
+    # Incluir pedido_id y commerce_order en la URL de retorno para asegurar que
+    # cuando Flow redirija de vuelta tengamos suficiente información para
+    # relacionar la transacción (aunque el token no sea provisto en la URL).
+    url_return_with_params = f"{url_ret}?pedido_id={pedido.id}&commerce_order={commerce_order}"
+
     body = {
         "apiKey": api_key,
         "commerceOrder": commerce_order,
@@ -77,7 +82,7 @@ def flow_crear_orden(request):
         "amount": str(amount_int),
         "email": getattr(pedido.usuario, "email", "") or "cliente@ejemplo.cl",
         "urlConfirmation": url_conf,
-        "urlReturn": url_ret,
+        "urlReturn": url_return_with_params,
     }
     body["s"] = flow_sign(body, secret)
 
@@ -131,7 +136,8 @@ def flow_crear_orden(request):
     except Exception as e:
         print(f"[FLOW_CREAR_ORDEN] Error guardando token: {e}")
 
-    url_retorno_con_id = f"{url_ret}?pedido_id={pedido.id}"
+    # URL de retorno que esperamos que Flow use (incluye pedido_id y commerce_order)
+    url_retorno_con_id = url_return_with_params
     
     print(f"[FLOW_CREAR_ORDEN] Redirigiendo a Flow con token: {token}")
     print(f"[FLOW_CREAR_ORDEN] URL de retorno configurada: {url_retorno_con_id}")
