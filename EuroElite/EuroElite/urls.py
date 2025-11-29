@@ -74,6 +74,7 @@ urlpatterns = [
     path("pagos/flow/crear/", pay_views.flow_crear_orden, name="flow_crear_orden"),
     path("pagos/flow/confirmacion/", pay_views.flow_confirmacion, name="flow_confirmacion"),
     path("pagos/flow/retorno/", pay_views.flow_retorno, name="flow_retorno"),
+    path("pagos/flow/debug_check/", pay_views.flow_debug_check, name="flow_debug_check"),
 
     #esto es para que al usuario le pida el correo para recuperar la contraseña
     path('recuperar_contrasena/', 

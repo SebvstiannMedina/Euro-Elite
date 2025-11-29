@@ -155,8 +155,19 @@ def flow_confirmacion(request):
         return HttpResponseBadRequest("Método no permitido")
 
     token = _s(request.POST.get("token"))
+    # Aceptar token desde POST form, GET o JSON body (algunas integraciones envían JSON)
     if not token:
-        print(f"[FLOW_CONFIRMACION] ❌ Falta token")
+        token = _s(request.GET.get("token"))
+    if not token:
+        try:
+            import json
+            body_json = json.loads(request.body.decode('utf-8') or '{}') if request.body else {}
+            token = _s(body_json.get('token'))
+        except Exception:
+            token = token
+
+    if not token:
+        print(f"[FLOW_CONFIRMACION] ❌ Falta token en POST/GET/JSON. POST keys: {list(request.POST.keys())} GET keys: {list(request.GET.keys())}")
         return HttpResponseBadRequest("Falta token")
     
     print(f"[FLOW_CONFIRMACION] Token recibido: {token}")
@@ -427,7 +438,12 @@ def flow_retorno(request):
                     pedido.save()
 
                 except requests.RequestException as e:
-                    print(f"[FLOW_RETORNO] Error consultando Flow: {e}")
+                    resp_text = None
+                    try:
+                        resp_text = e.response.text if getattr(e, 'response', None) else None
+                    except Exception:
+                        resp_text = None
+                    print(f"[FLOW_RETORNO] Error consultando Flow: {e}. Resp: {resp_text}")
                 except ValueError:
                     print(f"[FLOW_RETORNO] Respuesta inválida de Flow (no JSON) en retorno")
 
@@ -448,3 +464,45 @@ def flow_retorno(request):
     print("[FLOW_RETORNO] Redirigiendo a compra_exitosa genérica")
     print(f"[FLOW_RETORNO] ========== FIN ==========")
     return redirect('compra_exitosa')
+
+
+@csrf_exempt
+def flow_debug_check(request):
+    """Vista de diagnóstico: consultar estado en Flow para un pedido/token proporcionados.
+    Útil para pruebas manuales desde navegador o curl.
+    Parámetros: pedido_id, token (GET o POST)
+    """
+    Pedido = apps.get_model('Main', 'Pedido')
+    PedidoId = request.GET.get('pedido_id') or request.POST.get('pedido_id')
+    token = (request.GET.get('token') or request.POST.get('token') or '').strip()
+
+    if not PedidoId:
+        return JsonResponse({'ok': False, 'error': 'falta pedido_id'}, status=400)
+
+    try:
+        pedido = Pedido.objects.get(id=int(PedidoId))
+    except Exception as e:
+        return JsonResponse({'ok': False, 'error': f'Pedido no encontrado: {e}'}, status=404)
+
+    if not token:
+        return JsonResponse({'ok': False, 'error': 'falta token'}, status=400)
+
+    api_base = _s(settings.FLOW_API_BASE)
+    api_key = _s(settings.FLOW_API_KEY)
+    secret = _s(settings.FLOW_SECRET_KEY)
+    params = {"apiKey": api_key, "token": token}
+    params["s"] = flow_sign(params, secret)
+
+    try:
+        rs = requests.get(f"{api_base}/payment/getStatusExtended", params=params, timeout=20)
+        rs.raise_for_status()
+        data = rs.json()
+    except Exception as e:
+        resp_text = None
+        try:
+            resp_text = getattr(e, 'response', None) and e.response.text
+        except Exception:
+            resp_text = None
+        return JsonResponse({'ok': False, 'error': str(e), 'resp_text': resp_text}, status=500)
+
+    return JsonResponse({'ok': True, 'flow_data': data, 'pedido_id': pedido.id})
