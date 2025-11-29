@@ -355,19 +355,91 @@ def flow_retorno(request):
             print(f"[FLOW_RETORNO] Error buscando último pedido: {e}")
     
     if pedido_id:
-        # Verificar el estado del pedido antes de redirigir
+        # Intentar actualizar estado consultando Flow si recibimos token
         try:
             pedido = Pedido.objects.get(id=pedido_id)
-            print(f"[FLOW_RETORNO] Estado del pedido: {pedido.estado}")
-            
+            print(f"[FLOW_RETORNO] Estado actual del pedido: {pedido.estado}")
+
+            # Si tenemos token, consultar Flow para obtener estado y actualizar DB
+            if token:
+                try:
+                    api_base = _s(settings.FLOW_API_BASE)
+                    api_key = _s(settings.FLOW_API_KEY)
+                    secret = _s(settings.FLOW_SECRET_KEY)
+                    params = {"apiKey": api_key, "token": token}
+                    params["s"] = flow_sign(params, secret)
+                    print(f"[FLOW_RETORNO] Consultando Flow por token para actualizar estado...")
+                    rs = requests.get(f"{api_base}/payment/getStatusExtended", params=params, timeout=20)
+                    rs.raise_for_status()
+                    data = rs.json()
+                    print(f"[FLOW_RETORNO] Respuesta Flow (retorno): {data}")
+
+                    status_flow = str(data.get("status"))
+                    payment_data = data.get('paymentData', {})
+                    has_payment_data = payment_data and payment_data.get('authorizationCode')
+                    is_paid = status_flow == "1" or (status_flow == "2" and has_payment_data)
+
+                    Pago = apps.get_model('Main', 'Pago')
+                    pago = None
+                    try:
+                        pago = Pago.objects.filter(pedido=pedido, flow_token=token).first()
+                    except Exception:
+                        pago = None
+
+                    if not pago:
+                        pago = Pago.objects.filter(pedido=pedido).order_by('-id').first()
+
+                    if not pago:
+                        pago = Pago.objects.create(
+                            pedido=pedido,
+                            metodo=Pedido.MetodoPago.PASARELA,
+                            monto=pedido.total,
+                            estado=Pago.Estado.PENDIENTE,
+                        )
+
+                    if is_paid:
+                        pago.estado = Pago.Estado.COMPLETADO
+                        pedido.estado = Pedido.Estado.PAGADO
+
+                        # Descontar stock igual que en confirmación
+                        Producto = apps.get_model('Main', 'Producto')
+                        for item in pedido.items.select_related('producto'):
+                            producto = item.producto
+                            if producto and producto.stock is not None:
+                                nueva_stock = max(0, producto.stock - item.cantidad)
+                                if nueva_stock != producto.stock:
+                                    producto.stock = nueva_stock
+                                    producto.save(update_fields=['stock'])
+                    elif status_flow == "3":
+                        pago.estado = Pago.Estado.FALLIDO
+                        pedido.estado = Pedido.Estado.CANCELADO
+
+                    # guardar posibles campos
+                    try:
+                        if hasattr(pago, "flow_response"):
+                            pago.flow_response = str(data)
+                        if hasattr(pago, "flow_token"):
+                            pago.flow_token = token
+                    except Exception:
+                        pass
+
+                    pago.save()
+                    pedido.save()
+
+                except requests.RequestException as e:
+                    print(f"[FLOW_RETORNO] Error consultando Flow: {e}")
+                except ValueError:
+                    print(f"[FLOW_RETORNO] Respuesta inválida de Flow (no JSON) en retorno")
+
             # Si el pedido fue cancelado (pago rechazado), redirigir a página de rechazo
             if pedido.estado == Pedido.Estado.CANCELADO:
                 print(f"[FLOW_RETORNO] 🚫 Pedido CANCELADO - redirigiendo a compra_rechazada")
                 print(f"[FLOW_RETORNO] ========== FIN ==========")
                 return redirect('compra_rechazada', pedido_id=pedido_id)
+
         except Pedido.DoesNotExist:
             print(f"[FLOW_RETORNO] ⚠️ Pedido {pedido_id} no existe")
-        
+
         print(f"[FLOW_RETORNO] 🎯 Redirigiendo a compra_exitosa_detalle con pedido_id={pedido_id}")
         print(f"[FLOW_RETORNO] ========== FIN ==========")
         return redirect('compra_exitosa_detalle', pedido_id=pedido_id)
