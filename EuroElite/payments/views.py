@@ -371,15 +371,27 @@ def flow_retorno(request):
             pedido = Pedido.objects.get(id=pedido_id)
             print(f"[FLOW_RETORNO] Estado actual del pedido: {pedido.estado}")
 
-            # Si tenemos token, consultar Flow para obtener estado y actualizar DB
-            if token:
+            # Si no recibimos token en la petición, intentar usar el token guardado en Pago
+            used_token = token
+            if not used_token:
+                try:
+                    Pago = apps.get_model('Main', 'Pago')
+                    pago_tmp = Pago.objects.filter(pedido=pedido).order_by('-id').first()
+                    if pago_tmp and getattr(pago_tmp, 'flow_token', None):
+                        used_token = pago_tmp.flow_token
+                        print(f"[FLOW_RETORNO] Usando token guardado en Pago: {used_token} para pedido {pedido.id}")
+                except Exception as e:
+                    print(f"[FLOW_RETORNO] Error al obtener pago guardado: {e}")
+
+            # Si tenemos token (o token desde DB), consultar Flow para obtener estado y actualizar DB
+            if used_token:
                 try:
                     api_base = _s(settings.FLOW_API_BASE)
                     api_key = _s(settings.FLOW_API_KEY)
                     secret = _s(settings.FLOW_SECRET_KEY)
-                    params = {"apiKey": api_key, "token": token}
+                    params = {"apiKey": api_key, "token": used_token}
                     params["s"] = flow_sign(params, secret)
-                    print(f"[FLOW_RETORNO] Consultando Flow por token para actualizar estado...")
+                    print(f"[FLOW_RETORNO] Consultando Flow por token para actualizar estado (token usado: {used_token})...")
                     rs = requests.get(f"{api_base}/payment/getStatusExtended", params=params, timeout=20)
                     rs.raise_for_status()
                     data = rs.json()
@@ -393,7 +405,7 @@ def flow_retorno(request):
                     Pago = apps.get_model('Main', 'Pago')
                     pago = None
                     try:
-                        pago = Pago.objects.filter(pedido=pedido, flow_token=token).first()
+                        pago = Pago.objects.filter(pedido=pedido, flow_token=used_token).first()
                     except Exception:
                         pago = None
 
