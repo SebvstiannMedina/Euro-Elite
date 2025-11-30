@@ -50,7 +50,7 @@
         left: 0;
         right: 0;
         margin: 0;
-        /* importante para que el menÃº se posicione debajo */
+        /* importante para que el menu se posicione debajo */
         z-index: 1000;
     }
 
@@ -318,7 +318,7 @@
         pointer-events: auto;
     }
 
-    /* Acciones (Carrito + Usuario + BotÃ³n menÃº) */
+    /* Acciones (Carrito + Usuario + Boton menu) */
     .navbar-actions {
         display: flex !important;
         align-items: center;
@@ -349,7 +349,7 @@
         padding: 2px 6px;
     }
 
-    /* Botón de acceso rápido a entregas (repartidores) */
+    /* Boton de acceso rapido a entregas (repartidores) */
     .delivery-icon .delivery-link {
         display: flex;
         align-items: center;
@@ -532,9 +532,9 @@
             </ul>
 
 
-            <!-- Acciones (BotÃ³n menÃº + Carrito + Usuario) -->
+            <!-- Acciones (Boton menu + Carrito + Usuario) -->
             <div class="navbar-actions">
-                <!-- BotÃ³n mÃ³vil -->
+                <!-- Boton movil -->
                 <button class="navbar-toggle" onclick="toggleMobileMenu()" aria-label="Abrir menu">
                     <i class="fas fa-bars"></i>
                 </button>
@@ -558,7 +558,7 @@
                         <a href="{% url 'perfil' %}"><i class="fas fa-user-circle"></i> Mi Perfil</a>
                         <a href="{% url 'mis_pedidos' %}"><i class="fas fa-shopping-bag"></i> Mis Pedidos</a>
                         <a href="{% url 'mis_citas' %}"><i class="fas fa-calendar-check"></i> Mis Citas</a>
-                        <!-- <a href="{% url 'mis_vehiculos' %}"><i class="fas fa-car"></i> Mis VehÃ­culos</a> -->
+                        <!-- <a href="{% url 'mis_vehiculos' %}"><i class="fas fa-car"></i> Mis Veh&iacute;culos</a> -->
                         
                         <!-- Links para repartidores -->
                         {% if user.rol == 'REPARTIDOR' %}
@@ -578,16 +578,16 @@
                         <hr style="margin: 8px 0; border-color: #e0e0e0;">
                         <form action="{% url 'logout' %}" method="post" style="margin: 0;">
                             {% csrf_token %}
-                            <button type="submit" class="dropdown-item logout-btn"><i class="fas fa-sign-out-alt"></i> Cerrar SesiÃ³n</button>
+                            <button type="submit" class="dropdown-item logout-btn"><i class="fas fa-sign-out-alt"></i> Cerrar Sesi&oacute;n</button>
                         </form>
                         {% else %}
-                        <a href="{% url 'login' %}"><i class="fas fa-sign-in-alt"></i> Iniciar SesiÃ³n</a>
+                        <a href="{% url 'login' %}"><i class="fas fa-sign-in-alt"></i> Iniciar Sesi&oacute;n</a>
                         <a href="{% url 'registro' %}"><i class="fas fa-user-plus"></i> Registrarse</a>
                         {% endif %}
                     </div>
                 </div>
 
-                <!-- Delivery Icon mobile (visible solo en móvil para repartidores) -->
+                <!-- Delivery Icon mobile (visible solo en movil para repartidores) -->
                 {% if user.is_authenticated and user.rol == 'REPARTIDOR' %}
                 <div class="delivery-icon d-lg-none">
                     <a href="{% url 'admin_entregas' %}" title="Mis Entregas" class="delivery-link" aria-label="Ir a mis entregas">
@@ -697,9 +697,9 @@
                         
                         <hr style="margin: 8px 0; border-color: #e0e0e0;">
                         
-                        <!-- ConfiguraciÃ³n 
+                        <!-- Configuraci&oacute;n 
                         <a href="{% url 'admin_configuracion' %}">
-                            <i class="fas fa-cogs"></i> ConfiguraciÃ³n
+                            <i class="fas fa-cogs"></i> Configuraci&oacute;n
                         </a>-->
                     </div>
                 </div>
@@ -718,7 +718,7 @@
         <div class="footer-container">
             <div class="footer-section">
                 <h3>Euro Elite</h3>
-                <p>Tu tienda especializada en repuestos europeos de alta calidad. MÃ¡s de 10 aÃ±os de experiencia en el
+                <p>Tu tienda especializada en repuestos europeos de alta calidad. M&aacute;s de 10 a&ntilde;os de experiencia en el
                     mercado automotriz.</p>
                 <div class="social-icons">
                     <a href="#" style="margin-right: 1rem;"><i class="fab fa-facebook-f"></i></a>
