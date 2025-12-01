@@ -4,70 +4,80 @@
 {% load i18n %}
 {% load custom_filters %}
 
-{% block title %}Productos - Euro Elite{% endblock %}
+{% block title %}Terminos - Euro Elite{% endblock %}
 
 {% block content %}
 
 <style>
     /* Estilos legales */
-        .legal-container {
-            max-width: 900px;
-            margin: 5rem auto;
-            padding: 3rem;
-            background: #fff;
-            border-radius: 12px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
-            line-height: 1.7;
-            font-family: 'Poppins', sans-serif;
-            color: #333;
-            animation: fadeIn 0.6s ease-in-out;
-        }
-        .legal-container h1 {
-            font-size: 2.2rem;
-            font-weight: 700;
-            color: #062b61;
-            margin-bottom: 1.5rem;
-            text-align: center;
-            border-bottom: 3px solid #cc0000;
-            padding-bottom: 0.5rem;
-        }
-        .legal-container h2 {
-            font-size: 1.4rem;
-            font-weight: 600;
-            margin-top: 2rem;
-            margin-bottom: 0.8rem;
-            color: #003399;
-        }
-        .legal-container p {
-            margin-bottom: 1rem;
-            font-size: 1rem;
-            color: #555;
-        }
-        .legal-container a {
-            color: #cc0000;
-            font-weight: 500;
-            text-decoration: none;
-            transition: color 0.3s ease;
-        }
-        .legal-container a:hover {
-            color: #062b61;
-            text-decoration: underline;
-        }
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(20px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
+    .legal-container {
+        max-width: 900px;
+        margin: 5rem auto !important; /* Centrar */
+        padding: 3rem;
+        background: #fff;
+        border-radius: 12px;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        line-height: 1.7;
+        font-family: 'Poppins', sans-serif;
+        color: #333;
+        animation: fadeIn 0.6s ease-in-out;
+        text-align: center; /* 🔥 CENTRA TODO EL CONTENIDO */
+    }
+
+    .legal-container h1 {
+        font-size: 2.2rem;
+        font-weight: 700;
+        color: #062b61;
+        margin-bottom: 1.5rem;
+        border-bottom: 3px solid #cc0000;
+        padding-bottom: 0.5rem;
+        display: inline-block; /* mantiene el centrado del h1 */
+    }
+
+    .legal-container h2 {
+        font-size: 1.4rem;
+        font-weight: 600;
+        margin-top: 2rem;
+        margin-bottom: 0.8rem;
+        color: #003399;
+    }
+
+    .legal-container p {
+        margin-bottom: 1rem;
+        font-size: 1rem;
+        color: #555;
+        max-width: 700px;
+        margin-left: auto;   /* centrar textos */
+        margin-right: auto;  /* centrar textos */
+    }
+
+    .legal-container a {
+        color: #cc0000;
+        font-weight: 500;
+        text-decoration: none;
+        transition: color 0.3s ease;
+    }
+
+    .legal-container a:hover {
+        color: #062b61;
+        text-decoration: underline;
+    }
+
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(20px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
 </style>
 
-     <div class="legal-container" style="margin: 1rem;">
-       <h1>Términos y Condiciones</h1>
-        <p>Bienvenido a <strong>Euro Elite</strong>. Al acceder y utilizar nuestro sitio web, aceptas los siguientes
-            términos y condiciones:</p>
+<div class="legal-container">
+    <h1>Términos y Condiciones</h1>
 
-        <div class="section-card">
-           <h2>1. Uso del sitio</h2>
-        <p>El usuario se compromete a utilizar este sitio únicamente con fines legales y de acuerdo con estos términos.
-        </p>
+    <p>Bienvenido a <strong>Euro Elite</strong>. Al acceder y utilizar nuestro sitio web, aceptas los siguientes
+        términos y condiciones:</p>
+
+    <div class="section-card">
+        <h2>1. Uso del sitio</h2>
+        <p>El usuario se compromete a utilizar este sitio únicamente con fines legales y de acuerdo con estos términos.</p>
 
         <h2>2. Propiedad intelectual</h2>
         <p>Todo el contenido del sitio, incluyendo textos, imágenes y logos, es propiedad de Euro Elite y no puede ser
@@ -79,79 +89,15 @@
         <h2>4. Modificaciones</h2>
         <p>Nos reservamos el derecho de actualizar estos términos en cualquier momento. Las modificaciones serán
             efectivas al publicarlas en esta página.</p>
-        </div>
-
-        
-
-        <a href="{% url 'home' %}" class="back-home">Volver al Inicio</a>
     </div>
 
+    <a href="{% url 'home' %}" class="back-home">Volver al Inicio</a>
+</div>
 
-    
-    <!-- FOOTER -->
-    <footer class="footer"  style="margin-bottom: 0rem;">
-        <div class="footer-container">
-            <div class="footer-section">
-                <h3>Euro Elite</h3>
-                <p>Tu tienda especializada en repuestos europeos de alta calidad. Más de 10 años de experiencia en el
-                    mercado automotriz.</p>
-                <div class="social-icons">
-                    <a href="#"><i class="fab fa-facebook-f"></i></a>
-                    <a href="#"><i class="fab fa-instagram"></i></a>
-                </div>
-            </div>
+<script>
+    const carritoURL = "{% url 'carrito_compras' %}";
+</script>
 
-            <div class="footer-section">
-                <h3>Productos</h3>
-                <ul>
-                    <li><a href="#">Repuestos BMW</a></li>
-                    <li><a href="#">Repuestos Audi</a></li>
-                    <li><a href="#">Repuestos Mercedes-Benz</a></li>
-                    <li><a href="#">Accesorios</a></li>
-                    <li><a href="#">Herramientas</a></li>
-                </ul>
-            </div>
-
-            <div class="footer-section">
-                <h3>Servicios</h3>
-                <ul>
-                    <li><a href="{% url 'agendar' %}">Instalación</a></li>
-                    <li><a href="{% url 'agendar' %}">Mantención</a></li>
-                    <li><a href="{% url 'agendar' %}">Diagnóstico</a></li>
-                    <li><a href="{% url 'agendar' %}">Garantía</a></li>
-                </ul>
-            </div>
-
-            <div class="footer-section">
-                <h3>Contacto</h3>
-                <ul>
-                    <li><i class="fas fa-map-marker-alt"></i> Cooperativa 1144, Recoleta, Santiago</li>
-                    <li><i class="fas fa-phone"></i> +56 9 1234 5678</li>
-                    <li><i class="fas fa-envelope"></i> info@euroelite.cl</li>
-                    <li><i class="fas fa-clock"></i> Lun-Vie: 9:00-18:00</li>
-                </ul>
-            </div>
-
-            <div class="footer-section">
-                <h3>Legal</h3>
-                <ul>
-                    <li><a href="{% url 'terminos' %}">Términos y Condiciones</a></li>
-                    <li><a href="{% url 'privacidad' %}">Política de Privacidad</a></li>
-                    <li><a href="{% url 'privacidad' %}">Política de Devoluciones</a></li>
-                </ul>
-            </div>
-        </div>
-
-        <div class="footer-bottom" style="text-align: center;">
-            <p>&copy; 2025 Euro Elite. Todos los derechos reservados. | Diseñado con ❤️ para los amantes del automóvil
-            </p>
-        </div>
-    </footer>
-<!--El const carrito URL es para que la página de carrito cargue la URL correcta-->
-
-    <script>
-        const carritoURL = "{% url 'carrito_compras' %}";
-    </script>
-    <script src="{% static 'js/main.js' %}?v=2"></script>
+<script src="{% static 'js/main.js' %}?v=2"></script>
 
 {% endblock %}

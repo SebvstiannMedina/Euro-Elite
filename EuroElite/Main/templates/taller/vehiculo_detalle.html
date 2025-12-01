@@ -1,6 +1,8 @@
 {% extends 'base.html' %}
 {% load static %}
-
+{% load humanize %}
+{% load i18n %}
+{% load custom_filters %}
 {% block title %}{{ vehiculo.marca }} {{ vehiculo.modelo }} - Euro Elite{% endblock %}
 
 {% block content %}
@@ -114,7 +116,7 @@
     .price-tag {
         font-size: 2.5rem;
         font-weight: 700;
-        color: #fdfdfd;
+        color: #fff;
         margin-bottom: 20px;
     }
 
@@ -226,17 +228,6 @@
         font-size: 1.1rem;
         font-weight: 600;
     }
-
-    .contact-box-wrapper {
-        position: relative;
-        z-index: 20;
-    }
-
-    .info-card-after-contact {
-        margin-top: 20px;
-        position: relative;
-        z-index: 1;
-    }
 </style>
 
 <!-- Hero -->
@@ -258,78 +249,83 @@
 
 <div class="container mb-5">
     <div class="row">
-        <!-- Galería e Info -->
+
+        <!-- COLUMNA IZQUIERDA -->
         <div class="col-lg-8">
+
             <!-- Galería con Carrusel -->
             <div class="vehicle-gallery">
                 {% if vehiculo.imagen or imagenes_galeria %}
-                    <!-- Carrusel Principal -->
                     <div class="carousel-main" id="mainCarousel">
                         {% if vehiculo.imagen %}
-                            <img src="{{ vehiculo.imagen.url }}" alt="{{ vehiculo.marca }} {{ vehiculo.modelo }}" data-index="0">
+                            <img src="{{ vehiculo.imagen.url }}" data-index="0">
                         {% elif imagenes_galeria %}
-                            <img src="{{ imagenes_galeria.0.imagen.url }}" alt="{{ vehiculo.marca }} {{ vehiculo.modelo }}" data-index="0">
+                            <img src="{{ imagenes_galeria.0.imagen.url }}" data-index="0">
                         {% endif %}
-                        
-                        <!-- Controles -->
+
                         <button class="carousel-control prev" onclick="changeImage(-1)">
                             <i class="fas fa-chevron-left"></i>
                         </button>
                         <button class="carousel-control next" onclick="changeImage(1)">
                             <i class="fas fa-chevron-right"></i>
                         </button>
-                        
-                        <!-- Contador -->
+
                         <div class="carousel-counter">
                             <span id="currentIndex">1</span> / <span id="totalImages">1</span>
                         </div>
                     </div>
 
-                    <!-- Miniaturas -->
                     <div class="thumbnails-container">
                         {% if vehiculo.imagen %}
                         <div class="thumbnail-item active" onclick="selectImage(0)" data-index="0">
-                            <img src="{{ vehiculo.imagen.url }}" alt="Principal">
+                            <img src="{{ vehiculo.imagen.url }}">
                         </div>
                         {% endif %}
-                        
+
                         {% for img in imagenes_galeria %}
-                        <div class="thumbnail-item" onclick="selectImage({{ forloop.counter }})" data-index="{{ forloop.counter }}">
-                            <img src="{{ img.imagen.url }}" alt="Imagen {{ forloop.counter }}">
+                        <div class="thumbnail-item" onclick="selectImage({{ forloop.counter }})">
+                            <img src="{{ img.imagen.url }}">
                         </div>
                         {% endfor %}
                     </div>
+
                 {% else %}
                     <div class="carousel-main">
-                        <img src="{% static 'img/default-car.jpg' %}" alt="Sin imagen">
+                        <img src="{% static 'img/default-car.jpg' %}">
                     </div>
                 {% endif %}
             </div>
 
-            <!-- Especificaciones -->
+            <!-- ESPECIFICACIONES -->
             <div class="info-card">
                 <h3 class="mb-4"><i class="fas fa-clipboard-list"></i> Especificaciones</h3>
+
                 <div class="specs-grid">
+
                     <div class="spec-box">
                         <i class="fas fa-calendar-alt"></i>
                         <div class="label">Año</div>
                         <div class="value">{{ vehiculo.anio }}</div>
                     </div>
+
                     <div class="spec-box">
                         <i class="fas fa-tachometer-alt"></i>
                         <div class="label">Kilometraje</div>
-                        <div class="value">{{ vehiculo.kilometraje|floatformat:0 }} km</div>
+                        <div class="value">{{ vehiculo.kilometraje|miles_chilenos }} km</div>
                     </div>
+
                     <div class="spec-box">
                         <i class="fas fa-gas-pump"></i>
                         <div class="label">Combustible</div>
                         <div class="value">{{ vehiculo.get_combustible_display }}</div>
                     </div>
+
                     <div class="spec-box">
                         <i class="fas fa-cog"></i>
                         <div class="label">Transmisión</div>
                         <div class="value">{{ vehiculo.get_transmision_display }}</div>
                     </div>
+
                     {% if vehiculo.color %}
                     <div class="spec-box">
                         <i class="fas fa-palette"></i>
@@ -337,6 +333,7 @@
                         <div class="value">{{ vehiculo.color|title }}</div>
                     </div>
                     {% endif %}
+
                     {% if vehiculo.patente %}
                     <div class="spec-box">
                         <i class="fas fa-id-card"></i>
@@ -344,10 +341,10 @@
                         <div class="value">{{ vehiculo.patente|upper }}</div>
                     </div>
                     {% endif %}
+
                 </div>
             </div>
 
-            <!-- Descripción -->
             {% if vehiculo.descripcion %}
             <div class="info-card">
                 <h3 class="mb-4"><i class="fas fa-file-alt"></i> Descripción</h3>
@@ -358,143 +355,121 @@
             {% endif %}
         </div>
 
-        <!-- Sidebar Contacto -->
+        <!-- COLUMNA DERECHA -->
         <div class="col-lg-4">
+
             <div class="contact-box-wrapper">
                 <div class="contact-box">
-                <div class="price-tag text-center mb-4">
-                    ${{ vehiculo.precio|floatformat:0 }}
-                </div>
+                    <div class="price-tag text-center mb-4">
+                        ${{ vehiculo.precio|miles_chilenos }}
+                    </div>
 
-                <h4><i class="fas fa-user-circle"></i> Vendedor</h4>
-                <div class="contact-info">
-                    <i class="fas fa-user"></i>
-                    <span>{{ vehiculo.usuario.get_full_name }}</span>
-                </div>
-                <div class="contact-info">
-                    <i class="fas fa-envelope"></i>
-                    <span>{{ vehiculo.usuario.email }}</span>
-                </div>
-                {% if vehiculo.usuario.telefono %}
-                <div class="contact-info">
-                    <i class="fas fa-phone"></i>
-                    <span>{{ vehiculo.usuario.telefono }}</span>
-                </div>
-                {% endif %}
+                    <h4><i class="fas fa-user-circle"></i> Vendedor</h4>
 
-                <hr style="border-color: rgba(255,255,255,0.3); margin: 25px 0;">
+                    <div class="contact-info">
+                        <i class="fas fa-user"></i>
+                        <span>{{ vehiculo.usuario.get_full_name }}</span>
+                    </div>
 
-                <h4><i class="fas fa-comments"></i> Contactar</h4>
-                <p class="mb-3" style="font-size: 0.9rem; opacity: 0.9;">
-                    Contáctate directamente con el vendedor para más información
-                </p>
+                    <div class="contact-info">
+                        <i class="fas fa-envelope"></i>
+                        <span>{{ vehiculo.usuario.email }}</span>
+                    </div>
 
-                {% if vehiculo.usuario.telefono %}
-                <a href="https://wa.me/56{{ vehiculo.usuario.telefono|slice:'1:' }}?text=Hola, estoy interesado en tu {{ vehiculo.marca }} {{ vehiculo.modelo }} {{ vehiculo.anio }}" 
-                   target="_blank" 
-                   class="btn-whatsapp">
-                    <i class="fab fa-whatsapp"></i> Contactar por WhatsApp
-                </a>
-                {% endif %}
+                    {% if vehiculo.usuario.telefono %}
+                    <div class="contact-info">
+                        <i class="fas fa-phone"></i>
+                        <span>{{ vehiculo.usuario.telefono }}</span>
+                    </div>
+                    {% endif %}
 
-                <a href="mailto:{{ vehiculo.usuario.email }}?subject=Consulta por {{ vehiculo.marca }} {{ vehiculo.modelo }}" 
-                   class="btn btn-light w-100 mt-3">
-                    <i class="fas fa-envelope"></i> Enviar Email
-                </a>
+                    <hr style="border-color: rgba(255,255,255,0.3); margin: 25px 0;">
 
-                <div class="mt-4 text-center" style="font-size: 0.85rem; opacity: 0.8;">
-                    <i class="fas fa-shield-alt"></i> Vehículo verificado por Euro Elite
+                    <h4><i class="fas fa-comments"></i> Contactar</h4>
+                    <p style="font-size: 0.9rem; opacity: 0.9;">
+                        Contáctate directamente con el vendedor para más información.
+                    </p>
+
+                    {% if vehiculo.usuario.telefono %}
+                    <a href="https://wa.me/56{{ vehiculo.usuario.telefono|slice:'1:' }}?text=Hola, estoy interesado en tu {{ vehiculo.marca }} {{ vehiculo.modelo }} {{ vehiculo.anio }}"
+                       target="_blank" class="btn-whatsapp">
+                        <i class="fab fa-whatsapp"></i> Contactar por WhatsApp
+                    </a>
+                    {% endif %}
+
+                    <a href="mailto:{{ vehiculo.usuario.email }}?subject=Consulta por {{ vehiculo.marca }} {{ vehiculo.modelo }}"
+                       class="btn btn-light w-100 mt-3">
+                        <i class="fas fa-envelope"></i> Enviar Email
+                    </a>
+
+                    <div class="mt-4 text-center" style="font-size: 0.85rem; opacity: 0.8;">
+                        <i class="fas fa-shield-alt"></i> Vehículo verificado por Euro Elite
+                    </div>
                 </div>
             </div>
-            </div>
 
-            <!-- Información Adicional -->
             <div class="info-card mt-4 info-card-after-contact">
                 <h5><i class="fas fa-info-circle"></i> Información</h5>
                 <ul class="list-unstyled mt-3">
                     <li class="mb-2">
-                        <i class="fas fa-check-circle text-success"></i>
-                        Vehículo aprobado
+                        <i class="fas fa-check-circle text-success"></i> Vehículo aprobado
                     </li>
                     <li class="mb-2">
                         <i class="fas fa-calendar"></i>
                         Publicado el {{ vehiculo.fecha_publicacion|date:"d/m/Y" }}
                     </li>
                     <li class="mb-2">
-                        <i class="fas fa-map-marker-alt"></i>
-                        Región Metropolitana, Chile
+                        <i class="fas fa-map-marker-alt"></i> Región Metropolitana, Chile
                     </li>
                 </ul>
             </div>
+
         </div>
     </div>
 </div>
 
 <script>
-// Sistema de carrusel de imágenes
 (function() {
     const carousel = document.getElementById('mainCarousel');
     const mainImage = carousel ? carousel.querySelector('img') : null;
     const thumbnails = document.querySelectorAll('.thumbnail-item');
     const currentIndexEl = document.getElementById('currentIndex');
     const totalImagesEl = document.getElementById('totalImages');
-    
+
     if (!carousel || !mainImage || thumbnails.length === 0) return;
-    
-    // Construir array de URLs de imágenes
+
     const images = [];
-    {% if vehiculo.imagen %}
-    images.push('{{ vehiculo.imagen.url }}');
-    {% endif %}
-    {% for img in imagenes_galeria %}
-    images.push('{{ img.imagen.url }}');
-    {% endfor %}
-    
+    {% if vehiculo.imagen %} images.push('{{ vehiculo.imagen.url }}'); {% endif %}
+    {% for img in imagenes_galeria %} images.push('{{ img.imagen.url }}'); {% endfor %}
+
     let currentIndex = 0;
-    
-    // Actualizar contador total
-    if (totalImagesEl) totalImagesEl.textContent = images.length;
-    
-    // Función para cambiar imagen
+
+    totalImagesEl.textContent = images.length;
+
     window.changeImage = function(direction) {
         currentIndex = (currentIndex + direction + images.length) % images.length;
         updateCarousel();
     };
-    
-    // Función para seleccionar imagen directamente
+
     window.selectImage = function(index) {
         currentIndex = index;
         updateCarousel();
     };
-    
-    // Actualizar carrusel
+
     function updateCarousel() {
-        if (mainImage) {
-            mainImage.src = images[currentIndex];
-            mainImage.alt = 'Imagen ' + (currentIndex + 1);
-        }
-        
-        if (currentIndexEl) {
-            currentIndexEl.textContent = currentIndex + 1;
-        }
-        
-        // Actualizar miniaturas activas
+        mainImage.src = images[currentIndex];
+        currentIndexEl.textContent = currentIndex + 1;
+
         thumbnails.forEach((thumb, idx) => {
-            if (idx === currentIndex) {
-                thumb.classList.add('active');
-            } else {
-                thumb.classList.remove('active');
-            }
+            thumb.classList.toggle('active', idx === currentIndex);
         });
     }
-    
-    // Navegación con teclado
+
     document.addEventListener('keydown', function(e) {
         if (e.key === 'ArrowLeft') changeImage(-1);
         if (e.key === 'ArrowRight') changeImage(1);
     });
-    
-    // Inicializar
+
     updateCarousel();
 })();
 </script>

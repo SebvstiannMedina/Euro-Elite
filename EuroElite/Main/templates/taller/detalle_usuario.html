@@ -2,34 +2,96 @@
 {% block title %}Detalle de Usuario - Euro Elite{% endblock %}
 {% block content %}
 
-<br><br><br><br><br><br>
+<br><br><br><br><br>
 
-<div class="container my-4">
-  <div class="card shadow-sm p-4">
-    <h3 class="mb-3">Detalle del Usuario</h3>
+<div class="container my-5">
+    <div class="card border-0 shadow-lg p-4" style="border-radius: 20px; background: #ffffff;">
+        
+        <!-- Título -->
+        <h2 class="fw-bold mb-4" 
+            style="background: linear-gradient(135deg, #4f46e5, #8b5cf6); 
+                   -webkit-background-clip: text; 
+                   -webkit-text-fill-color: transparent;">
+            Detalle del Usuario
+        </h2>
 
-    <p><strong>Nombre de usuario:</strong> {{ usuario.username }}</p>
-    <p><strong>Email:</strong> {{ usuario.email }}</p>
-    <p><strong>Fecha de registro:</strong> {{ usuario.date_joined|date:"d/m/Y H:i" }}</p>
-    <p><strong>Último acceso:</strong> {{ usuario.last_login|date:"d/m/Y H:i" }}</p>
-    <p><strong>Rol:</strong>
-      {% if usuario.is_superuser %}
-        <span class="badge bg-danger">Administrador</span>
-      {% elif usuario.is_staff %}
-        <span class="badge bg-primary">Staff</span>
-      {% else %}
-        <span class="badge bg-secondary">Cliente</span>
-      {% endif %}
-    </p>
+        <!-- Avatar + Nombre -->
+        <div class="d-flex align-items-center mb-4">
+            <div class="avatar-user me-3">
+                {{ usuario.first_name|default:"U"|first|upper }}
+            </div>
+            <div>
+                <h4 class="fw-semibold mb-1">
+                    {{ usuario.first_name }} {{ usuario.last_name }}
+                </h4>
+                <div class="text-muted">{{ usuario.email }}</div>
+            </div>
+        </div>
 
-    <div class="mt-3">
-      <a href="{% url 'admin_usuarios' %}" class="btn btn-secondary">Volver</a>
-      <a href="{% url 'eliminar_usuario' usuario.id %}" class="btn btn-danger"
-         onclick="return confirm('¿Seguro que deseas eliminar este usuario?');">
-        Eliminar
-      </a>
+        <!-- Datos -->
+        <div class="row mt-4">
+            <div class="col-md-6 mb-3">
+                <p class="mb-1 text-muted">Fecha de registro</p>
+                <p class="fw-semibold">{{ usuario.date_joined|date:"d/m/Y H:i" }}</p>
+            </div>
+
+            <div class="col-md-6 mb-3">
+                <p class="mb-1 text-muted">Último acceso</p>
+                <p class="fw-semibold">
+                    {% if usuario.last_login %}
+                        {{ usuario.last_login|date:"d/m/Y H:i" }}
+                    {% else %}
+                        <span class="text-muted">Nunca</span>
+                    {% endif %}
+                </p>
+            </div>
+
+            <div class="col-md-6 mb-3">
+                <p class="mb-1 text-muted">Rol</p>
+                <p>
+                    {% if usuario.is_superuser %}
+                        <span class="badge bg-danger px-3 py-2">Administrador</span>
+                    {% elif usuario.is_staff %}
+                        <span class="badge bg-primary px-3 py-2">Staff</span>
+                    {% else %}
+                        <span class="badge bg-secondary px-3 py-2">Cliente</span>
+                    {% endif %}
+                </p>
+            </div>
+        </div>
+
+        <!-- Botones -->
+        <div class="mt-4 d-flex gap-2">
+            <a href="{% url 'admin_usuarios' %}" class="btn btn-outline-secondary px-4">
+                <i class="fas fa-arrow-left me-1"></i> Volver
+            </a>
+
+            <a href="{% url 'eliminar_usuario' usuario.id %}"
+               onclick="return confirm('¿Seguro que deseas eliminar este usuario?')"
+               class="btn btn-danger px-4">
+                <i class="fas fa-trash-alt me-1"></i> Eliminar
+            </a>
+        </div>
     </div>
-  </div>
 </div>
+
+<style>
+.avatar-user {
+    width: 70px;
+    height: 70px;
+    border-radius: 16px;
+    background: radial-gradient(circle at 30% 30%, rgba(79,70,229,0.75), rgba(37,99,235,0.85));
+    color: #fff;
+    font-size: 1.7rem;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 12px 25px rgba(79,70,229,0.25);
+}
+.card {
+    background: linear-gradient(160deg, #ffffff 0%, #f6f7ff 100%);
+}
+</style>
 
 {% endblock %}

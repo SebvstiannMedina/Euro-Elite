@@ -5,211 +5,345 @@
 
 <!-- ESTILOS -->
 <style>
-.hero-nosotros{min-height:80vh;position:relative;display:flex;align-items:center;justify-content:center;}
-.hero-bg{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;filter:brightness(.6);animation:zoomHero 15s infinite alternate;}
-.overlay{position:absolute;inset:0;background:linear-gradient(135deg,rgba(13,110,253,0.6),rgba(102,16,242,0.6));}
-.hero-content{position:relative;z-index:2;}
-@keyframes zoomHero{from{transform:scale(1);}to{transform:scale(1.1);}}
-.animate-fade{animation:fadeIn 1s ease forwards;}
-.animate-fade-delay{opacity:0;animation:fadeIn 1s ease .5s forwards;}
-.animate-fade-delay2{opacity:0;animation:fadeIn 1s ease 1s forwards;}
-@keyframes fadeIn{to{opacity:1;transform:translateY(0);}}
-.icon-circle{width:70px;height:70px;border-radius:50%;background:linear-gradient(135deg,#0d6efd,#6610f2);color:white;display:flex;align-items:center;justify-content:center;margin:0 auto;transition:.3s;}
-.valor-card:hover .icon-circle{transform:scale(1.1);}
-.timeline{position:relative;margin-left:20px;}
-.timeline::before{content:"";position:absolute;left:0;top:0;bottom:0;width:2px;background:#0d6efd;}
-.timeline-item{position:relative;margin-bottom:20px;padding-left:30px;}
-.timeline-item .dot{position:absolute;left:-7px;top:5px;width:14px;height:14px;background:#fff;border:3px solid #0d6efd;border-radius:50%;}
-.team-card{position:relative;overflow:hidden;}
-.team-card img{width:120px;height:120px;object-fit:cover;}
-.team-card .overlay{position:absolute;inset:0;background:rgba(0,0,0,.6);color:white;display:flex;align-items:center;justify-content:center;opacity:0;transition:.3s;border-radius:50%;}
-.team-card:hover .overlay{opacity:1;}
-.gallery img{width:100%;border-radius:12px;transition:.4s;}
-.gallery:hover img{transform:scale(1.05);}
-.cta-nosotros{background:linear-gradient(135deg,#0d6efd,#6610f2);}
-.pulse{animation:pulseAnim 2s infinite;}
-@keyframes pulseAnim{0%{box-shadow:0 0 0 0 rgba(255,255,255,.7);}70%{box-shadow:0 0 0 20px rgba(255,255,255,0);}100%{box-shadow:0 0 0 0 rgba(255,255,255,0);}}
-/* Degradado en texto */
-.text-gradient{background:linear-gradient(135deg,#0d6efd,#6610f2);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;color:transparent;}
+/* ===== HERO ===== */
+.hero-nosotros {
+    min-height: 85vh;
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.hero-bg {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    filter: brightness(.5);
+    animation: zoomHero 15s infinite alternate cubic-bezier(.4,0,.2,1);
+}
+.overlay {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(135deg,rgba(13,110,253,0.5),rgba(102,16,242,0.6));
+}
+.hero-content {
+    position: relative;
+    z-index: 2;
+    max-width: 850px;
+}
+.hero-title {
+    font-size: 4rem;
+    font-weight: 900;
+    line-height: 1.1;
+    background: linear-gradient(135deg,#ffffff,#c9c4ff);
+    -webkit-background-clip:text;
+    -webkit-text-fill-color:transparent;
+}
+
+.hero-sub {
+    font-size: 1.3rem;
+    opacity: .9;
+}
+
+/* Animaciones */
+@keyframes zoomHero {
+    from { transform: scale(1); }
+    to { transform: scale(1.1); }
+}
+.animate-fade { animation: fadeIn .9s ease forwards; }
+.animate-fade-delay { opacity: 0; animation: fadeIn 1s ease .4s forwards; }
+.animate-fade-delay2 { opacity: 0; animation: fadeIn 1s ease .8s forwards; }
+@keyframes fadeIn {
+    0% { opacity: 0; transform: translateY(20px); }
+    100% { opacity: 1; transform: translateY(0); }
+}
+
+/* ===== QUIENES SOMOS ===== */
+.section-title {
+    font-weight: 800;
+    font-size: 2.4rem;
+    background: linear-gradient(135deg,#0d6efd,#6610f2);
+    -webkit-background-clip:text;
+    -webkit-text-fill-color:transparent;
+}
+
+.card-soft {
+    border: none;
+    border-radius: 15px;
+    background: #ffffff;
+    box-shadow: 0 10px 25px rgba(0,0,0,.06);
+    transition: .3s;
+}
+.card-soft:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 15px 35px rgba(0,0,0,.12);
+}
+
+/* ===== VALORES ===== */
+.icon-circle {
+    width: 70px;
+    height: 70px;
+    border-radius: 50%;
+    background: linear-gradient(135deg,#0d6efd,#6610f2);
+    color: white;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    margin: 0 auto;
+    transition: .3s;
+}
+.valor-card:hover .icon-circle {
+    transform: scale(1.1);
+}
+
+/* ===== TIMELINE ===== */
+.timeline {
+    position: relative;
+    margin-left: 25px;
+}
+.timeline::before {
+    content: "";
+    position: absolute;
+    left: 7px;
+    top: 0;
+    bottom: 0;
+    width: 3px;
+    background: #6610f2;
+}
+.timeline-item {
+    position: relative;
+    margin-bottom: 25px;
+    padding-left: 40px;
+}
+.timeline-item .dot {
+    position: absolute;
+    left: -3px;
+    top: 3px;
+    width: 16px;
+    height: 16px;
+    background: #fff;
+    border: 3px solid #6610f2;
+    border-radius: 50%;
+}
+
+/* ===== GALERÍA ===== */
+.gallery-item img {
+    width: 100%;
+    border-radius: 12px;
+    transition: .4s;
+    box-shadow: 0 8px 20px rgba(0,0,0,.15);
+}
+.gallery-item:hover img {
+    transform: scale(1.05);
+}
+
+/* ===== CTA ===== */
+.cta-nosotros {
+    background: linear-gradient(135deg,#0d6efd,#6610f2);
+}
+.pulse {
+    animation: pulseAnim 2s infinite;
+}
+@keyframes pulseAnim {
+    0% { box-shadow: 0 0 0 0 rgba(255,255,255,.7); }
+    70% { box-shadow: 0 0 0 20px rgba(255,255,255,0); }
+    100% { box-shadow: 0 0 0 0 rgba(255,255,255,0); }
+}
+
 </style>
+
 <!-- HERO -->
 <section class="hero-nosotros text-white text-center">
-  <div class="overlay"></div>
-  <img class="hero-bg" src="https://images.unsplash.com/photo-1502877338535-766e1452684a?w=1600&q=80" alt="Auto de lujo">
-  <div class="container hero-content">
-    <h1 class="display-3 fw-bold text-gradient animate-fade">Conoce Euro Elite</h1>
-    <p class="lead animate-fade-delay">Más que autos, experiencias de confianza.</p>
-    <div class="d-flex justify-content-center gap-3 mt-3 animate-fade-delay2">
-      <a href="{% url 'productos' %}" class="btn btn-light btn-lg rounded-pill shadow">Ver autos</a>
-      <a href="{% url 'agendar' %}" class="btn btn-outline-light btn-lg rounded-pill shadow">Agendar cita</a>
+    <div class="overlay"></div>
+    <img class="hero-bg" src="https://images.unsplash.com/photo-1502877338535-766e1452684a?w=1600&q=80" alt="Auto de lujo">
+    <div class="container hero-content">
+        <h1 class="hero-title animate-fade">Conoce Euro Elite</h1>
+        <p class="hero-sub animate-fade-delay">Más que autos, experiencias de confianza.</p>
+        <div class="d-flex justify-content-center gap-3 mt-4 animate-fade-delay2">
+            <a href="{% url 'productos' %}" class="btn btn-light btn-lg rounded-pill shadow">Ver autos</a>
+            <a href="{% url 'agendar' %}" class="btn btn-outline-light btn-lg rounded-pill shadow">Agendar cita</a>
+        </div>
     </div>
-  </div>
 </section>
 
-<!-- QUIÉNES SOMOS -->
+<!-- QUIENES SOMOS -->
 <section class="py-5">
-  <div class="container">
-    <div class="row align-items-center g-5">
-      <div class="col-lg-6">
-        <img src="https://images.unsplash.com/photo-1525609004556-c46c7d6cf023?w=1000&q=80" 
-             class="img-fluid rounded-4 shadow" alt="Sucursal">
-      </div>
-      <div class="col-lg-6">
-        <h2 class="fw-bold mb-3 text-gradient">Quiénes somos</h2>
-        <p class="text-muted">
-          En <b>Euro Elite</b> seleccionamos e importamos vehículos de alta gama con transparencia, servicio humano y excelencia técnica. 
-          Queremos que cada cliente viva una experiencia premium al comprar su auto.
-        </p>
-        <div class="row g-3 mt-3">
-          <div class="col-sm-6">
-            <div class="card h-100 shadow-sm p-3">
-              <h6 class="fw-bold">Misión</h6>
-              <p class="small text-muted mb-0">Ofrecer confianza y excelencia en cada auto que entregamos.</p>
+    <div class="container">
+        <div class="row align-items-center g-5">
+
+            <div class="col-lg-6">
+                <img src="https://images.unsplash.com/photo-1525609004556-c46c7d6cf023?w=1000&q=80"
+                     class="img-fluid rounded-4 shadow-lg" alt="Sucursal">
             </div>
-          </div>
-          <div class="col-sm-6">
-            <div class="card h-100 shadow-sm p-3">
-              <h6 class="fw-bold">Visión</h6>
-              <p class="small text-muted mb-0">Ser la automotora premium más confiable e innovadora de Chile.</p>
+
+            <div class="col-lg-6">
+                <h2 class="section-title mb-3">Quiénes somos</h2>
+                <p class="text-muted fs-5">
+                    En <b>Euro Elite</b> seleccionamos e importamos vehículos de alta gama con transparencia,
+                    servicio humano y excelencia técnica. Queremos que cada cliente viva una experiencia premium.
+                </p>
+
+                <div class="row g-3 mt-3">
+                    <div class="col-sm-6">
+                        <div class="card-soft p-3">
+                            <h6 class="fw-bold">Misión</h6>
+                            <p class="text-muted small mb-0">
+                                Ofrecer confianza, seguridad y excelencia en cada auto que entregamos.
+                            </p>
+                        </div>
+                    </div>
+
+                    <div class="col-sm-6">
+                        <div class="card-soft p-3">
+                            <h6 class="fw-bold">Visión</h6>
+                            <p class="text-muted small mb-0">
+                                Convertirnos en la automotora premium más confiable e innovadora de Chile.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
             </div>
-          </div>
         </div>
-      </div>
     </div>
-  </div>
 </section>
 
 <!-- VALORES -->
 <section class="py-5 bg-light">
-  <div class="container">
-    <h2 class="fw-bold text-center mb-5 text-gradient">Nuestros valores</h2>
-    <div class="row text-center g-4">
-      <div class="col-md-3">
-        <div class="valor-card p-4 shadow-sm">
-          <div class="icon-circle"><i class="fas fa-handshake fa-lg"></i></div>
-          <h6 class="mt-3">Confianza</h6>
-          <p class="text-muted small">Relaciones honestas y claras.</p>
+    <div class="container">
+        <h2 class="section-title text-center mb-5">Nuestros valores</h2>
+
+        <div class="row text-center g-4">
+        
+            <div class="col-md-3">
+                <div class="valor-card p-4 shadow-sm rounded-4">
+                    <div class="icon-circle"><i class="fas fa-handshake fa-lg"></i></div>
+                    <h6 class="mt-3">Confianza</h6>
+                    <p class="text-muted small">Relaciones honestas y transparentes desde el primer contacto.</p>
+                </div>
+            </div>
+
+            <div class="col-md-3">
+                <div class="valor-card p-4 shadow-sm rounded-4">
+                    <div class="icon-circle"><i class="fas fa-car-side fa-lg"></i></div>
+                    <h6 class="mt-3">Calidad</h6>
+                    <p class="text-muted small">Vehículos seleccionados rigurosamente por expertos.</p>
+                </div>
+            </div>
+
+            <div class="col-md-3">
+                <div class="valor-card p-4 shadow-sm rounded-4">
+                    <div class="icon-circle"><i class="fas fa-microchip fa-lg"></i></div>
+                    <h6 class="mt-3">Innovación</h6>
+                    <p class="text-muted small">Tecnología de punta en procesos y servicios.</p>
+                </div>
+            </div>
+
+            <div class="col-md-3">
+                <div class="valor-card p-4 shadow-sm rounded-4">
+                    <div class="icon-circle"><i class="fas fa-users fa-lg"></i></div>
+                    <h6 class="mt-3">Compromiso</h6>
+                    <p class="text-muted small">Acompañamiento cercano en todo el proceso.</p>
+                </div>
+            </div>
+
         </div>
-      </div>
-      <div class="col-md-3">
-        <div class="valor-card p-4 shadow-sm">
-          <div class="icon-circle"><i class="fas fa-car-side fa-lg"></i></div>
-          <h6 class="mt-3">Calidad</h6>
-          <p class="text-muted small">Unidades seleccionadas a mano.</p>
-        </div>
-      </div>
-      <div class="col-md-3">
-        <div class="valor-card p-4 shadow-sm">
-          <div class="icon-circle"><i class="fas fa-microchip fa-lg"></i></div>
-          <h6 class="mt-3">Innovación</h6>
-          <p class="text-muted small">Procesos modernos y tecnología.</p>
-        </div>
-      </div>
-      <div class="col-md-3">
-        <div class="valor-card p-4 shadow-sm">
-          <div class="icon-circle"><i class="fas fa-users fa-lg"></i></div>
-          <h6 class="mt-3">Compromiso</h6>
-          <p class="text-muted small">Acompañamiento en cada etapa.</p>
-        </div>
-      </div>
     </div>
-  </div>
 </section>
 
 <!-- HISTORIA -->
 <section class="py-5">
-  <div class="container">
-    <h2 class="fw-bold text-center mb-5 text-gradient">Nuestra historia</h2>
-    <div class="timeline">
-      <div class="timeline-item"><span class="dot"></span><div class="content"><h6>2020</h6><p>Nace Euro Elite en Chile.</p></div></div>
-      <div class="timeline-item"><span class="dot"></span><div class="content"><h6>2021</h6><p>Abrimos nuestra primera sucursal.</p></div></div>
-      <div class="timeline-item"><span class="dot"></span><div class="content"><h6>2023</h6><p>Superamos los 500 clientes felices.</p></div></div>
-      <div class="timeline-item"><span class="dot"></span><div class="content"><h6>2025</h6><p>Lanzamos nuestra plataforma online.</p></div></div>
-    </div>
-  </div>
-</section>
+    <div class="container">
+        <h2 class="section-title text-center mb-5">Nuestra historia</h2>
 
-<!-- EQUIPO 
-<section class="py-5 bg-light">
-  <div class="container">
-    <h2 class="fw-bold text-center mb-5 text-gradient">Nuestro equipo</h2>
-    <div class="row text-center g-4">
-      <div class="col-md-3">
-        <div class="team-card">
-          <img src="https://randomuser.me/api/portraits/women/44.jpg" class="rounded-circle mb-3">
-          <div class="overlay"><p>Gerente Comercial</p></div>
-          <h6>Camila Rivas</h6>
+        <div class="timeline">
+            <div class="timeline-item">
+                <span class="dot"></span>
+                <h6 class="fw-bold">2020</h6>
+                <p class="text-muted">Nace Euro Elite en Chile.</p>
+            </div>
+
+            <div class="timeline-item">
+                <span class="dot"></span>
+                <h6 class="fw-bold">2021</h6>
+                <p class="text-muted">Apertura de nuestra primera sucursal.</p>
+            </div>
+
+            <div class="timeline-item">
+                <span class="dot"></span>
+                <h6 class="fw-bold">2023</h6>
+                <p class="text-muted">Superamos los 500 clientes felices.</p>
+            </div>
+
+            <div class="timeline-item">
+                <span class="dot"></span>
+                <h6 class="fw-bold">2025</h6>
+                <p class="text-muted">Lanzamos nuestra plataforma digital.</p>
+            </div>
         </div>
-      </div>
-      <div class="col-md-3">
-        <div class="team-card">
-          <img src="https://randomuser.me/api/portraits/men/45.jpg" class="rounded-circle mb-3">
-          <div class="overlay"><p>Jefe de Ventas</p></div>
-          <h6>Tomás Muñoz</h6>
-        </div>
-      </div>
-      <div class="col-md-3">
-        <div class="team-card">
-          <img src="https://randomuser.me/api/portraits/women/68.jpg" class="rounded-circle mb-3">
-          <div class="overlay"><p>Importación</p></div>
-          <h6>Valentina Díaz</h6>
-        </div>
-      </div>
-      <div class="col-md-3">
-        <div class="team-card">
-          <img src="https://randomuser.me/api/portraits/men/77.jpg" class="rounded-circle mb-3">
-          <div class="overlay"><p>Jefe de Taller</p></div>
-          <h6>Ricardo Soto</h6>
-        </div>
-      </div>
     </div>
-  </div>
-</section> -->
+</section>
 
 <!-- GALERÍA -->
 <section class="py-5">
-  <div class="container">
-    <h2 class="fw-bold text-center mb-5 text-gradient">Galería</h2>
-    <div class="row g-3">
-      <div class="col-md-4"><div class="gallery"><img src="https://di-uploads-pod14.dealerinspire.com/downtownlamotorsmercedesbenz/uploads/2025/01/2025-Mercedes-Benz-G-Wagon.png"></div></div>
-      <div class="col-md-4"><div class="gallery"><img src="https://bieninformado.mx/wp-content/uploads/2024/03/bmw-m-series-seo-overview-ms-04.jpg" alt="BMW"></div></div>
-      <div class="col-md-4"><div class="gallery"><img src="https://chileautos.pxcrush.net/cars/dealer/4o3utb0zh4plrlkbe3wulaol0.jpg?pxc_method=fitfill&pxc_bgtype=self&height=725&width=1087" alt="Audi"></div></div>
-    </div>
-  </div>
-</section>
+    <div class="container">
+        <h2 class="section-title text-center mb-5">Galería</h2>
 
-<!-- RESEÑAS PÚBLICAS -->
-<section class="py-5 bg-light">
-  <div class="container">
-    <h2 class="fw-bold text-center mb-5 text-gradient">Lo que dicen nuestros clientes</h2>
-    <div class="row text-center g-4">
-      {% if resenas %}
-        {% for t in resenas %}
-          <div class="col-md-4">
-            <p class="fst-italic">“{{ t.mensaje|truncatechars:160 }}”</p>
-            <small>- {% if t.nombre %}{{ t.nombre }}{% elif t.usuario %}{{ t.usuario.get_full_name }}{% else %}Anónimo{% endif %} {% if t.calificacion %} {% for i in "12345" %}{% if forloop.counter <= t.calificacion %}⭐{% endif %}{% endfor %}{% endif %}</small>
-          </div>
-        {% endfor %}
-      {% else %}
-        <div class="col-12">
-          <div class="alert alert-info">Todavía no hay reseñas públicas. <a href="{% url 'resenas' %}">Deja la tuya</a>.</div>
+        <div class="row g-3">
+            <div class="col-md-4"><div class="gallery-item"><img src="https://di-uploads-pod14.dealerinspire.com/downtownlamotorsmercedesbenz/uploads/2025/01/2025-Mercedes-Benz-G-Wagon.png"></div></div>
+            <div class="col-md-4"><div class="gallery-item"><img src="https://bieninformado.mx/wp-content/uploads/2024/03/bmw-m-series-seo-overview-ms-04.jpg"></div></div>
+            <div class="col-md-4"><div class="gallery-item"><img src="https://chileautos.pxcrush.net/cars/dealer/4o3utb0zh4plrlkbe3wulaol0.jpg?pxc_method=fitfill"></div></div>
         </div>
-      {% endif %}
+
     </div>
-  </div>
 </section>
 
-<!-- CTA -->
-<section class="cta-nosotros text-center text-white py-5">
-  <div class="container">
-    <h2 class="fw-bold mb-3 text-gradient" style="background-color: #6610f2;" >¿Listo para tu próximo auto?</h2>
-    <div class="d-flex justify-content-center gap-3">
-      <a href="{% url 'productos' %}" class="btn btn-light btn-lg rounded-pill shadow pulse">Ver autos</a>
-      <a href="{% url 'agendar' %}" class="btn btn-outline-light btn-lg rounded-pill shadow pulse">Agendar cita</a>
+<!-- RESEÑAS -->
+<section class="py-5 bg-light">
+    <div class="container">
+        <h2 class="section-title text-center mb-5">Lo que dicen nuestros clientes</h2>
+
+        <div class="row text-center g-4">
+            {% if resenas %}
+                {% for t in resenas %}
+                <div class="col-md-4">
+                    <div class="card-soft p-4 h-100">
+                        <p class="fst-italic">
+                            “{{ t.mensaje|truncatechars:160 }}”
+                        </p>
+                        <small class="text-muted">
+                            — {% if t.nombre %}{{ t.nombre }}{% elif t.usuario %}{{ t.usuario.get_full_name }}{% else %}Anónimo{% endif %}
+                        </small>
+                        <div>
+                            {% if t.calificacion %}
+                                {% for i in "12345" %}
+                                    {% if forloop.counter <= t.calificacion %}⭐{% endif %}
+                                {% endfor %}
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            {% else %}
+                <div class="col-12">
+                    <div class="alert alert-info">Aún no hay reseñas públicas. <a href="{% url 'resenas' %}">Deja la tuya aquí</a>.</div>
+                </div>
+            {% endif %}
+        </div>
     </div>
-  </div>
+</section>
+
+<!-- CTA FINAL -->
+<section class="cta-nosotros text-center text-white py-5">
+    <div class="container">
+        <h2 class="fw-bold mb-3">¿Listo para tu próximo auto?</h2>
+
+        <div class="d-flex justify-content-center gap-3">
+            <a href="{% url 'vehiculos_venta' %}" class="btn btn-light btn-lg rounded-pill shadow pulse">Ver autos</a>
+            <a href="{% url 'agendar' %}" class="btn btn-outline-light btn-lg rounded-pill shadow pulse">Agendar cita</a>
+        </div>
+    </div>
 </section>
 
 {% endblock %}
-
-

@@ -1,5 +1,8 @@
 {% extends 'base.html' %}
 {% load static %}
+{% load humanize %}
+{% load i18n %}
+{% load custom_filters %}
 
 {% block title %}Vehículos en Venta - Euro Elite{% endblock %}
 
@@ -151,7 +154,7 @@
     }
 </style>
 
-<!-- Hero Section -->
+<!-- HERO -->
 <div class="hero-section">
     <div class="container">
         <div class="row align-items-center">
@@ -173,33 +176,37 @@
 </div>
 
 <div class="container mb-5">
-    <!-- Filtros -->
+
+    <!-- FILTROS -->
     <div class="filter-section">
         <form method="get" action="{% url 'vehiculos_venta' %}" id="filterForm" novalidate>
             <div class="row g-3">
+
                 <div class="col-md-3">
-                    <label class="form-label fw-bold">
-                        <i class="fas fa-tag"></i> Marca
-                    </label>
-                    <input type="text" name="marca" class="form-control" id="filtroMarca" placeholder="Ej: Toyota..." maxlength="60" value="{{ request.GET.marca }}" data-filter-input>
-                    <small class="text-muted d-block mt-1"><span data-char-count="marca">0</span>/60</small>
+                    <label class="form-label fw-bold"><i class="fas fa-tag"></i> Marca</label>
+                    <input 
+                        type="text" 
+                        name="marca" 
+                        class="form-control"
+                        placeholder="Ej: Toyota..."
+                        maxlength="60"
+                        value="{{ request.GET.marca }}">
                 </div>
+
                 <div class="col-md-3">
-                    <label class="form-label fw-bold">
-                        <i class="fas fa-calendar"></i> Año Desde
-                    </label>
-                    <input type="number" name="anio_desde" class="form-control" placeholder="2010" value="{{ request.GET.anio_desde }}">
+                    <label class="form-label fw-bold"><i class="fas fa-calendar"></i> Año Desde</label>
+                    <input type="number" name="anio_desde" class="form-control"
+                           value="{{ request.GET.anio_desde }}">
                 </div>
+
                 <div class="col-md-3">
-                    <label class="form-label fw-bold">
-                        <i class="fas fa-dollar-sign"></i> Precio Máximo
-                    </label>
-                    <input type="number" name="precio_max" class="form-control" placeholder="10000000" value="{{ request.GET.precio_max }}">
+                    <label class="form-label fw-bold"><i class="fas fa-dollar-sign"></i> Precio Máximo</label>
+                    <input type="number" name="precio_max" class="form-control"
+                           value="{{ request.GET.precio_max }}">
                 </div>
+
                 <div class="col-md-3">
-                    <label class="form-label fw-bold">
-                        <i class="fas fa-gas-pump"></i> Combustible
-                    </label>
+                    <label class="form-label fw-bold"><i class="fas fa-gas-pump"></i> Combustible</label>
                     <select name="combustible" class="form-select">
                         <option value="">Todos</option>
                         <option value="gasolina" {% if request.GET.combustible == 'gasolina' %}selected{% endif %}>Gasolina</option>
@@ -208,7 +215,9 @@
                         <option value="electrico" {% if request.GET.combustible == 'electrico' %}selected{% endif %}>Eléctrico</option>
                     </select>
                 </div>
+
             </div>
+
             <div class="row mt-3">
                 <div class="col-12 text-end">
                     <a href="{% url 'vehiculos_venta' %}" class="btn btn-outline-secondary">
@@ -222,7 +231,7 @@
         </form>
     </div>
 
-    <!-- Resultados -->
+    <!-- RESULTADOS -->
     <div class="row mb-4">
         <div class="col-12">
             <h4 class="mb-3">
@@ -235,89 +244,62 @@
         </div>
     </div>
 
-    <!-- Grid de Vehículos -->
+    <!-- GRID DE VEHÍCULOS -->
     {% if vehiculos %}
     <div class="row g-4">
         {% for vehiculo in vehiculos %}
         <div class="col-lg-4 col-md-6">
             <div class="vehicle-card">
                 <div class="position-relative">
+
                     {% if vehiculo.imagen %}
                         <img src="{{ vehiculo.imagen.url }}" class="vehicle-image" alt="{{ vehiculo.marca }} {{ vehiculo.modelo }}">
                     {% else %}
                         <img src="{% static 'img/default-car.jpg' %}" class="vehicle-image" alt="Sin imagen">
                     {% endif %}
+
                     <span class="vehicle-badge">{{ vehiculo.anio }}</span>
                 </div>
+
                 <div class="vehicle-info">
                     <h3 class="vehicle-title">{{ vehiculo.marca }} {{ vehiculo.modelo }}</h3>
-                    <div class="vehicle-price">${{ vehiculo.precio|floatformat:0 }}</div>
-                    
+
+                    <!-- PRECIO FORMATEADO -->
+                    <div class="vehicle-price">
+                        ${{ vehiculo.precio|miles_chilenos }}
+                    </div>
+
                     <div class="vehicle-specs">
                         <div class="spec-item">
-                            <i class="fas fa-calendar-alt"></i>
-                            <span>{{ vehiculo.anio }}</span>
+                            <i class="fas fa-calendar-alt"></i>{{ vehiculo.anio }}
                         </div>
+
                         <div class="spec-item">
                             <i class="fas fa-tachometer-alt"></i>
-                            <span>{{ vehiculo.kilometraje|floatformat:0 }} km</span>
+                            {{ vehiculo.kilometraje|miles_chilenos }} km
                         </div>
+
                         <div class="spec-item">
-                            <i class="fas fa-gas-pump"></i>
-                            <span>{{ vehiculo.get_combustible_display }}</span>
+                            <i class="fas fa-gas-pump"></i>{{ vehiculo.get_combustible_display }}
                         </div>
+
                         <div class="spec-item">
-                            <i class="fas fa-cog"></i>
-                            <span>{{ vehiculo.get_transmision_display }}</span>
+                            <i class="fas fa-cog"></i>{{ vehiculo.get_transmision_display }}
                         </div>
                     </div>
 
                     <a href="{% url 'vehiculo_detalle' vehiculo.id %}" class="btn-contact">
                         <i class="fas fa-eye"></i> Ver Detalles
                     </a>
+
                 </div>
             </div>
         </div>
         {% endfor %}
     </div>
 
-    <!-- Paginación -->
-    {% if vehiculos.has_other_pages %}
-    <nav aria-label="Paginación" class="mt-5">
-        <ul class="pagination justify-content-center">
-            {% if vehiculos.has_previous %}
-                <li class="page-item">
-                    <a class="page-link" href="?page={{ vehiculos.previous_page_number }}{% if request.GET.marca %}&marca={{ request.GET.marca }}{% endif %}{% if request.GET.anio_desde %}&anio_desde={{ request.GET.anio_desde }}{% endif %}{% if request.GET.precio_max %}&precio_max={{ request.GET.precio_max }}{% endif %}{% if request.GET.combustible %}&combustible={{ request.GET.combustible }}{% endif %}">
-                        <i class="fas fa-chevron-left"></i> Anterior
-                    </a>
-                </li>
-            {% endif %}
-
-            {% for num in vehiculos.paginator.page_range %}
-                {% if vehiculos.number == num %}
-                    <li class="page-item active">
-                        <span class="page-link">{{ num }}</span>
-                    </li>
-                {% elif num > vehiculos.number|add:'-3' and num < vehiculos.number|add:'3' %}
-                    <li class="page-item">
-                        <a class="page-link" href="?page={{ num }}{% if request.GET.marca %}&marca={{ request.GET.marca }}{% endif %}{% if request.GET.anio_desde %}&anio_desde={{ request.GET.anio_desde }}{% endif %}{% if request.GET.precio_max %}&precio_max={{ request.GET.precio_max }}{% endif %}{% if request.GET.combustible %}&combustible={{ request.GET.combustible }}{% endif %}">{{ num }}</a>
-                    </li>
-                {% endif %}
-            {% endfor %}
-
-            {% if vehiculos.has_next %}
-                <li class="page-item">
-                    <a class="page-link" href="?page={{ vehiculos.next_page_number }}{% if request.GET.marca %}&marca={{ request.GET.marca }}{% endif %}{% if request.GET.anio_desde %}&anio_desde={{ request.GET.anio_desde }}{% endif %}{% if request.GET.precio_max %}&precio_max={{ request.GET.precio_max }}{% endif %}{% if request.GET.combustible %}&combustible={{ request.GET.combustible }}{% endif %}">
-                        Siguiente <i class="fas fa-chevron-right"></i>
-                    </a>
-                </li>
-            {% endif %}
-        </ul>
-    </nav>
-    {% endif %}
-
     {% else %}
-    <!-- Sin Resultados -->
+    <!-- SIN RESULTADOS -->
     <div class="no-vehicles">
         <i class="fas fa-car-side"></i>
         <h3 class="text-muted">No hay vehículos disponibles</h3>
@@ -327,76 +309,7 @@
         </a>
     </div>
     {% endif %}
+
 </div>
 
 {% endblock %}
-
-<script>
-document.addEventListener('DOMContentLoaded', function () {
-    // Función para detectar patrones SQL injection
-    const hasSqlInjectionPatterns = (value) => {
-      const sqlPatterns = [
-        /(\b(SELECT|INSERT|UPDATE|DELETE|DROP|CREATE|ALTER|EXEC|EXECUTE|SCRIPT|UNION|OR|AND)\b)/gi,
-        /(['";])/g,
-        /(--|#|\/\*|\*\/)/g,
-        /(xp_|sp_)/i
-      ];
-      return sqlPatterns.some(pattern => pattern.test(value));
-    };
-
-    // Validar campo Marca
-    const marcaInput = document.getElementById('filtroMarca');
-    if (marcaInput) {
-      marcaInput.addEventListener('input', function () {
-        // Limitar a 60 caracteres
-        if (this.value.length > 60) {
-          this.value = this.value.substring(0, 60);
-        }
-        
-        // Actualizar contador
-        const charCount = document.querySelector('[data-char-count="marca"]');
-        if (charCount) {
-          charCount.textContent = this.value.length;
-        }
-
-        // Detectar SQL injection
-        if (hasSqlInjectionPatterns(this.value)) {
-          this.classList.add('is-invalid');
-        } else {
-          this.classList.remove('is-invalid');
-        }
-      });
-
-      marcaInput.addEventListener('blur', function () {
-        if (this.value && hasSqlInjectionPatterns(this.value)) {
-          this.classList.add('is-invalid');
-          alert('⚠️ El campo contiene caracteres no permitidos.');
-          this.value = ''; // Limpiar el campo
-        }
-      });
-
-      // Inicializar contador con valor actual
-      const charCount = document.querySelector('[data-char-count="marca"]');
-      if (charCount) {
-        charCount.textContent = marcaInput.value.length;
-      }
-    }
-
-    // Validar formulario antes de enviar
-    const filterForm = document.getElementById('filterForm');
-    if (filterForm) {
-      filterForm.addEventListener('submit', function (event) {
-        if (marcaInput) {
-          const marca = marcaInput.value.trim();
-          
-          if (marca && hasSqlInjectionPatterns(marca)) {
-            event.preventDefault();
-            alert('⚠️ El campo Marca contiene caracteres no permitidos. Por favor, usa solo letras y números.');
-            marcaInput.focus();
-            return false;
-          }
-        }
-      });
-    }
-});
-</script>
