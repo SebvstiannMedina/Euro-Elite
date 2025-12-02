@@ -4,6 +4,126 @@
 {% block title %}Confirmación de datos{% endblock %}
 
 {% block content %}
+
+<style>
+/* =============== ESTILOS PROFESIONALES =============== */
+
+/* Breadcrumb */
+.breadcrumb {
+  background: transparent;
+  font-size: 0.9rem;
+}
+.breadcrumb a {
+  text-decoration: none;
+  color: #5a67d8;
+  font-weight: 500;
+}
+.breadcrumb .active {
+  color: #4a5568;
+}
+
+/* Títulos */
+h1, .h3 {
+  font-weight: 700;
+  color: #1a202c;
+}
+h2, .h5 {
+  font-weight: 600;
+  color: #2d3748;
+}
+
+/* Cards */
+.card {
+  border-radius: 16px;
+  border: none;
+  background: #ffffff;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.08);
+  transition: 0.2s ease;
+}
+.card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 12px 28px rgba(0,0,0,0.12);
+}
+
+/* Inputs */
+.form-control, .form-select {
+  border-radius: 10px !important;
+  padding: 0.7rem 0.9rem;
+  border: 1px solid #cbd5e1;
+  background: #f8fafc;
+  transition: 0.2s ease;
+}
+.form-control:focus, .form-select:focus {
+  background: #fff;
+  border-color: #4c51bf;
+  box-shadow: 0 0 0 3px rgba(76,81,191,.15);
+}
+
+/* Input group */
+.input-group-text {
+  border-radius: 10px 0 0 10px;
+  background: #edf2f7;
+  border: 1px solid #cbd5e1;
+  font-weight: 600;
+}
+
+/* Botones */
+.btn-primary {
+  border-radius: 12px;
+  padding: 0.75rem 1.2rem;
+  background: linear-gradient(135deg, #4f46e5, #6d5dfc);
+  border: none;
+  box-shadow: 0 8px 20px rgba(79,70,229,0.3);
+  transition: 0.2s ease;
+}
+.btn-primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 28px rgba(79,70,229,0.45);
+}
+.btn-outline-secondary {
+  border-radius: 12px;
+  padding: 0.75rem 1.2rem;
+  border-color: #cbd5e1;
+  color: #1a202c;
+}
+.btn-outline-secondary:hover {
+  background: #e2e8f0;
+}
+
+/* Feedback */
+.text-danger.small {
+  margin-top: 3px;
+  font-size: 0.85rem;
+}
+
+/* Layout ajustes */
+#direccion-title {
+  margin-top: 1rem;
+}
+
+#metodo-entrega-display span {
+  font-size: 0.9rem;
+  color: #4a5568;
+}
+
+#summary-total-text {
+  font-size: 1.3rem;
+  font-weight: 700;
+  color: #2d3748;
+}
+
+#summary-subtotal-text,
+#summary-envio-text,
+#summary-descuento-text {
+  font-weight: 600;
+}
+
+/* Espaciado general */
+.container {
+  max-width: 1100px;
+}
+
+</style>
 <div class="container py-4">
 
   <nav aria-label="breadcrumb" class="mb-3">

@@ -12,6 +12,8 @@ pip install resend
 pip install google-cloud-bigquery google-cloud-storage google-auth
 pip install -r requirements.txt
 
+
+
 python manage.py runserver
 
 
