@@ -95,18 +95,29 @@
 
     .btn-filter {
         background: #5777b8;
-        color: white;
+        color: white !important;
         border: none;
         padding: 10px 25px;
         border-radius: 25px;
         font-weight: 600;
         transition: all 0.3s ease;
+        text-decoration: none;
+        font-size: 0.9rem;
     }
+
+    .no-vehicles .btn-filter i {
+    font-size: 1.2rem !important;
+    }
+
+    .no-vehicles .btn-filter i::before {
+    font-size: 1.2rem !important;
+    }
+
 
     .btn-filter:hover {
         background: #3d5a8f;
-        color: white;
         transform: translateY(-2px);
+        color: white !important;
     }
 
     .btn-contact {
@@ -122,19 +133,34 @@
 
     .btn-contact:hover {
         background: #3d5a8f;
-        color: white;
         transform: translateY(-2px);
+        color: white;
     }
 
+    /* ESTILO DEL BLOQUE SIN RESULTADOS */
     .no-vehicles {
         text-align: center;
-        padding: 80px 20px;
+        padding: 100px 30px;
+        background: #f9fafc;
+        border-radius: 20px;
+        box-shadow: 0 5px 20px rgba(0,0,0,0.05);
     }
 
     .no-vehicles i {
-        font-size: 5rem;
-        color: #ddd;
+        font-size: 6rem;
+        color: #d6dbe5;
         margin-bottom: 20px;
+    }
+
+    .no-vehicles h3 {
+        color: #2c3e50;
+        font-size: 1.8rem;
+        font-weight: 700;
+    }
+
+    .no-vehicles p {
+        color: #7f8c8d;
+        margin-bottom: 25px;
     }
 
     .pagination {
@@ -299,11 +325,12 @@
     </div>
 
     {% else %}
-    <!-- SIN RESULTADOS -->
+    <!-- SIN RESULTADOS (CORREGIDO) -->
     <div class="no-vehicles">
         <i class="fas fa-car-side"></i>
-        <h3 class="text-muted">No hay vehículos disponibles</h3>
-        <p class="text-muted">Intenta ajustar los filtros o vuelve más tarde.</p>
+        <h3>No hay vehículos disponibles</h3>
+        <p>Intenta ajustar los filtros o vuelve más tarde.</p>
+
         <a href="{% url 'publicar_vehiculo' %}" class="btn-filter mt-3">
             <i class="fas fa-plus-circle"></i> Publica tu vehículo
         </a>
