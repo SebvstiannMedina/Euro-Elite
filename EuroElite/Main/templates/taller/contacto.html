@@ -1,10 +1,7 @@
 {% extends 'base.html' %}
 {% load static %}
-
 {% block title %}Contacto - Euro Elite{% endblock %}
-
 {% block content %}
-
 <style>
 /* ===== HERO PREMIUM ===== */
 .hero-contacto {
@@ -37,7 +34,6 @@
     opacity: .9;
     font-size: 1.15rem;
 }
-
 /* ===== CARD CONTACTO ===== */
 .page-contact {
     background:
@@ -60,7 +56,6 @@
     color: #0d1b2a;
     margin-bottom: 20px;
 }
-
 /* ===== INPUTS PREMIUM ===== */
 .contact-form .form-label {
     font-weight: 700;
@@ -84,7 +79,7 @@
 }
 .contact-form .form-control {
     border-radius: 12px;
-    padding: 12px 14px 12px 42px;
+    padding: 12px 42px 12px 42px;
     border: 1px solid #e2e8f0;
     background: #fdfefe;
     box-shadow: inset 0 1px 0 rgba(255,255,255,.6);
@@ -97,7 +92,100 @@
     border-color: #6610f2;
     box-shadow: 0 0 0 .2rem rgba(102,16,242,.16);
 }
-
+.input-wrapper .error-icon {
+    position: absolute;
+    right: 12px;
+    top: 0;
+    bottom: 0;
+    margin: auto 0;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    width: 24px;
+    pointer-events: none;
+    font-size: 1rem;
+    line-height: 1;
+    z-index: 2;
+    color: #dc3545 !important;
+}
+.input-wrapper.has-error .error-icon {
+    display: flex;
+}
+.input-wrapper .error-icon i {
+    color: #dc3545 !important;
+}
+.input-wrapper.has-error .error-icon {
+    display: block;
+}
+.input-wrapper.has-error .form-control {
+    border-color: #dc3545;
+    box-shadow: 0 0 0 1px rgba(220,53,69,.2);
+}
+.input-wrapper.has-error .form-control:focus {
+    box-shadow: 0 0 0 .2rem rgba(220,53,69,.18);
+}
+.telefono-field {
+    position: relative;
+    display: flex;
+    align-items: stretch;
+    gap: 0;
+}
+.telefono-prefix {
+    display: inline-flex;
+    align-items: center;
+    padding: 0 12px;
+    border: 1px solid #e2e8f0;
+    border-right: 0;
+    border-radius: 12px 0 0 12px;
+    background: #f7f9fb;
+    color: #0d1b2a;
+    font-weight: 600;
+    white-space: nowrap;
+}
+.telefono-field input.form-control {
+    padding-left: 12px;
+    padding-right: 42px;
+    border-radius: 0 12px 12px 0;
+    border-left: 0;
+}
+.telefono-field .error-icon {
+    position: absolute;
+    right: 12px;
+    top: 0;
+    bottom: 0;
+    margin: auto 0;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    width: 24px;
+    pointer-events: none;
+    font-size: 1rem;
+    line-height: 1;
+    z-index: 2;
+    color: #dc3545 !important;
+}
+.telefono-field.has-error .error-icon {
+    display: flex;
+}
+.telefono-field .error-icon i {
+    color: #dc3545 !important;
+}
+.telefono-field.has-error .error-icon {
+    display: block;
+}
+.telefono-field.has-error .telefono-prefix,
+.telefono-field.has-error input.form-control {
+    border-color: #dc3545;
+    box-shadow: 0 0 0 1px rgba(220,53,69,.2);
+}
+.telefono-field.has-error input.form-control:focus {
+    box-shadow: 0 0 0 .2rem rgba(220,53,69,.18);
+}
+.field-feedback {
+    color: #dc3545;
+    font-size: .9rem;
+    margin-top: 6px;
+}
 /* ===== BOTÓN ENVIAR ===== */
 .btn-send {
     background: linear-gradient(135deg, #0d6efd, #6610f2);
@@ -113,7 +201,6 @@
     transform: translateY(-3px);
     box-shadow: 0 7px 15px rgba(102,16,242,.45);
 }
-
 /* ===== CONTACT INFO ===== */
 .contact-box {
     background: #fff;
@@ -134,13 +221,11 @@
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
 }
-
 /* ===== ANIMACIÓN ===== */
 @keyframes fadeUp {
     from { opacity: 0; transform: translateY(25px); }
     to   { opacity: 1; transform: translateY(0); }
 }
-
 /* CTA FINAL */
 .cta-final {
     background: linear-gradient(135deg, #0d6efd, #6610f2);
@@ -168,7 +253,6 @@
     background: #e8e8e8;
 }
 </style>
-
 <!-- HERO -->
 <section class="hero-contacto">
     <div class="hero-content">
@@ -176,14 +260,11 @@
         <p>Estamos aquí para atender todas tus consultas.</p>
     </div>
 </section>
-
 <!-- CONTENIDO -->
 <div class="page-contact">
 <div class="container">
     <div class="row justify-content-center">
-
         <div class="col-lg-8">
-
             {% if messages %}
                 {% for message in messages %}
                 <div class="alert alert-{{ message.tags }} fade show shadow-sm">
@@ -191,7 +272,6 @@
                 </div>
                 {% endfor %}
             {% endif %}
-
             <!-- FORMULARIO PREMIUM -->
             <div class="glass-card">
                 <div class="d-flex align-items-center gap-2 mb-2">
@@ -201,49 +281,77 @@
                 <h2 class="form-legend">Envíanos tu mensaje</h2>
                 <form method="post" action="{% url 'contacto' %}" class="contact-form">
                     {% csrf_token %}
-
                     <div class="row g-3">
                         <div class="col-md-6">
-                            <label for="nombre" class="form-label">Nombre completo *</label>
+                            <label for="nombre" class="form-label">Nombre completo</label>
                             <div class="input-wrapper">
                                 <i class="fas fa-user"></i>
-                                <input type="text" class="form-control" id="nombre" name="nombre" required>
+                                <input
+                                    type="text"
+                                    class="form-control"
+                                    id="nombre"
+                                    name="nombre"
+                                    placeholder="Ingresa tu nombre completo"
+                                    minlength="3"
+                                    maxlength="60"
+                                    pattern="^[A-Za-z\u00C1\u00C9\u00CD\u00D3\u00DA\u00E1\u00E9\u00ED\u00F3\u00FA\s]{3,60}$"
+                                    title="Solo letras y espacios. Se permiten tildes en vocales. De 3 a 60 caracteres."
+                                    aria-describedby="nombre-feedback"
+                                    required
+                                >
+                                <span class="error-icon" aria-hidden="true"><i class="fas fa-exclamation-circle"></i></span>
                             </div>
+                            <small class="field-feedback" id="nombre-feedback" aria-live="polite"></small>
                         </div>
-
                         <div class="col-md-6">
-                            <label for="email" class="form-label">Correo electrónico *</label>
+                            <label for="email" class="form-label">Correo electrónico</label>
                             <div class="input-wrapper">
                                 <i class="fas fa-envelope"></i>
-                                <input type="email" class="form-control" id="email" name="email" required>
+                                <input type="email" class="form-control" id="email" name="email" placeholder="tucorreo@ejemplo.com" aria-describedby="email-feedback" required>
+                                <span class="error-icon" aria-hidden="true"><i class="fas fa-exclamation-circle"></i></span>
                             </div>
+                            <small class="field-feedback" id="email-feedback" aria-live="polite"></small>
                         </div>
-
                         <div class="col-md-6">
                             <label for="telefono" class="form-label">Teléfono</label>
-                            <div class="input-wrapper">
-                                <i class="fas fa-phone"></i>
-                                <input type="tel" class="form-control" id="telefono" name="telefono" placeholder="+56 9 ...">
+                            <div class="input-wrapper telefono-field">
+                                <span class="telefono-prefix">+56 9</span>
+                                <input
+                                    type="tel"
+                                    class="form-control"
+                                    id="telefono"
+                                    name="telefono"
+                                    placeholder="Ej: 12345678"
+                                    inputmode="numeric"
+                                    pattern="^[0-9]{8}$"
+                                    maxlength="8"
+                                    autocomplete="tel"
+                                    aria-describedby="telefono-feedback"
+                                    required
+                                >
+                                <span class="error-icon" aria-hidden="true"><i class="fas fa-exclamation-circle"></i></span>
                             </div>
+                            <small class="field-feedback" id="telefono-feedback" aria-live="polite"></small>
                         </div>
-
                         <div class="col-md-6">
-                            <label for="asunto" class="form-label">Asunto *</label>
+                            <label for="asunto" class="form-label">Asunto</label>
                             <div class="input-wrapper">
                                 <i class="fas fa-tag"></i>
-                                <input type="text" class="form-control" id="asunto" name="asunto" required>
+                                <input type="text" class="form-control" id="asunto" name="asunto" placeholder="Motivo de tu mensaje" minlength="3" maxlength="120" aria-describedby="asunto-feedback" required>
+                                <span class="error-icon" aria-hidden="true"><i class="fas fa-exclamation-circle"></i></span>
                             </div>
+                            <small class="field-feedback" id="asunto-feedback" aria-live="polite"></small>
                         </div>
-
                         <div class="col-12">
-                            <label for="mensaje" class="form-label">Mensaje *</label>
+                            <label for="mensaje" class="form-label">Mensaje</label>
                             <div class="input-wrapper">
                                 <i class="fas fa-comment-dots"></i>
-                                <textarea class="form-control" id="mensaje" name="mensaje" required></textarea>
+                                <textarea class="form-control" id="mensaje" name="mensaje" placeholder="Cuéntanos cómo podemos ayudarte" minlength="10" maxlength="1000" aria-describedby="mensaje-feedback" required></textarea>
+                                <span class="error-icon" aria-hidden="true"><i class="fas fa-exclamation-circle"></i></span>
                             </div>
+                            <small class="field-feedback" id="mensaje-feedback" aria-live="polite"></small>
                         </div>
                     </div>
-
                     <button type="submit" class="btn-send mt-4">
                         <i class="fas fa-paper-plane me-2"></i> Enviar mensaje
                     </button>
@@ -251,7 +359,6 @@
             </div>
         </div>
     </div>
-
     <!-- INFO ADICIONAL -->
     <div class="row mt-5 g-4">
         <div class="col-md-4">
@@ -261,7 +368,6 @@
                 <p class="text-muted">Cooperativa 1144, Recoleta, Santiago</p>
             </div>
         </div>
-
         <div class="col-md-4">
             <div class="contact-box">
                 <i class="fas fa-phone-alt"></i>
@@ -269,7 +375,6 @@
                 <p class="text-muted">+56 9 3080 7846</p>
             </div>
         </div>
-
         <div class="col-md-4">
             <div class="contact-box">
                 <i class="fas fa-envelope"></i>
@@ -280,12 +385,121 @@
     </div>
 </div>
 </div>
-
 <!-- CTA FINAL -->
 <section class="cta-final container my-5">
     <h2>¿Listo para dar el siguiente paso?</h2>
     <p class="mb-4">Estamos disponibles para resolver todas tus dudas.</p>
     <a href="{% url 'vehiculos_venta' %}">Ver Autos Disponibles</a>
 </section>
+<script>
+(() => {
+    const form = document.querySelector('.contact-form');
+    if (!form) return;
 
+    const getField = (id) => {
+        const input = document.getElementById(id);
+        if (!input) return null;
+        const wrapper = input.closest('.input-wrapper') || input.closest('.telefono-field');
+        const feedback = document.getElementById(`${id}-feedback`);
+        return wrapper && feedback ? { input, wrapper, feedback } : null;
+    };
+
+    const setError = (field, message) => {
+        const { input, wrapper, feedback } = field;
+        wrapper.classList.add('has-error');
+        feedback.textContent = message;
+        input.setCustomValidity(message);
+        input.setAttribute('aria-invalid', 'true');
+    };
+
+    const clearError = (field) => {
+        const { input, wrapper, feedback } = field;
+        wrapper.classList.remove('has-error');
+        feedback.textContent = '';
+        input.setCustomValidity('');
+        input.removeAttribute('aria-invalid');
+    };
+
+    const validators = {
+        nombre: (value) => {
+            const clean = value.trim();
+            if (!clean) return 'Ingresa tu nombre completo';
+            if (!/^[A-Za-z\u00C1\u00C9\u00CD\u00D3\u00DA\u00E1\u00E9\u00ED\u00F3\u00FA\s]{3,60}$/.test(clean)) {
+                return 'Usa solo letras y espacios (tildes en vocales), 3-60 caracteres.';
+            }
+            return '';
+        },
+        email: (value) => {
+            const clean = value.trim();
+            if (!clean) return 'Ingresa tu correo';
+            if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(clean)) return 'Ingresa un correo válido';
+            return '';
+        },
+        telefono: (value) => {
+            const clean = value.trim();
+            if (!clean) return 'Ingresa tu teléfono';
+            if (!/^[0-9]{8}$/.test(clean)) return 'Teléfono debe contener 8 dígitos';
+            return '';
+        },
+        asunto: (value) => {
+            const clean = value.trim();
+            if (!clean) return 'Ingresa el asunto';
+            if (clean.length < 3) return 'Asunto debe tener al menos 3 caracteres';
+            return '';
+        },
+        mensaje: (value) => {
+            const clean = value.trim();
+            if (!clean) return 'Ingresa tu mensaje';
+            if (clean.length < 10) return 'Mensaje debe tener al menos 10 caracteres';
+            return '';
+        },
+    };
+
+    const normalizers = {
+        nombre: (field) => {
+            const clean = field.input.value.replace(/[^A-Za-z\u00C1\u00C9\u00CD\u00D3\u00DA\u00E1\u00E9\u00ED\u00F3\u00FA\s]/g, '').slice(0, 60);
+            if (field.input.value !== clean) field.input.value = clean;
+        },
+        telefono: (field) => {
+            const clean = field.input.value.replace(/\D/g, '').slice(0, 8);
+            if (field.input.value !== clean) field.input.value = clean;
+        },
+    };
+
+    const fields = ['nombre', 'email', 'telefono', 'asunto', 'mensaje']
+        .map((id) => [id, getField(id)])
+        .filter(([, field]) => field)
+        .reduce((acc, [id, field]) => ({ ...acc, [id]: field }), {});
+
+    const runValidation = (id) => {
+        const field = fields[id];
+        if (!field) return true;
+        if (normalizers[id]) normalizers[id](field);
+        const message = validators[id](field.input.value);
+        if (message) {
+            setError(field, message);
+            return false;
+        }
+        clearError(field);
+        return true;
+    };
+
+    Object.entries(fields).forEach(([id, field]) => {
+        field.input.addEventListener('input', () => {
+            if (normalizers[id]) normalizers[id](field);
+            clearError(field);
+        });
+        field.input.addEventListener('blur', () => runValidation(id));
+        field.input.addEventListener('invalid', (event) => {
+            event.preventDefault();
+            runValidation(id);
+        });
+    });
+
+    form.addEventListener('submit', (event) => {
+        const allValid = Object.keys(fields).every((id) => runValidation(id));
+        if (!allValid) event.preventDefault();
+    });
+})();
+</script>
 {% endblock %}
