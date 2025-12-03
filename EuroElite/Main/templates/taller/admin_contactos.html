@@ -4,80 +4,345 @@
 {% block title %}Administrar Contactos - Euro Elite{% endblock %}
 
 {% block content %}
-<div class="container my-5">
-    <h1 class="mb-4">Mensajes de Contacto</h1>
+<style>
+    :root {
+        --ink: #0d1b2a;
+        --muted: #6c7893;
+        --accent: #2b63f6;
+    }
+    .admin-contact-page {
+        position: relative;
+        background: radial-gradient(circle at 12% 18%, rgba(43,99,246,.12), transparent 34%),
+                    radial-gradient(circle at 88% 12%, rgba(31,138,77,.12), transparent 32%),
+                    #f4f6fb;
+        padding: 52px 0 46px;
+        min-height: calc(100vh - 120px);
+    }
+    .page-heading {
+        display: flex;
+        align-items: center;
+        gap: 18px;
+        margin-bottom: 20px;
+    }
+    .heading-icon {
+        width: 60px;
+        height: 60px;
+        border-radius: 18px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        background: linear-gradient(135deg, #1f8a4d, #2b63f6);
+        color: #fff;
+        box-shadow: 0 14px 28px rgba(43,99,246,.28);
+    }
+    .heading-copy h1 {
+        margin: 0 0 4px;
+        color: var(--ink);
+        font-weight: 800;
+        letter-spacing: 0.2px;
+    }
+    .heading-copy p {
+        margin: 0;
+        color: var(--muted);
+        font-size: 0.98rem;
+    }
+    .heading-meta {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        margin-top: 10px;
+    }
+    .stat-chip {
+        background: #fff;
+        border: 1px solid rgba(13,110,253,.14);
+        color: var(--ink);
+        padding: 8px 14px;
+        border-radius: 999px;
+        font-weight: 700;
+        box-shadow: 0 10px 24px rgba(0,0,0,.05);
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+    }
+    .stat-chip i { color: var(--accent); }
+    .legend {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        align-items: center;
+    }
+    .legend .status-pill {
+        padding: 6px 12px;
+        border-radius: 999px;
+        border: 1px dashed rgba(13,110,253,.18);
+        box-shadow: none;
+    }
+    .admin-contact-card {
+        border: 1px solid rgba(13,110,253,.08);
+        box-shadow: 0 16px 40px rgba(0,0,0,.08);
+        border-radius: 16px;
+        overflow: hidden;
+        background: #fff;
+    }
+    .admin-contact-header {
+        padding: 18px 20px;
+        border-bottom: 1px solid #e5e9f2;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 16px;
+    }
+    .table-modern thead {
+        background: linear-gradient(135deg, #f7f9ff, #eef3ff);
+        color: var(--ink);
+        border: none;
+    }
+    .table-modern thead th {
+        border: none;
+        letter-spacing: 0.3px;
+        font-weight: 700;
+        text-transform: uppercase;
+        font-size: 0.85rem;
+    }
+    .table-modern tbody tr {
+        transition: background .15s ease;
+        border-top: 1px solid #eef1f7;
+    }
+    .table-modern tbody tr:hover {
+        background: #f7faff;
+    }
+    .table-modern tbody td {
+        color: #12213a;
+        border: none;
+        vertical-align: middle;
+    }
+    .table-modern tbody tr.table-primary {
+        --bs-table-bg: rgba(43,99,246,.08);
+        --bs-table-hover-bg: rgba(43,99,246,.14);
+        color: #0f1f3f;
+    }
+    .status-col { text-align: center; }
+    .actions-col { text-align: center; }
+    .status-pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 6px 12px;
+        border-radius: 12px;
+        font-weight: 700;
+        font-size: 0.85rem;
+        border: 1px solid transparent;
+    }
+    .status-pill i { font-size: .85rem; }
+    .pill-new { background: #fff8e6; color: #8c6b00; border-color: rgba(243,165,0,.36); }
+    .pill-read { background: #eaf3ff; color: #0b6cbd; border-color: rgba(43,99,246,.28); }
+    .btn-soft {
+        border: 1px solid rgba(13,110,253,.2);
+        background: #f7f9ff;
+        color: var(--accent);
+        font-weight: 700;
+        border-radius: 10px;
+        padding: 8px 12px;
+    }
+    .btn-soft:hover { background: #eaf1ff; }
+    .modal-header {
+        border-bottom: 1px solid #e5e9f2;
+        background: #f9fbff;
+        color: var(--ink);
+    }
+    .modal-content {
+        border-radius: 18px;
+        border: 1px solid #e6e9f3;
+        box-shadow: 0 18px 48px rgba(0,0,0,.14);
+        overflow: hidden;
+    }
+    .modal-header {
+        background: linear-gradient(135deg, #f6f9ff, #eef4ff);
+        padding: 16px 18px;
+    }
+    .modal-title { font-weight: 700; }
+    .modal-body {
+        background: #fff;
+        padding: 18px 18px 14px;
+    }
+    .modal-body p strong { color: #0d1b2a; }
+    .modal-footer {
+        background: #f8f9fc;
+        border-top: 1px solid #e5e9f2;
+    }
+    .meta-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+        gap: 10px;
+        margin-bottom: 14px;
+    }
+    .meta-item {
+        background: #f7f9ff;
+        border: 1px solid rgba(13,110,253,.12);
+        border-radius: 12px;
+        padding: 10px 12px;
+    }
+    .meta-label {
+        display: block;
+        font-size: 0.8rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        color: var(--muted);
+        margin-bottom: 4px;
+        font-weight: 700;
+    }
+    .meta-value {
+        color: var(--ink);
+        font-weight: 700;
+    }
+    .message-box {
+        border: 1px solid #e6e9f3;
+        border-radius: 14px;
+        background: #fdfefe;
+        padding: 12px 14px;
+    }
+    .message-title {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-weight: 800;
+        color: var(--ink);
+        margin-bottom: 8px;
+    }
+    .message-title i {
+        color: var(--accent);
+    }
+    .message-content {
+        color: #12213a;
+        line-height: 1.55;
+        background: #fff;
+        border-radius: 10px;
+        padding: 10px 12px;
+        border: 1px dashed #e0e6f4;
+    }
+    .table-wrapper {
+        padding: 10px 18px 20px;
+    }
+    @media (max-width: 768px) {
+        .admin-contact-header { flex-direction: column; align-items: flex-start; }
+        .page-heading { flex-direction: column; align-items: flex-start; }
+        .heading-meta { width: 100%; }
+    }
+</style>
 
-    <div class="card shadow">
-        <div class="card-body">
-            <table class="table table-hover">
-                <thead>
-                    <tr>
-                        <th>Fecha</th>
-                        <th>Nombre</th>
-                        <th>Email</th>
-                        <th>Asunto</th>
-                        <th>Estado</th>
-                        <th>Acciones</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for contacto in contactos %}
-                    <tr class="{% if not contacto.leido %}table-primary{% endif %}">
-                        <td>{{ contacto.creado|date:"d/m/Y H:i" }}</td>
-                        <td>{{ contacto.nombre }}</td>
-                        <td>{{ contacto.email }}</td>
-                        <td>{{ contacto.asunto }}</td>
-                        <td>
-                            {% if contacto.respondido %}
-                                <span class="badge bg-success">Respondido</span>
-                            {% elif contacto.leido %}
-                                <span class="badge bg-info">Leído</span>
-                            {% else %}
-                                <span class="badge bg-warning">Nuevo</span>
-                            {% endif %}
-                        </td>
-                        <td>
-                            <button class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#modalContacto{{ contacto.id }}">
-                                <i class="fas fa-eye"></i> Ver
-                            </button>
-                        </td>
-                    </tr>
+<div class="admin-contact-page">
+    <div class="container">
+        <div class="page-heading">
+            <div class="heading-icon">
+                <i class="fas fa-comments"></i>
+            </div>
+            <div class="heading-copy">
+                <h1>Mensajes de Contacto</h1>
+                <p>Revisa y gestiona los mensajes que env&iacute;an los clientes desde la web.</p>
+                <div class="heading-meta">
+                    <span class="stat-chip"><i class="fas fa-inbox"></i> Total: <strong>{{ contactos|length }}</strong></span>
+                    <div class="legend">
+                        <span class="status-pill pill-new"><i class="fas fa-bell"></i> Nuevo</span>
+                        <span class="status-pill pill-read"><i class="fas fa-envelope-open-text"></i> Le&iacute;do</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="admin-contact-card">
+            <div class="admin-contact-header">
+                <div>
+                    <h2 class="m-0" style="font-weight: 800; color: var(--ink);">Bandeja interna</h2>
+                    <p class="mb-0" style="color: var(--muted);">Mensajes recibidos listos para gestionar y responder.</p>
+                </div>
+                <div class="text-end">
+                    <small class="text-muted">Actualizado: {% now "d/m/Y H:i" %}</small>
+                </div>
+            </div>
+            <div class="table-responsive table-wrapper">
+                <table class="table table-modern align-middle mb-0">
+                    <thead>
+                        <tr>
+                            <th style="min-width: 120px;">Fecha</th>
+                            <th style="min-width: 140px;">Nombre</th>
+                            <th style="min-width: 180px;">Email</th>
+                            <th>Asunto</th>
+                            <th class="status-col" style="min-width: 120px;">Estado</th>
+                            <th class="actions-col" style="min-width: 120px;">Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for contacto in contactos %}
+                        <tr class="{% if not contacto.leido %}table-primary{% endif %}">
+                            <td>{{ contacto.creado|date:"d/m/Y H:i" }}</td>
+                            <td>{{ contacto.nombre }}</td>
+                            <td>{{ contacto.email }}</td>
+                            <td>{{ contacto.asunto }}</td>
+                            <td class="status-col">
+                                {% if contacto.leido %}
+                                    <span class="status-pill pill-read"><i class="fas fa-envelope-open-text"></i> Le&iacute;do</span>
+                                {% else %}
+                                    <span class="status-pill pill-new"><i class="fas fa-bell"></i> Nuevo</span>
+                                {% endif %}
+                            </td>
+                            <td class="actions-col">
+                                <button class="btn btn-sm btn-soft" data-bs-toggle="modal" data-bs-target="#modalContacto{{ contacto.id }}">
+                                    <i class="fas fa-eye"></i> Ver
+                                </button>
+                            </td>
+                        </tr>
 
-                    <!-- Modal para ver mensaje -->
-                    <div class="modal fade" id="modalContacto{{ contacto.id }}" tabindex="-1">
-                        <div class="modal-dialog modal-lg">
-                            <div class="modal-content">
-                                <div class="modal-header">
-                                    <h5 class="modal-title">{{ contacto.asunto }}</h5>
-                                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                                </div>
-                                <div class="modal-body">
-                                    <p><strong>De:</strong> {{ contacto.nombre }} ({{ contacto.email }})</p>
-                                    {% if contacto.telefono %}
-                                    <p><strong>Teléfono:</strong> {{ contacto.telefono }}</p>
-                                    {% endif %}
-                                    <p><strong>Fecha:</strong> {{ contacto.creado|date:"d/m/Y H:i" }}</p>
-                                    <hr>
-                                    <p>{{ contacto.mensaje|linebreaks }}</p>
-                                </div>
-                                <div class="modal-footer">
-                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
-                                    {% if not contacto.leido %}
-                                    <button type="button" class="btn btn-primary" onclick="marcarLeido({{ contacto.id }})">
-                                        Marcar como leído
-                                    </button>
-                                    {% endif %}
+                        <!-- Modal para ver mensaje -->
+                        <div class="modal fade" id="modalContacto{{ contacto.id }}" tabindex="-1">
+                            <div class="modal-dialog modal-lg modal-dialog-centered">
+                                <div class="modal-content">
+                                    <div class="modal-header">
+                                        <h5 class="modal-title">{{ contacto.asunto }}</h5>
+                                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                    </div>
+                                    <div class="modal-body">
+                                        <div class="meta-grid">
+                                            <div class="meta-item">
+                                                <span class="meta-label">De</span>
+                                                <span class="meta-value">{{ contacto.nombre }} ({{ contacto.email }})</span>
+                                            </div>
+                                            {% if contacto.telefono %}
+                                            <div class="meta-item">
+                                                <span class="meta-label">Tel&eacute;fono</span>
+                                                <span class="meta-value">{{ contacto.telefono }}</span>
+                                            </div>
+                                            {% endif %}
+                                            <div class="meta-item">
+                                                <span class="meta-label">Fecha</span>
+                                                <span class="meta-value">{{ contacto.creado|date:"d/m/Y H:i" }}</span>
+                                            </div>
+                                        </div>
+                                        <div class="message-box">
+                                            <div class="message-title">
+                                                <i class="fas fa-comment-dots"></i>
+                                                <span>{{ contacto.asunto }}</span>
+                                            </div>
+                                            <div class="message-content">{{ contacto.mensaje|linebreaks }}</div>
+                                        </div>
+                                    </div>
+                                    <div class="modal-footer">
+                                        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cerrar</button>
+                                        {% if not contacto.leido %}
+                                        <button type="button" class="btn btn-primary" onclick="marcarLeido({{ contacto.id }})">
+                                            Marcar como le&iacute;do
+                                        </button>
+                                        {% endif %}
+                                    </div>
                                 </div>
                             </div>
                         </div>
-                    </div>
-                    {% empty %}
-                    <tr>
-                        <td colspan="6" class="text-center">No hay mensajes de contacto</td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
+                        {% empty %}
+                        <tr>
+                            <td colspan="6" class="text-center text-muted py-4">No hay mensajes de contacto</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
         </div>
     </div>
 </div>
