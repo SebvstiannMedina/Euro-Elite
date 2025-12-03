@@ -689,7 +689,7 @@ class VehiculoEnVenta(models.Model):
     modelo = models.CharField(max_length=50)
     año = models.PositiveIntegerField()
     # Permitir guardar registros existentes sin valor inicial y completar luego
-    patente = models.CharField(max_length=10, help_text="Patente del vehículo", blank=True, default="")
+    patente = models.CharField(max_length=6, blank=True, default="")
     kilometraje = models.PositiveIntegerField(help_text="Kilómetros recorridos")
     transmision = models.CharField(max_length=20, choices=TRANSMISIONES)
     combustible = models.CharField(max_length=20, choices=COMBUSTIBLES)
@@ -734,7 +734,7 @@ class VehiculoImagen(models.Model):
 class VehiculoCliente(MarcaTiempo):
     """Vehículo registrado por un cliente para seguimiento de servicios."""
     usuario = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="vehiculos")
-    patente = models.CharField(max_length=10, unique=True)
+    patente = models.CharField(max_length=6, unique=True)
     marca = models.CharField(max_length=50)
     modelo = models.CharField(max_length=50)
     año = models.PositiveIntegerField()

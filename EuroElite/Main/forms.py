@@ -762,3 +762,123 @@ class HorarioDiaForm(forms.ModelForm):
             "hora_fin": forms.TimeInput(attrs={"type": "time", "class": "form-control"}),
             "activo": forms.CheckboxInput(attrs={"class": "form-check-input"}),
         }
+
+import re
+from django import forms
+from .models import VehiculoCliente, VehiculoEnVenta, VehiculoImagen
+
+from django import forms
+import re
+
+from .models import VehiculoEnVenta, VehiculoCliente, VehiculoImagen
+
+from django.forms.widgets import ClearableFileInput
+
+
+class MultipleFileInput(ClearableFileInput):
+    allow_multiple_selected = True
+
+# ======================================================
+# FORMULARIO PARA VEHICULOS EN VENTA
+# ======================================================
+
+import re
+from django import forms
+from .models import VehiculoEnVenta, VehiculoCliente
+from django.forms.widgets import ClearableFileInput
+
+
+class MultipleFileInput(ClearableFileInput):
+    allow_multiple_selected = True
+
+
+class VehiculoEnVentaForm(forms.ModelForm):
+
+    imagenes = forms.FileField(required=True)
+
+    class Meta:
+        model = VehiculoEnVenta
+        fields = [
+            'marca', 'modelo', 'año', 'patente', 'kilometraje',
+            'transmision', 'combustible', 'color',
+            'precio', 'descripcion'
+        ]
+
+    def clean_patente(self):
+        patente = self.cleaned_data.get("patente", "").upper().strip()
+
+        pattern = r"^[A-Z]{4}[0-9]{2}$|^[A-Z]{6}$"
+
+        if not re.fullmatch(pattern, patente):
+            raise forms.ValidationError(
+                "La patente no es válida. Formatos permitidos: AABB12 o ABCDEF."
+            )
+
+        existe = VehiculoEnVenta.objects.filter(patente=patente)
+
+        if self.instance.pk:
+            existe = existe.exclude(pk=self.instance.pk)
+
+        if existe.exists():
+            raise forms.ValidationError(
+                "Esta patente ya está registrada en vehículos en venta."
+            )
+
+        if VehiculoCliente.objects.filter(patente=patente).exists():
+            raise forms.ValidationError(
+                "Esta patente ya pertenece a un vehículo de cliente."
+            )
+
+        return patente
+    
+    def clean_año(self):
+        anio = self.cleaned_data.get("año")
+        from datetime import datetime
+
+        anio_actual = datetime.now().year
+
+        if anio < 1950 or anio > anio_actual:
+            raise forms.ValidationError(
+            f"El año del vehículo debe estar entre 1950 y {anio_actual}."
+        )
+
+        return anio
+
+
+
+# ======================================================
+# FORMULARIO PARA VEHICULOS DE CLIENTES
+# ======================================================
+class VehiculoClienteForm(forms.ModelForm):
+
+    class Meta:
+        model = VehiculoCliente
+        fields = "__all__"
+
+    def clean_patente(self):
+        patente = self.cleaned_data.get("patente", "").upper().strip()
+
+        # Formatos válidos: AABB12 o ABCDEF
+        pattern = r"^[A-Z]{4}[0-9]{2}$|^[A-Z]{6}$"
+
+        if not re.fullmatch(pattern, patente):
+            raise forms.ValidationError("Formato de patente inválido.")
+
+        # Validar duplicado dentro de VehiculoCliente
+        existe = VehiculoCliente.objects.filter(patente=patente)
+
+        if self.instance.pk:
+            existe = existe.exclude(pk=self.instance.pk)
+
+        if existe.exists():
+            raise forms.ValidationError(
+                "Esta patente ya está registrada como vehículo de cliente."
+            )
+
+        # Validación cruzada con VehiculoEnVenta
+        if VehiculoEnVenta.objects.filter(patente=patente).exists():
+            raise forms.ValidationError(
+                "Esta patente ya está registrada en vehículos en venta."
+            )
+
+        return patente

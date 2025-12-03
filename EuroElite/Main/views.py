@@ -1609,42 +1609,47 @@ from .forms import VehiculoForm
 
 
 
+from django.contrib.auth.decorators import login_required
+from django.contrib import messages
+from .forms import VehiculoEnVentaForm
+from .models import VehiculoImagen
+
+
 @login_required
 def publicar_vehiculo(request):
     if request.method == 'POST':
-        form = VehiculoForm(request.POST, request.FILES)
+        form = VehiculoEnVentaForm(request.POST, request.FILES)
         if form.is_valid():
             vehiculo = form.save(commit=False)
             vehiculo.usuario = request.user
             vehiculo.save()
 
-            # Guardar imágenes múltiples si se enviaron
-            try:
-                imagenes = request.FILES.getlist('imagenes')
-            except Exception:
-                imagenes = []
-
-            from .models import VehiculoImagen
+            # Guardar imágenes múltiples
+            imagenes = request.FILES.getlist('imagenes')
 
             if imagenes:
                 orden = 0
                 for img in imagenes[:10]:  # seguridad extra
-                    VehiculoImagen.objects.create(vehiculo=vehiculo, imagen=img, orden=orden)
+                    VehiculoImagen.objects.create(
+                        vehiculo=vehiculo,
+                        imagen=img,
+                        orden=orden
+                    )
                     orden += 1
 
-                # Usar la primera imagen de la galería como imagen principal
-                primera = imagenes[0]
-                vehiculo.imagen = primera
+                # Primera imagen como portada
+                vehiculo.imagen = imagenes[0]
                 vehiculo.save(update_fields=['imagen'])
-            
+
             messages.success(request, "Tu vehículo fue enviado para aprobación del administrador.")
             return redirect('estado_revi_vehiculos')
         else:
             messages.error(request, "Por favor revisa los campos del formulario.")
     else:
-        form = VehiculoForm()
+        form = VehiculoEnVentaForm()
 
     return render(request, 'taller/publicar_vehiculo.html', {'form': form})
+
 
 
 

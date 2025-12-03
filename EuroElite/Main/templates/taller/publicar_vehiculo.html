@@ -10,31 +10,76 @@
     padding: 60px 0 40px;
     margin-bottom: 40px;
   }
+
   .vehiculo-card {
     background: #ffffff;
     border-radius: 1rem;
     box-shadow: 0 10px 25px rgba(0, 0, 0, 0.08);
   }
-  .vehiculo-form label { font-weight: 600; }
-  .vehiculo-form .help-text { font-size: .85rem; color: #6c757d; }
-  .preview-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
-  .preview-item { position: relative; border-radius: 8px; overflow: hidden; }
-  .preview-item img { width: 100%; height: 100px; object-fit: cover; }
-  .preview-item .badge { position: absolute; top: 6px; left: 6px; }
+
+  .vehiculo-form label {
+    font-weight: 600;
+  }
+
+  .vehiculo-form .help-text {
+    font-size: .85rem;
+    color: #6c757d;
+  }
+
+  .preview-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 12px;
+  }
+
+  .preview-item {
+    position: relative;
+    border-radius: 8px;
+    overflow: hidden;
+  }
+
+  .preview-item img {
+    width: 100%;
+    height: 100px;
+    object-fit: cover;
+  }
+
+  .preview-item .badge {
+    position: absolute;
+    top: 6px;
+    left: 6px;
+  }
+
   .btn-enviar {
     background: linear-gradient(90deg, #5777b8, #3d5a8f);
-    border: none; color: #fff; font-weight: 600;
+    border: none;
+    color: #fff;
+    font-weight: 600;
   }
-  .btn-enviar:hover { filter: brightness(1.05); }
-  .field-error { color: #dc3545; font-size: .95rem; font-weight: 600; margin-top: .35rem; display:block; }
-  .section-title { font-weight: 700; color: #2c3e50; }
-  
+
+  .btn-enviar:hover {
+    filter: brightness(1.05);
+  }
+
+  .field-error {
+    color: #dc3545;
+    font-size: .95rem;
+    font-weight: 600;
+    margin-top: .35rem;
+    display: block;
+  }
+
+  .section-title {
+    font-weight: 700;
+    color: #2c3e50;
+  }
+
   /* Validaciones visuales */
   .is-valid {
     border-color: #28a745 !important;
     background-color: #f0fff4 !important;
   }
-  
+
   .is-invalid {
     border-color: #dc3545 !important;
     background-color: #fff5f5 !important;
@@ -86,10 +131,21 @@
     margin-bottom: 4px;
   }
 
-  .toast-custom-title.success { color: #28a745; }
-  .toast-custom-title.error { color: #dc3545; }
-  .toast-custom-title.warning { color: #ffc107; }
-  .toast-custom-title.info { color: #0d6efd; }
+  .toast-custom-title.success {
+    color: #28a745;
+  }
+
+  .toast-custom-title.error {
+    color: #dc3545;
+  }
+
+  .toast-custom-title.warning {
+    color: #ffc107;
+  }
+
+  .toast-custom-title.info {
+    color: #0d6efd;
+  }
 
   .toast-custom-message {
     font-size: 0.9rem;
@@ -112,6 +168,7 @@
       transform: translateX(400px);
       opacity: 0;
     }
+
     to {
       transform: translateX(0);
       opacity: 1;
@@ -123,6 +180,7 @@
       transform: translateX(0);
       opacity: 1;
     }
+
     to {
       transform: translateX(400px);
       opacity: 0;
@@ -137,20 +195,22 @@
 <!-- Toast Container -->
 <div id="toastContainer" class="toast-container-custom"></div>
 
-<!-- Hero -->
+<!-- HERO -->
 <div class="hero-section">
-  <div class="container">
-    <div class="d-flex justify-content-between align-items-center">
-      <div>
-        <h1 class="fw-bold mb-2"><i class="fas fa-plus-circle"></i> Publicar tu vehículo</h1>
-        <div class="opacity-75">Completa los datos. Revisaremos y aprobarmos tu publicación.</div>
+  <div class="container d-flex justify-content-between align-items-center">
+    <div>
+      <h1 class="fw-bold mb-2">
+        <i class="fas fa-plus-circle"></i> Publicar tu vehículo
+      </h1>
+      <div class="opacity-75">
+        Completa los datos. Revisaremos y aprobarmos tu publicación.
       </div>
-      <a href="{% url 'vehiculos_venta' %}" class="btn btn-light">
-        <i class="fas fa-arrow-left"></i> Volver al listado
-      </a>
     </div>
+    <a href="{% url 'vehiculos_venta' %}" class="btn btn-light">
+      <i class="fas fa-arrow-left"></i> Volver al listado
+    </a>
   </div>
-  </div>
+</div>
 
 <div class="container mb-5">
   <div class="row justify-content-center">
@@ -158,100 +218,112 @@
       <div class="vehiculo-card p-4 p-md-5">
 
         {% if messages %}
-          {% for message in messages %}
-            <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
-              {{ message }}
-              <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-            </div>
-          {% endfor %}
+        {% for message in messages %}
+          <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+            {{ message }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+          </div>
+        {% endfor %}
         {% endif %}
 
-        <form method="POST" enctype="multipart/form-data" class="vehiculo-form">
+        <form method="POST" enctype="multipart/form-data" class="vehiculo-form" id="vehiculoForm">
           {% csrf_token %}
-          <div id="clientErrorSummary" class="alert alert-danger d-none" role="alert" style="display:none;">
+
+          <div id="clientErrorSummary" class="alert alert-danger d-none" role="alert">
             <strong>Hay errores en el formulario:</strong>
             <ul id="clientErrorList" class="mb-0"></ul>
           </div>
 
           <!-- Datos principales -->
-          <h5 class="section-title mb-3"><i class="fas fa-car me-2"></i> Datos del vehículo</h5>
+          <h5 class="section-title mb-3">
+            <i class="fas fa-car me-2"></i> Datos del vehículo
+          </h5>
+
           <div class="row g-3">
+
             <div class="col-md-6">
               <label class="form-label">Marca</label>
               {{ form.marca }}
-              <small class="form-text text-muted">Solo letras, números y guiones</small>
               {% if form.marca.errors %}<div class="field-error">{{ form.marca.errors.0 }}</div>{% endif %}
             </div>
+
             <div class="col-md-6">
               <label class="form-label">Modelo</label>
               {{ form.modelo }}
-              <small class="form-text text-muted">Solo letras, números y guiones</small>
               {% if form.modelo.errors %}<div class="field-error">{{ form.modelo.errors.0 }}</div>{% endif %}
             </div>
+
             <div class="col-md-3">
               <label class="form-label">Año</label>
               {{ form.año }}
-              <small class="form-text text-muted">Solo números</small>
               {% if form.año.errors %}<div class="field-error">{{ form.año.errors.0 }}</div>{% endif %}
             </div>
+
             <div class="col-md-3">
-              <label class="form-label">Kilometraje (km)</label>
+              <label class="form-label">Kilometraje</label>
               {{ form.kilometraje }}
-              <small class="form-text text-muted">Solo números</small>
               {% if form.kilometraje.errors %}<div class="field-error">{{ form.kilometraje.errors.0 }}</div>{% endif %}
             </div>
+
             <div class="col-md-3">
-              <label class="form-label">Precio (CLP)</label>
+              <label class="form-label">Precio</label>
               {{ form.precio }}
-              <small class="form-text text-muted">Solo números</small>
               {% if form.precio.errors %}<div class="field-error">{{ form.precio.errors.0 }}</div>{% endif %}
             </div>
+
             <div class="col-md-3">
               <label class="form-label">Patente</label>
               {{ form.patente }}
-              <small class="form-text text-muted">Máx. 6 caracteres alfanuméricos</small>
+              <small class="form-text text-muted">Formato: AABB12 o ABCDEF</small>
+              <div id="patenteError" class="field-error" style="display:none;"></div>
               {% if form.patente.errors %}<div class="field-error">{{ form.patente.errors.0 }}</div>{% endif %}
             </div>
+
             <div class="col-md-6">
               <label class="form-label">Transmisión</label>
               {{ form.transmision }}
-              {% if form.transmision.errors %}<div class="field-error">{{ form.transmision.errors.0 }}</div>{% endif %}
             </div>
+
             <div class="col-md-6">
               <label class="form-label">Combustible</label>
               {{ form.combustible }}
-              {% if form.combustible.errors %}<div class="field-error">{{ form.combustible.errors.0 }}</div>{% endif %}
             </div>
+
             <div class="col-md-6">
               <label class="form-label">Color</label>
               {{ form.color }}
-              <small class="form-text text-muted">Solo letras</small>
-              {% if form.color.errors %}<div class="field-error">{{ form.color.errors.0 }}</div>{% endif %}
             </div>
+
             <div class="col-12">
               <label class="form-label">Descripción</label>
               {{ form.descripcion }}
-              <small class="form-text text-muted">Letras, números y símbolos: .,!?;:-() (máx. 2000 caracteres)</small>
-              {% if form.descripcion.errors %}<div class="field-error">{{ form.descripcion.errors.0 }}</div>{% endif %}
             </div>
+
           </div>
 
           <hr class="my-4">
 
           <!-- Imágenes -->
-          <h5 class="section-title mb-3"><i class="fas fa-images me-2"></i> Galería de imágenes</h5>
+          <h5 class="section-title mb-3">
+            <i class="fas fa-images me-2"></i> Galería de imágenes
+          </h5>
+
           <div class="row g-3">
             <div class="col-12">
               <label class="form-label">Imágenes del vehículo (hasta 10)</label>
-              {{ form.imagenes }}
+
+              <input
+                type="file"
+                name="imagenes"
+                id="id_imagenes"
+                class="form-control"
+                multiple
+                accept="image/jpeg,image/png,image/webp"
+              >
+
               <div class="help-text">
-                <i class="fas fa-info-circle"></i> 
-                JPG, PNG o WEBP. Máx. 5 MB cada una. <strong>La primera imagen será la portada.</strong>
+                JPG, PNG o WEBP. Máx. 5 MB cada una.
               </div>
-              {% if form.imagenes.errors %}<div class="field-error">{{ form.imagenes.errors.0 }}</div>{% endif %}
-            </div>
-            <div class="col-12">
-              <div id="previewGrid" class="preview-grid"></div>
             </div>
           </div>
 
@@ -260,6 +332,7 @@
               <i class="fa-solid fa-paper-plane me-2"></i> Enviar para aprobación
             </button>
           </div>
+
         </form>
       </div>
     </div>
@@ -270,21 +343,21 @@
   // Sistema de notificaciones Toast
   const ToastManager = {
     container: null,
-    
+
     init() {
       this.container = document.getElementById('toastContainer');
     },
 
     show(message, type = 'info', duration = 3000, title = '') {
       if (!this.container) this.init();
-      
+
       const toast = document.createElement('div');
       toast.className = `toast-custom ${type}`;
-      
+
       let icon = '';
       let defaultTitle = '';
-      
-      switch(type) {
+
+      switch (type) {
         case 'success':
           icon = '<i class="fas fa-check-circle me-2"></i>';
           defaultTitle = '¡Correcto!';
@@ -302,15 +375,15 @@
           defaultTitle = 'Información';
           break;
       }
-      
+
       toast.innerHTML = `
         <span class="toast-close" onclick="this.parentElement.remove()">&times;</span>
         ${title || defaultTitle ? `<div class="toast-custom-title ${type}">${icon}${title || defaultTitle}</div>` : ''}
         <div class="toast-custom-message">${message}</div>
       `;
-      
+
       this.container.appendChild(toast);
-      
+
       if (duration > 0) {
         setTimeout(() => {
           toast.classList.add('hide');
@@ -324,13 +397,13 @@
   ToastManager.init();
 
   // Validaciones en tiempo real
-  (function() {
+  (function () {
     // Función para agregar validación a un campo
     const addValidation = (fieldName, pattern, invalidMsg, options = {}) => {
       const field = document.querySelector(`[name="${fieldName}"]`);
       if (!field) return;
 
-      field.addEventListener('input', function() {
+      field.addEventListener('input', function () {
         const value = this.value;
         let isValid = true;
 
@@ -356,7 +429,7 @@
         }
       });
 
-      field.addEventListener('blur', function() {
+      field.addEventListener('blur', function () {
         if (this.value && !pattern.test(this.value)) {
           this.classList.add('is-invalid');
           this.classList.remove('is-valid');
@@ -398,7 +471,7 @@
     addValidation('patente', /^[A-Z0-9]*$/, 'Solo letras y números, máximo 6', { maxLength: 6 });
     const patenteField = document.querySelector('[name="patente"]');
     if (patenteField) {
-      patenteField.addEventListener('input', function() {
+      patenteField.addEventListener('input', function () {
         this.value = this.value.toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 6);
       });
     }
@@ -409,7 +482,7 @@
     // Descripción: Letras, números, espacios y símbolos simples
     addValidation('descripcion', /^[a-zA-Z0-9\s\.\,\!\?\;\:\-\(\)áéíóúÁÉÍÓÚ\n\r]*$/, 'Caracteres no permitidos', { maxLength: 2000 });
   })();
-  
+
   // Helpers para mostrar/limpiar errores con toasts
   function setFieldError(el, message) {
     if (!el) {
@@ -456,13 +529,13 @@
   }
 
   // Previsualización de la galería + validación de archivos (tipo y tamaño)
-  (function() {
+  (function () {
     const input = document.querySelector('input[name="imagenes"]');
     const grid = document.getElementById('previewGrid');
     if (!input || !grid) return;
 
     const MAX_SIZE = 7 * 1024 * 1024; // 7 MB
-    const ALLOWED = ['image/jpeg','image/png','image/webp'];
+    const ALLOWED = ['image/jpeg', 'image/png', 'image/webp'];
 
     function validateImages(files) {
       const errs = [];
@@ -473,12 +546,12 @@
       return errs;
     }
 
-    input.addEventListener('change', function() {
+    input.addEventListener('change', function () {
       grid.innerHTML = '';
       const files = Array.from(this.files || []);
       const errors = validateImages(files.slice(0, 10));
       const imgField = this;
-      
+
       if (errors.length) {
         setFieldError(imgField, errors.join(' — '));
       } else {
@@ -491,11 +564,11 @@
       if (files.length === 0) return;
       files.slice(0, 10).forEach((file, idx) => {
         const reader = new FileReader();
-        reader.onload = function(e) {
+        reader.onload = function (e) {
           const item = document.createElement('div');
           item.className = 'preview-item';
-          const badgeHTML = idx === 0 
-            ? '<span class="badge bg-primary">Portada</span>' 
+          const badgeHTML = idx === 0
+            ? '<span class="badge bg-primary">Portada</span>'
             : `<span class="badge bg-secondary">${idx + 1}</span>`;
           item.innerHTML = `<img src="${e.target.result}" alt="img-${idx}">${badgeHTML}`;
           grid.appendChild(item);
@@ -506,14 +579,14 @@
   })();
 
   // Validación al enviar el formulario
-  (function() {
+  (function () {
     const form = document.querySelector('form.vehiculo-form');
     if (!form) { return; }
 
     const patterns = {
       marca: /^[a-zA-Z0-9\s\-áéíóúÁÉÍÓÚ]+$/,
       modelo: /^[a-zA-Z0-9\s\-áéíóúÁÉÍÓÚ]+$/,
-      patente: /^[A-Z0-9]{1,6}$/, 
+      patente: /^[A-Z0-9]{1,6}$/,
       color: /^[a-zA-Z\s\-áéíóúÁÉÍÓÚ]+$/,
       descripcion: /^[a-zA-Z0-9\s\.\,\!\?\;\:\-\(\)áéíóúÁÉÍÓÚ\n\r]*$/
     };
@@ -547,26 +620,26 @@
       const marca = get('marca');
       const marcaVal = (marca && marca.value || '').trim();
       if (!marcaVal) {
-        setFieldError(marca, 'Falta completar la marca.'); 
+        setFieldError(marca, 'Falta completar la marca.');
         errors.push('Marca: falta por rellenar');
       } else if (!patterns.marca.test(marcaVal)) {
-        setFieldError(marca, 'Formato inválido: solo letras, números y guiones.'); 
+        setFieldError(marca, 'Formato inválido: solo letras, números y guiones.');
         errors.push('Marca: formato inválido');
-      } else { 
-        clearFieldError(marca); 
+      } else {
+        clearFieldError(marca);
       }
 
       // Modelo (required)
       const modelo = get('modelo');
       const modeloVal = (modelo && modelo.value || '').trim();
       if (!modeloVal) {
-        setFieldError(modelo, 'Falta completar el modelo.'); 
+        setFieldError(modelo, 'Falta completar el modelo.');
         errors.push('Modelo: falta por rellenar');
       } else if (!patterns.modelo.test(modeloVal)) {
-        setFieldError(modelo, 'Formato inválido: solo letras, números y guiones.'); 
+        setFieldError(modelo, 'Formato inválido: solo letras, números y guiones.');
         errors.push('Modelo: formato inválido');
-      } else { 
-        clearFieldError(modelo); 
+      } else {
+        clearFieldError(modelo);
       }
 
       // Año (required, rango)
@@ -574,53 +647,53 @@
       const anioVal = anio ? parseInt(anio.value, 10) : NaN;
       const current = new Date().getFullYear();
       if (!anio || !anio.value) {
-        setFieldError(anio, 'Falta completar el año.'); 
+        setFieldError(anio, 'Falta completar el año.');
         errors.push('Año: falta por rellenar');
       } else if (isNaN(anioVal) || anioVal < 1950 || anioVal > current + 1) {
-        setFieldError(anio, `Año inválido. Debe ser entre 1950 y ${current + 1}.`); 
+        setFieldError(anio, `Año inválido. Debe ser entre 1950 y ${current + 1}.`);
         errors.push('Año: fuera de rango');
-      } else { 
-        clearFieldError(anio); 
+      } else {
+        clearFieldError(anio);
       }
 
       // Kilometraje
       const km = get('kilometraje');
       const kmVal = km ? parseInt(km.value, 10) : NaN;
       if (!km || !km.value) {
-        setFieldError(km, 'Falta completar el kilometraje.'); 
+        setFieldError(km, 'Falta completar el kilometraje.');
         errors.push('Kilometraje: falta por rellenar');
       } else if (isNaN(kmVal) || kmVal < 0 || kmVal > 999999) {
-        setFieldError(km, 'Kilometraje inválido (0 - 999999).'); 
+        setFieldError(km, 'Kilometraje inválido (0 - 999999).');
         errors.push('Kilometraje: inválido');
-      } else { 
-        clearFieldError(km); 
+      } else {
+        clearFieldError(km);
       }
 
       // Precio
       const precio = get('precio');
       const precioVal = precio ? Number(precio.value) : NaN;
       if (!precio || !precio.value) {
-        setFieldError(precio, 'Falta completar el precio.'); 
+        setFieldError(precio, 'Falta completar el precio.');
         errors.push('Precio: falta por rellenar');
       } else if (isNaN(precioVal) || precioVal <= 0) {
-        setFieldError(precio, 'Precio inválido. Debe ser mayor a 0.'); 
+        setFieldError(precio, 'Precio inválido. Debe ser mayor a 0.');
         errors.push('Precio: inválido');
-      } else { 
-        clearFieldError(precio); 
+      } else {
+        clearFieldError(precio);
       }
 
       // Patente (required)
       const patente = get('patente');
-      const patVal = (patente && patente.value || '').trim().toUpperCase().replace(/[^A-Z0-9]/g,'');
+      const patVal = (patente && patente.value || '').trim().toUpperCase().replace(/[^A-Z0-9]/g, '');
       if (!patVal) {
         setFieldError(patente, 'Falta completar la patente.');
         errors.push('Patente: falta por rellenar');
       } else if (!patterns.patente.test(patVal)) {
-        setFieldError(patente, 'Patente inválida. Máx. 6 caracteres alfanuméricos.'); 
+        setFieldError(patente, 'Patente inválida. Máx. 6 caracteres alfanuméricos.');
         errors.push('Patente: inválida');
-      } else { 
-        patente.value = patVal; 
-        clearFieldError(patente); 
+      } else {
+        patente.value = patVal;
+        clearFieldError(patente);
       }
 
       // Imágenes (required - al menos 1)
@@ -632,7 +705,7 @@
         const files = Array.from(imgInput.files).slice(0, 10);
         const imgErrors = [];
         const MAX_SIZE = 7 * 1024 * 1024; // 7MB
-        const ALLOWED = ['image/jpeg','image/png','image/webp'];
+        const ALLOWED = ['image/jpeg', 'image/png', 'image/webp'];
         files.forEach(f => {
           if (!ALLOWED.includes(f.type)) imgErrors.push(`${f.name}: formato no permitido`);
           if (f.size > MAX_SIZE) imgErrors.push(`${f.name}: excede 7 MB`);
@@ -651,11 +724,11 @@
       if (!colorVal) {
         setFieldError(color, 'Falta completar el color.');
         errors.push('Color: falta por rellenar');
-      } else if (!patterns.color.test(colorVal)) { 
-        setFieldError(color, 'Color inválido. Solo letras y espacios.'); 
-        errors.push('Color: inválido'); 
-      } else { 
-        clearFieldError(color); 
+      } else if (!patterns.color.test(colorVal)) {
+        setFieldError(color, 'Color inválido. Solo letras y espacios.');
+        errors.push('Color: inválido');
+      } else {
+        clearFieldError(color);
       }
 
       // Descripción (required)
@@ -664,11 +737,11 @@
       if (!descVal) {
         setFieldError(desc, 'Falta completar la descripción.');
         errors.push('Descripción: falta por rellenar');
-      } else if (!patterns.descripcion.test(descVal)) { 
-        setFieldError(desc, 'Descripción inválida. Contiene caracteres no permitidos.'); 
-        errors.push('Descripción: inválida'); 
-      } else { 
-        clearFieldError(desc); 
+      } else if (!patterns.descripcion.test(descVal)) {
+        setFieldError(desc, 'Descripción inválida. Contiene caracteres no permitidos.');
+        errors.push('Descripción: inválida');
+      } else {
+        clearFieldError(desc);
       }
 
       // Mostrar resumen de errores si los hay
@@ -676,40 +749,40 @@
       const list = document.getElementById('clientErrorList');
       if (errors.length > 0) {
         list.innerHTML = '';
-        errors.forEach(e => { 
-          const li = document.createElement('li'); 
-          li.textContent = e; 
-          list.appendChild(li); 
+        errors.forEach(e => {
+          const li = document.createElement('li');
+          li.textContent = e;
+          list.appendChild(li);
         });
-        summary.classList.remove('d-none'); 
+        summary.classList.remove('d-none');
         summary.style.display = 'block';
         ToastManager.show('Por favor revisa los errores en el formulario', 'error', 4000, 'Formulario incompleto');
       } else {
         list.innerHTML = '';
-        summary.classList.add('d-none'); 
+        summary.classList.add('d-none');
         summary.style.display = 'none';
       }
 
       return errors.length === 0;
     }
 
-    form.addEventListener('submit', function(e) {
+    form.addEventListener('submit', function (e) {
       const ok = validateAll();
       if (!ok) {
-        e.preventDefault(); 
+        e.preventDefault();
         e.stopPropagation();
         const first = form.querySelector('.is-invalid');
-        if (first) { 
-          first.focus(); 
-          first.scrollIntoView({behavior:'smooth', block:'center'}); 
+        if (first) {
+          first.focus();
+          first.scrollIntoView({ behavior: 'smooth', block: 'center' });
         }
       }
       else {
         ToastManager.show('Enviando tu vehículo para aprobación...', 'info', 0);
         try {
-          try { localStorage.setItem('eu_flash', JSON.stringify({tag:'success', text: 'Tu vehículo fue enviado para aprobación del administrador.'})); } catch(e) {}
-          window.addEventListener('beforeunload', function() {});
-        } catch(e) { console.error(e); }
+          try { localStorage.setItem('eu_flash', JSON.stringify({ tag: 'success', text: 'Tu vehículo fue enviado para aprobación del administrador.' })); } catch (e) { }
+          window.addEventListener('beforeunload', function () { });
+        } catch (e) { console.error(e); }
       }
     });
   })();
