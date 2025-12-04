@@ -10,29 +10,36 @@ from .utils import track
 @csrf_exempt
 @require_POST
 def track_event(request):
-	"""Endpoint público (POST JSON) para recibir eventos desde frontend.
+	"""Endpoint público para recibir eventos desde frontend o backend.
 
-	Cuerpo esperado: {"name": "event_name", "props": {...}}
+	Cuerpo esperado:
+	{"name": "event_name", "props": { ... }}
 	"""
 	try:
 		data = json.loads(request.body.decode("utf-8") or "{}")
-	except Exception:
-		return HttpResponseBadRequest("invalid json")
+	except Exception as e:
+		print(f"[analytics.track_event] invalid json: {e}")
+		return HttpResponseBadRequest(json.dumps({"error": "invalid json"}), content_type="application/json")
 
 	name = data.get("name")
 	props = data.get("props") or {}
 
 	if not name:
-		return HttpResponseBadRequest("missing event name")
+		return HttpResponseBadRequest(json.dumps({"error": "missing event name"}), content_type="application/json")
+
+	if not isinstance(name, str) or len(name) > 100:
+		return HttpResponseBadRequest(json.dumps({"error": "invalid event name"}), content_type="application/json")
+
+	if not isinstance(props, dict):
+		props = {}
 
 	try:
 		track(request, name, **props)
 	except Exception as e:
-		# no romper la experiencia frontend
-		print("[analytics.track_event] error tracking:", e)
+		print(f"[analytics.track_event] error tracking event '{name}': {e}")
 
 	return JsonResponse({"ok": True})
 
 
 def health(request):
-	return JsonResponse({"ok": True})
+	return JsonResponse({"ok": True, "service": "analytics"})

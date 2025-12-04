@@ -4,32 +4,55 @@ from .utils import track
 
 
 class PageViewMiddleware:
-    """Middleware para registrar page_view automáticamente.
+    """Middleware para registrar page_view automáticamente con contexto rico.
 
-    Mide duración de la petición y envía un evento "page_view" con datos básicos.
+    Mide duración de la petición y envía un evento "page_view" con datos detallados.
     """
 
     def __init__(self, get_response):
         self.get_response = get_response
+        # Rutas que NO queremos trackear
+        self.excluded_paths = [
+            "/static",
+            "/analytics",
+            "/media",
+            "/.well-known",
+            "/robots.txt",
+            "/favicon.ico",
+        ]
 
     def __call__(self, request):
-        # marcar inicio
+        # Marcar inicio
         request._analytics_start = time()
 
         response = self.get_response(request)
 
         try:
-            # evitar estáticos y endpoints de analytics para evitar bucles
-            if not request.path.startswith("/static") and not request.path.startswith("/analytics"):
+            # Evitar estáticos, endpoints de analytics, etc.
+            should_track = not any(request.path.startswith(p) for p in self.excluded_paths)
+            
+            if should_track:
                 duration_ms = int((time() - getattr(request, "_analytics_start", time())) * 1000)
-                track(request, "page_view",
-                      url=request.path,
-                      method=request.method,
-                      status=getattr(response, "status_code", None),
-                      duration_ms=duration_ms,
-                      )
-        except Exception:
+                status_code = getattr(response, "status_code", None)
+                
+                # Props específicos del page_view
+                page_props = {
+                    "status_code": status_code,
+                    "is_error": status_code and status_code >= 400,
+                }
+                
+                # Si hay error, agregarlo
+                if status_code and status_code >= 400:
+                    page_props["error_status"] = status_code
+                
+                track(
+                    request,
+                    "page_view",
+                    duration_ms=duration_ms,
+                    **page_props
+                )
+        except Exception as e:
             # nunca romper la respuesta por analytics
-            pass
+            print(f"[analytics.middleware] error tracking page_view: {e}")
 
         return response
