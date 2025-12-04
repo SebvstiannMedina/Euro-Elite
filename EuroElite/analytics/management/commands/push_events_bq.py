@@ -1,4 +1,6 @@
 from django.core.management.base import BaseCommand
+import json
+
 from analytics.models import Event
 from analytics import bq
 from django.conf import settings
@@ -35,16 +37,26 @@ class Command(BaseCommand):
             if limit and sent >= limit:
                 break
 
+            # Parse properties: convert to dict, then serialize back to JSON string for BigQuery
+            props = ev.props
+            if isinstance(props, str):
+                try:
+                    props = json.loads(props)
+                except Exception:
+                    props = {}
+            elif props is None:
+                props = {}
+            
+            # Serialize properties as JSON string (BigQuery column is STRING, not RECORD)
+            properties_str = json.dumps(props, ensure_ascii=False)
+
             row = {
-                "id": str(ev.id),
+                "name": ev.name,
                 "ts": ev.ts.isoformat(),
-                "event_time": ev.ts.isoformat(),
-                "event_date": ev.event_date.isoformat() if ev.event_date else ev.ts.date().isoformat(),
                 "user_id": str(ev.user_id) if ev.user_id is not None else None,
                 "session_id": ev.session_id,
-                "name": ev.name,
-                "event_type": ev.name,
-                "properties": ev.props or {},
+                "event_type": ev.name,  # or use ev.event_type if you have that field
+                "properties": properties_str,  # JSON string, not dict
             }
 
             batch.append(row)
@@ -63,6 +75,8 @@ class Command(BaseCommand):
     def _flush_batch(self, batch, dry, processed_count):
         if dry:
             self.stdout.write(f"[dry-run] would push batch of {len(batch)} (processed so far: {processed_count})")
+            if batch:
+                self.stdout.write(f"  Sample row: {batch[0]}")
             return
 
         client = bq.get_bq_client()
@@ -75,6 +89,6 @@ class Command(BaseCommand):
             if errors:
                 self.stderr.write(f"Errors inserting batch: {errors}")
             else:
-                self.stdout.write(f"Pushed batch of {len(batch)} (processed so far: {processed_count})")
+                self.stdout.write(f"✓ Pushed batch of {len(batch)} (processed so far: {processed_count})")
         except Exception as e:
             self.stderr.write(f"Exception while inserting batch: {e}")

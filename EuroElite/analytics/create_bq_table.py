@@ -15,7 +15,7 @@ schema = [
     bigquery.SchemaField("user_id", "STRING"),
     bigquery.SchemaField("session_id", "STRING"),
     bigquery.SchemaField("event_type", "STRING"),
-    bigquery.SchemaField("properties", "JSON"),
+    bigquery.SchemaField("properties", "STRING"),
 ]
 
 table = bigquery.Table(TABLE_ID, schema=schema)

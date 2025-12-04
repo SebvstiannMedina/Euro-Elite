@@ -10,7 +10,7 @@ from google.api_core import exceptions as gcp_exceptions
 # Lee configuración desde variables de entorno definidas en el WSGI
 PROJECT_ID = os.environ.get("GCP_PROJECT_ID", "euroelite-478518")
 BQ_DATASET = os.environ.get("BQ_DATASET", "Eventos_EuroElite")
-BQ_TABLE = f"{PROJECT_ID}.{BQ_DATASET}.events"  # tabla destino: proyecto.dataset.events
+BQ_TABLE = f"{PROJECT_ID}.{BQ_DATASET}.eventos"  # tabla destino: proyecto.dataset.eventos
 
 
 def get_bq_client():
@@ -27,56 +27,77 @@ def get_bq_client():
         # Si por alguna razón settings no está disponible, no romper
         pass
 
-    # Intentar crear cliente normalmente
+    # Forzar project desde settings si está definido, sino usar PROJECT_ID
+    project = getattr(settings, "GCP_PROJECT_ID", PROJECT_ID)
+
     try:
-        return bigquery.Client(project=PROJECT_ID)
+        return bigquery.Client(project=project)
     except Exception as e:
-        print(f"[analytics.bq] error creating BigQuery client: {e}")
+        print(f"[analytics.bq] ERROR creando cliente BigQuery para proyecto '{project}': {e}")
         return None
 
 
 def _make_row(event_dict):
     """
-    Asegura el formato apropiado para BigQuery:
-    - event_time: ISO timestamp (BigQuery TIMESTAMP)
-    - event_date: YYYY-MM-DD (DATE) — opcional si la tabla está particionada por event_date
-    - properties: un JSON serializable (BigQuery JSON)
+    Asegura el formato apropiado para BigQuery según la estructura de la tabla:
+    - name: STRING
+    - ts: TIMESTAMP (ISO format)
+    - user_id: STRING
+    - session_id: STRING
+    - event_type: STRING
+    - properties: STRING (JSON serializado)
     """
     row = dict(event_dict)  # copia para no mutar original
 
-    # asegurarse de que event_time y event_date existan (si no, intentar derivar)
-    if "event_time" not in row and "ts" in row:
-        # si viene como datetime.isoformat() en ts
-        row["event_time"] = row.get("ts")
-    if "event_date" not in row and row.get("event_time"):
-        # derive date
-        try:
-            row["event_date"] = str(row["event_time"]).split("T")[0]
-        except Exception:
-            row["event_date"] = None
+    # Asegurar que ts existe y está en formato ISO
+    if "ts" not in row and "event_time" in row:
+        row["ts"] = row["event_time"]
+    
+    if "ts" in row and row["ts"]:
+        # Convertir a ISO format si es necesario
+        ts_val = row["ts"]
+        if hasattr(ts_val, "isoformat"):
+            row["ts"] = ts_val.isoformat()
+        else:
+            row["ts"] = str(ts_val)
 
-    # properties como dict (preferible para columnas JSON en BQ)
+    # name (usar event_type si no existe name)
+    if "name" not in row and "event_type" in row:
+        row["name"] = row["event_type"]
+
+    # event_type (defaultear a name si no existe)
+    if "event_type" not in row and "name" in row:
+        row["event_type"] = row["name"]
+
+    # user_id a string
+    if "user_id" in row and row["user_id"] is not None:
+        row["user_id"] = str(row["user_id"])
+    else:
+        row["user_id"] = None
+
+    # session_id a string
+    if "session_id" in row and row["session_id"] is not None:
+        row["session_id"] = str(row["session_id"])
+
+    # properties como JSON string (no como dict)
     props = row.get("properties") or row.get("props") or {}
-    if isinstance(props, (str, bytes)):
+    if isinstance(props, str):
         try:
-            # si llegó como string JSON, parsearlo
             props = json.loads(props)
         except Exception:
             props = {}
-    # asegurarse de que sea serializable a JSON simple
-    try:
-        json.dumps(props, ensure_ascii=False)
-    except Exception:
+    elif not isinstance(props, dict):
         props = {}
-    row["properties"] = props
+    
+    # Serializar a JSON string
+    try:
+        row["properties"] = json.dumps(props, ensure_ascii=False)
+    except Exception:
+        row["properties"] = "{}"
 
-    # normalizar user_id a string (opcional)
-    if "user_id" in row and row["user_id"] is not None:
-        row["user_id"] = str(row["user_id"])
-
-    # event_type / name
-    if "event_type" not in row and "name" in row:
-        row["event_type"] = row["name"]
+    # Remover campos que no existen en la tabla
+    fields_to_keep = {"name", "ts", "user_id", "session_id", "event_type", "properties"}
+    row = {k: v for k, v in row.items() if k in fields_to_keep}
 
     return row
 
