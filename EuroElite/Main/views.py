@@ -122,6 +122,17 @@ def cart_add(request):
     item.save(update_fields=['cantidad', 'precio_unitario'])
 
     total_items = sum(i.cantidad for i in cart.items.all())
+    # Analytics: track add to cart with context
+    try:
+        track(request, "add_to_cart",
+              product_id=producto.id,
+              product_name=producto.nombre,
+              price=float(producto.precio),
+              added_quantity=qty,
+              new_quantity=item.cantidad,
+              total_items=total_items)
+    except Exception:
+        pass
     return JsonResponse({
         "ok": True,
         "items": total_items,
@@ -160,6 +171,20 @@ def cart_update(request):
         item.cantidad = qty
         item.save(update_fields=['cantidad'])
 
+    # Analytics: track cart update
+    try:
+        cart = _get_active_cart(request.user)
+        total_items = sum(i.cantidad for i in cart.items.all())
+        total_value = float(sum(i.precio_unitario * i.cantidad for i in cart.items.all()))
+        track(request, "update_cart",
+              item_id=item.id,
+              product_id=item.producto.id,
+              new_quantity=qty,
+              total_items=total_items,
+              total_value=total_value)
+    except Exception:
+        pass
+
     return JsonResponse({"ok": True})
 
 
@@ -193,6 +218,11 @@ def cart_json(request):
         })
     total = sum(d["subtotal"] for d in data)
     total_items = sum(d["cantidad"] for d in data)
+    # Analytics: view cart (API)
+    try:
+        track(request, "view_cart", total=total, count=total_items)
+    except Exception:
+        pass
     return JsonResponse({"items": data, "total": total, "count": total_items})
 
 
@@ -305,7 +335,21 @@ def checkout_crear_pedido_y_pagar(request):
     # Cerrar carrito
     cart.activo = False
     cart.save(update_fields=['activo'])
-    track(request, "purchase", order_id=pedido.id, total=int(pedido.total))  # ← ANALYTICS
+    # Analytics: checkout started (pedido creado)
+    try:
+        items = []
+        for it in pedido.items.all():
+            items.append({"product_id": it.producto.id, "cantidad": it.cantidad, "precio_unitario": float(it.precio_unitario)})
+        track(request, "checkout_start",
+              order_id=pedido.id,
+              subtotal=float(pedido.subtotal),
+              envio=float(pedido.envio),
+              descuento=float(pedido.descuento),
+              total=float(pedido.total),
+              metodo_entrega=str(pedido.metodo_entrega),
+              items=items)
+    except Exception:
+        pass
     
     # Guardar pedido_id en sesión para recuperarlo después del pago
     request.session['last_order_id'] = pedido.id
@@ -358,7 +402,13 @@ def producto_detalle(request, pk):
         pk=pk,
         activo=True
     )
-    track(request, "view_product", product_id=p.id)
+    try:
+        track(request, "view_product",
+              product_id=p.id,
+              category=getattr(p.categoria, 'nombre', None),
+              price=float(p.precio) if getattr(p, 'precio', None) is not None else None)
+    except Exception:
+        pass
     
     # Obtener reseñas aprobadas
     resenas = Resena.objects.filter(producto=p, aprobada=True).select_related('usuario').order_by('-creado')
@@ -382,6 +432,7 @@ def producto_detalle(request, pk):
         'puede_resenar': puede_resenar
     })
 
+
 def nosotros(request):
     from .models import FotoNosotros, Testimonio
     fotos = FotoNosotros.objects.filter(activa=True).order_by('orden', '-creado')
@@ -399,6 +450,11 @@ def productos(request):
     for p in productos:
         p.promocion = p.promocion_vigente
         p.precio_descuento = p.precio_con_descuento
+
+    try:
+        track(request, "list_products", count=productos.count())
+    except Exception:
+        pass
 
     return render(request, "taller/productos.html", {
         "productos": productos,
@@ -470,7 +526,11 @@ def registro(request):
     if request.method == 'POST':
         form = RegistroForm(request.POST)
         if form.is_valid():
-            form.save()
+            user = form.save()
+            try:
+                track(request, "user_registered", user_id=getattr(user, 'id', None), email=getattr(user, 'email', None))
+            except Exception:
+                pass
             messages.success(request, 'Registro exitoso. Inicia sesión para continuar.')
             return redirect('login')
         else:
@@ -530,6 +590,10 @@ def perfil(request):
             
             direccion.save()
             
+            try:
+                track(request, "profile_updated", user_id=request.user.id)
+            except Exception:
+                pass
             messages.success(request, "Perfil actualizado correctamente ✔")
             return redirect("perfil")
     else:
@@ -592,6 +656,10 @@ def agendar(request):
                 form.add_error("bloque", "Este bloque ya está reservado.")
 
             else:
+                try:
+                    track(request, "appointment_booked", servicio=form.cleaned_data.get("servicio"), usuario_id=request.user.id, bloque_id=bloque.id, inicio=str(bloque.inicio))
+                except Exception:
+                    pass
                 messages.success(request, "Tu cita fue reservada correctamente ✅")
                 return redirect("mis_citas")
 
@@ -637,6 +705,10 @@ def anular_cita(request, cita_id):
             cita.bloque.bloqueado = False
             cita.bloque.save(update_fields=["bloqueado"])
         cita.save(update_fields=["estado"])
+        try:
+            track(request, "appointment_canceled", cita_id=cita.id, usuario_id=(request.user.id if request.user.is_authenticated else None))
+        except Exception:
+            pass
         
         if is_ajax:
             return JsonResponse({"success": True, "message": "La cita fue cancelada correctamente."})
@@ -670,6 +742,10 @@ def avanzar_estado_cita(request, cita_id):
     nuevo_estado, mensaje = siguiente
     cita.estado = nuevo_estado
     cita.save(update_fields=["estado"])
+    try:
+        track(request, "appointment_state_changed", cita_id=cita.id, nuevo_estado=str(nuevo_estado), actor_id=(request.user.id if request.user.is_authenticated else None))
+    except Exception:
+        pass
     messages.success(request, mensaje)
 
     return _redirect_back(request, "admin_agendamiento")
@@ -905,6 +981,20 @@ def compra_exitosa(request, pedido_id=None):
     print(f"[COMPRA_EXITOSA] Renderizando template con pedido_id={numero_pedido}")
     print(f"[COMPRA_EXITOSA] ========== FIN ==========")
     
+    # Analytics: purchase completed (if pedido available)
+    try:
+        if pedido:
+            items = []
+            for it in pedido.items.all():
+                items.append({"product_id": it.producto.id, "cantidad": it.cantidad, "subtotal": float(it.subtotal)})
+            track(request, "purchase_completed",
+                  order_id=pedido.id,
+                  total=float(pedido.total) if pedido.total is not None else None,
+                  metodo_pago=str(metodo_pago) if metodo_pago else None,
+                  items=items)
+    except Exception:
+        pass
+
     return render(request, 'taller/compra_exitosa.html', {
         'user': template_user,
         'pedido': pedido,
@@ -972,7 +1062,12 @@ def compra_rechazada(request, pedido_id=None):
     
     print(f"[COMPRA_RECHAZADA] Renderizando template con pedido_id={numero_pedido}")
     print(f"[COMPRA_RECHAZADA] ========== FIN ==========")
-    
+    # Analytics: purchase failed
+    try:
+        track(request, "purchase_failed", order_id=numero_pedido, total=float(total) if total else None, reason=(motivo_rechazo or None))
+    except Exception:
+        pass
+
     return render(request, 'taller/compra_rechazada.html', {
         'user': template_user,
         'pedido': pedido,
@@ -980,6 +1075,7 @@ def compra_rechazada(request, pedido_id=None):
         'total': total,
         'motivo_rechazo': motivo_rechazo or 'El pago fue rechazado por el medio de pago.',
     })
+
 
 
 def ofertas(request):

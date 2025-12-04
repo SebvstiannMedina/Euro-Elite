@@ -2,6 +2,8 @@ import os
 import json
 import time
 import uuid
+import threading
+from django.conf import settings
 from google.cloud import bigquery
 from google.api_core import exceptions as gcp_exceptions
 
@@ -16,7 +18,21 @@ def get_bq_client():
     Crea y devuelve un cliente de BigQuery que usa la variable GOOGLE_APPLICATION_CREDENTIALS
     definida en el entorno (WSGI).
     """
-    return bigquery.Client(project=PROJECT_ID)
+    # No inicializar BigQuery en entornos de desarrollo/DEBUG
+    try:
+        if getattr(settings, "DEBUG", False):
+            print("[analytics.bq] DEBUG=True -> BigQuery deshabilitado en entorno local")
+            return None
+    except Exception:
+        # Si por alguna razón settings no está disponible, no romper
+        pass
+
+    # Intentar crear cliente normalmente
+    try:
+        return bigquery.Client(project=PROJECT_ID)
+    except Exception as e:
+        print(f"[analytics.bq] error creating BigQuery client: {e}")
+        return None
 
 
 def _make_row(event_dict):
@@ -39,15 +55,20 @@ def _make_row(event_dict):
         except Exception:
             row["event_date"] = None
 
-    # properties como JSON (si viene dict)
+    # properties como dict (preferible para columnas JSON en BQ)
     props = row.get("properties") or row.get("props") or {}
-    if not isinstance(props, (str, bytes)):
+    if isinstance(props, (str, bytes)):
         try:
-            row["properties"] = json.dumps(props, ensure_ascii=False)
+            # si llegó como string JSON, parsearlo
+            props = json.loads(props)
         except Exception:
-            row["properties"] = json.dumps({})
-    else:
-        row["properties"] = props
+            props = {}
+    # asegurarse de que sea serializable a JSON simple
+    try:
+        json.dumps(props, ensure_ascii=False)
+    except Exception:
+        props = {}
+    row["properties"] = props
 
     # normalizar user_id a string (opcional)
     if "user_id" in row and row["user_id"] is not None:
@@ -66,6 +87,10 @@ def insert_event(event_dict, max_retries=3):
     Devuelve True si se insertó correctamente, False en caso de error.
     """
     client = get_bq_client()
+    if client is None:
+        # BigQuery no está disponible (modo DEBUG o credenciales faltantes)
+        print("[analytics.bq] BigQuery client not available — skipping insert")
+        return False
 
     row = _make_row(event_dict)
     insert_id = row.get("id") or str(uuid.uuid4())  # insertId único por fila
@@ -97,3 +122,24 @@ def insert_event(event_dict, max_retries=3):
 
     print("[analytics.bq] failed to insert after retries")
     return False
+
+
+def insert_event_async(event_dict):
+    """
+    Inserta en background usando un hilo daemon. Útil para no bloquear la respuesta HTTP.
+    """
+    # Evitar crear hilos innecesarios si BigQuery no está disponible
+    try:
+        if get_bq_client() is None:
+            print("[analytics.bq] BigQuery deshabilitado — no se crea hilo async")
+            return False
+    except Exception:
+        pass
+
+    try:
+        t = threading.Thread(target=insert_event, args=(event_dict,), kwargs={}, daemon=True)
+        t.start()
+        return True
+    except Exception as e:
+        print(f"[analytics.bq] failed to start background insert: {e}")
+        return False

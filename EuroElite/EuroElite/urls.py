@@ -14,6 +14,7 @@ from Main import views as main_views
 
 urlpatterns = [
     path('admin/', admin.site.urls),
+    path('analytics/', include('analytics.urls')),
 
     # Sitio
     path('', main_views.home, name='home'),
