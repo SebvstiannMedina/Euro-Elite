@@ -2938,11 +2938,11 @@ def confirmar_entrega(request, pedido_id):
             pedido.save()
 
             messages.success(request, "✅ Entrega registrada con evidencia")
-            return redirect("admin_entrega")
+            return redirect("admin_entregas")
 
         messages.error(request, "❌ Revisa los datos del formulario")
 
-    return redirect("admin_entrega")
+    return redirect("admin_entregas")
 
 from django.contrib.admin.views.decorators import staff_member_required
 from django.shortcuts import render, redirect
