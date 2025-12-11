@@ -176,9 +176,9 @@ LOGIN_URL = "login"
 LOGIN_REDIRECT_URL = "home"
 LOGOUT_REDIRECT_URL = "login"
 
-FLOW_API_BASE = "https://sandbox.flow.cl/api"
-FLOW_API_KEY = "4426F16C-1880-404C-A66D-6D9E24L18B4B".strip()
-FLOW_SECRET_KEY = "4a12a875e3923de0efbc492f2a7787dc117eed14".strip()
+FLOW_API_BASE = "https://flow.cl/api"
+FLOW_API_KEY = "632867F9-16D0-421A-85BA-21L6F6F7DB27".strip()
+FLOW_SECRET_KEY = "26b56df83a1639975bdd9e90e4352e244d00b4cf".strip()
 FLOW_URL_CONFIRMATION = "https://www.euroelite.cl/pagos/flow/confirmacion/"
 FLOW_URL_RETURN       = "https://www.euroelite.cl/pagos/flow/retorno/"
 
