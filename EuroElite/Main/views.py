@@ -96,10 +96,11 @@ def cart_add(request):
     if stock_disponible <= 0:
         return JsonResponse({"ok": False, "msg": "Producto sin stock disponible."}, status=400)
 
+    # Use the product's discounted price when creating/updating cart items
     item, created = ItemCarrito.objects.get_or_create(
         carrito=cart,
         producto=producto,
-        defaults={'cantidad': 0, 'precio_unitario': producto.precio}
+        defaults={'cantidad': 0, 'precio_unitario': producto.precio_con_descuento}
     )
 
     # Calculamos nueva cantidad
@@ -116,9 +117,9 @@ def cart_add(request):
             "msg": "Ya has agregado el máximo disponible de este producto."
         }, status=400)
 
-    # Actualizamos cantidad y precio
+    # Actualizamos cantidad y fijamos el precio unitario al precio (posible) con descuento
     item.cantidad = nueva_cantidad
-    item.precio_unitario = producto.precio
+    item.precio_unitario = producto.precio_con_descuento
     item.save(update_fields=['cantidad', 'precio_unitario'])
 
     total_items = sum(i.cantidad for i in cart.items.all())
@@ -284,8 +285,8 @@ def checkout_crear_pedido_y_pagar(request):
     if metodo_entrega == Pedido.MetodoEntrega.RETIRO:
         envio_cost = Decimal(0)
     else:
-        # Obtener costo de envío configurado (fallback 4990)
-        envio_cost = Decimal(4990)
+        # Obtener costo de envío configurado (fallback 2990)
+        envio_cost = Decimal(2990)
         try:
             cfg = ConfigSitio.objects.first()
             if cfg and getattr(cfg, 'costo_envio_base', None) is not None:
@@ -1388,7 +1389,7 @@ def mis_pedidos(request):
 
 
 def resumen_compra(request):
-    shipping_cost = 4990
+    shipping_cost = 2990
     try:
         cfg = ConfigSitio.objects.first()
         if cfg and cfg.costo_envio_base is not None:
@@ -1479,7 +1480,7 @@ def confirmacion_datos(request):
         except Exception:
             pass
 
-    shipping_cost_int = 4990
+    shipping_cost_int = 2990
     try:
         cfg = ConfigSitio.objects.first()
         if cfg and getattr(cfg, 'costo_envio_base', None) is not None:

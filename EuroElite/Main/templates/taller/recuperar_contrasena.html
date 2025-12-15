@@ -221,7 +221,7 @@
       const sqlPatterns = [
         /(\b(SELECT|INSERT|UPDATE|DELETE|DROP|CREATE|ALTER|EXEC|EXECUTE|SCRIPT|UNION|OR|AND)\b)/gi,
         /(['";])/g,
-        /(--|#|\/\*|\*\/)/g,
+        /(--|\/\*|\*\/)/g,
         /(xp_|sp_)/i
       ];
       return sqlPatterns.some(pattern => pattern.test(value));

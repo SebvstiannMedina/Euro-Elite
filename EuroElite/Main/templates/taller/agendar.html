@@ -208,7 +208,7 @@ document.addEventListener('DOMContentLoaded', function () {
         // Palabras clave SQL peligrosas
         /(\b(SELECT|INSERT|UPDATE|DELETE|DROP|CREATE|ALTER|EXEC|EXECUTE|SCRIPT|UNION|OR|AND)\b)/gi,
         // Secuencias de escape peligrosas
-        /(--|#|\/\*|\*\/)/g,
+        /(--|\/\*|\*\/)/g,
         // Comillas múltiples (intento de escape)
         /(['"])\1{2,}/g,
         // Procedimientos del sistema
